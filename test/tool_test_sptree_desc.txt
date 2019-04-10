@@ -1,2 +1,2 @@
-The test species tree is not drawn to scale. Nodes are labelled with the timing of the split in # of generations. Each tip is labelled with 3 values: the taxon ID, the character state 
-for that taxon (0 for ancestral, 1 for derived), and the effective population size of the taxon. For now, we are assuming a constant size in the ancestral populations. 
+The test species tree is not drawn to scale. Nodes are labelled with the timing of the split in 4N generations. Each tip is labelled with 3 values: the taxon ID, the character state 
+for that taxon (0 for ancestral, 1 for derived), and the sampling time of the taxon relative to the longest branch (taxon 4). 
