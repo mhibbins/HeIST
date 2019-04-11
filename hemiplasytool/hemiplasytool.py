@@ -96,7 +96,8 @@ def sedTrees(treefile, taxalist):
 	 if (key not in seen):
             seen.append(key)
             seen.append(val)
-            call = "sed -i '.bak' 's/" + str(key) + "/~~" + "/g; s/" + str(val) + "/" + str(key) + "/g; s/~~/" + str(val) + "/g' " + treefile #bug in this line
+	    #TODO: deal with .bak call for mac vs. linux systems
+            call = "sed -i '.bak' 's/" + str(key) + "/~~" + "/g; s/" + str(val) + "/" + str(key) + "/g; s/~~/" + str(val) + "/g' " + treefile 
             log.debug("Fixing taxa names...")
             os.system(call)
 
