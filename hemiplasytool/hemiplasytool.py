@@ -7,6 +7,7 @@ import argparse
 import sys
 import os
 import logging as log
+import seqtools
 
 def read_splits(file):
     """
@@ -68,7 +69,7 @@ def seq_gen_call(treefile, path):
     """
     Make seq-gen call. TODO: Add option to change seq-gen parameters.
     """
-    return(path + ' -m HKY -l 1 -s 0.01 -wa <"' + treefile + '" > seqs.tmp')
+    return(path + ' -m HKY -l 1 -s 0.01 <"' + treefile + '" > seqs.tmp')
 
 def call_programs(ms_call, seqgencall, treefile, ntaxa):
     """
@@ -104,7 +105,8 @@ def main(*args):
     parser = argparse.ArgumentParser(description="Calculate the probability that convergent trait patterns are due to hemiplasy")
     parser.add_argument("-v", "--verbose", help="Enable debugging messages to be displayed", action='store_true')
     parser.add_argument("-s","--splittimes", help="Split times file, ordered from oldest to newest. In units of 4N generations.")
-    parser.add_argument("-t","--traits", help="Traits file")  
+    parser.add_argument("-t","--traits", help="Traits file")
+    parser.add_argument("-b","--speciestree", help="Species topology in Newick format on one line.")
     parser.add_argument("-n","--replicates", help="Number of replicates")
     parser.add_argument("-p","--mspath", help="Path to ms")
     parser.add_argument("-g","--seqgenpath", help="Path to seq-gen")
@@ -130,11 +132,15 @@ def main(*args):
     taxalist = []
     for s in sample_times.keys():
         taxalist.append(int(s))
-    
+
     #Call ms and seq-gen
     call_programs(ms_call, seqgencall, 'trees.tmp', taxalist)
 
-
+    match_species_pattern = seqtools.readSeqs("seqs.tmp",len(taxalist), traits)
+    print(match_species_pattern)
+    focal_trees = seqtools.getTrees('trees.tmp', match_species_pattern)
+    speciesTree  = "(1,(2,((6,5),(4,3))));"
+    print(seqtools.propDiscordant(focal_trees, speciesTree))
 
 if __name__ == "__main__":
     main(*sys.argv)
