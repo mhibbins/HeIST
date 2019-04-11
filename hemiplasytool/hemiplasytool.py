@@ -94,10 +94,11 @@ def sedTrees(treefile, taxalist):
         newTaxa[t] = max1 - t + 1
     seen = []
     for key,val in newTaxa.items():
-        if (key not in seen):
+	 if (key not in seen):
             seen.append(key)
             seen.append(val)
-            call = "sed -i '.bak' 's/" + str(key) + "/~~" + "/g; s/" + str(val) + "/" + str(key) + "/g; s/~~/" + str(val) + "/g' " + treefile
+	    #TODO: deal with .bak call for mac vs. linux systems
+            call = "sed -i '.bak' 's/" + str(key) + "/~~" + "/g; s/" + str(val) + "/" + str(key) + "/g; s/~~/" + str(val) + "/g' " + treefile 
             log.debug("Fixing taxa names...")
             os.system(call)
 
