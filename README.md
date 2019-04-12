@@ -1,4 +1,4 @@
-# hemiplasytool
+# HemiplasyTool
 
 ## Dependencies:
 * ms  
@@ -13,8 +13,8 @@ conda install -c etetoolkit ete3 ete_toolchain
 ## Usage
 ```
 usage: hemiplasytool.py [-h] [-v] [-s SPLITTIMES] [-t TRAITS] [-b SPECIESTREE]
-                        [-n REPLICATES] [-p MSPATH] [-g SEQGENPATH]
-                        [-o OUTPUTDIR]
+                        [-n REPLICATES] [-x BATCHES] [-p MSPATH]
+                        [-g SEQGENPATH] [-o OUTPUTDIR]
 
 Calculate the probability that convergent trait patterns are due to hemiplasy
 
@@ -29,7 +29,9 @@ optional arguments:
   -b SPECIESTREE, --speciestree SPECIESTREE
                         Species topology in Newick format on one line.
   -n REPLICATES, --replicates REPLICATES
-                        Number of replicates
+                        Number of replicates per batch
+  -x BATCHES, --batches BATCHES
+                        Number of batches
   -p MSPATH, --mspath MSPATH
                         Path to ms
   -g SEQGENPATH, --seqgenpath SEQGENPATH
@@ -71,4 +73,10 @@ The species tree file specifies the tree topology in Newick format. Again, taxa 
 
 ```
 (1,(2,((6,5),(4,3))));
+```
+
+
+## Example:
+```
+python hemiplasytool.py -s ../splits_test.txt -n 1000000 -x 2 -p ~/bin/ms -t ../traits_test.txt -g  ~/bin/seq-gen -b ../test_species.txt -v
 ```
