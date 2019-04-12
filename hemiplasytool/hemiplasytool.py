@@ -9,6 +9,7 @@ import os
 import logging as log
 import seqtools
 from ete3 import Tree
+from scipy.stats import fisher_exact
 
 def read_splits(file):
     """
@@ -106,11 +107,11 @@ def sedTrees(treefile, taxalist):
             seen.append(key)
             seen.append(val)
             if sys.platform == "darwin":
-                call = "sed -i '.bak' 's/" + str(key) + ":/~~" + "/g; s/" + str(val) + ":/" + str(key) + ":/g; s/~~/" + str(val) + ":/g' " + treefile 
+                call = "sed -i '.bak' 's/" + str(key) + "/~~" + "/g; s/" + str(val) + "/" + str(key) + "/g; s/~~/" + str(val) + "/g' " + treefile 
                 log.debug("Fixing taxa names...")
                 os.system(call)
             elif sys.platform == "linux" or sys.platform == "linux2":
-                call = "sed -i 's/" + str(key) + ":/~~" + "/g; s/" + str(val) + ":/" + str(key) + ":/g; s/~~/" + str(val) + ":/g' " + treefile 
+                call = "sed -i 's/" + str(key) + "/~~" + "/g; s/" + str(val) + "/" + str(key) + "/g; s/~~/" + str(val) + "/g' " + treefile 
                 log.debug("Fixing taxa names...")
                 os.system(call)
     if sys.platform == "darwin":
@@ -119,6 +120,22 @@ def sedTrees(treefile, taxalist):
 def cleanup():
     os.system("rm trees.tmp")
     os.system("rm seqs.tmp")
+
+def summarize(results, alltrees):
+    c_disc_follow = 0
+    c_conc_follow = 0
+    c_disc_others = 0
+    c_conc_others = 0
+    for key, val in results.items():
+        c_disc_follow += val[0]
+        c_conc_follow += val[1]
+    for key, val in alltrees.items():
+        c_disc_others += val[0]
+        c_conc_others += val[1]
+    return([c_disc_follow, c_conc_follow, c_disc_others, c_conc_others])
+
+def fishers_exact(counts):
+    return(fisher_exact([[counts[0], (counts[1]-counts[0])],[counts[2], (counts[3]-counts[2])]]))
 
 def main(*args):
     parser = argparse.ArgumentParser(description="Calculate the probability that convergent trait patterns are due to hemiplasy")
@@ -148,18 +165,18 @@ def main(*args):
     batches = int(args.batches)
     speciesTree = read_tree(args.speciestree)
 
+    #Make program calls
+    ms_call = splits_to_ms(splits, taxa, args.replicates, sample_times, args.mspath)
+    seqgencall = seq_gen_call('trees.tmp', args.seqgenpath)
+
+    taxalist = []
+    for s in sample_times.keys():
+        taxalist.append(int(s))
+
+
     results = {}
     results_alltrees ={}
     for i in range(0, batches):
-
-        #Make program calls
-        ms_call = splits_to_ms(splits, taxa, args.replicates, sample_times, args.mspath)
-        seqgencall = seq_gen_call('trees.tmp', args.seqgenpath)
-
-        taxalist = []
-        for s in sample_times.keys():
-            taxalist.append(int(s))
-
         #Call ms and seq-gen
         call_programs(ms_call, seqgencall, 'trees.tmp', taxalist)
 
@@ -174,6 +191,7 @@ def main(*args):
         #of trees which are discordant.
         log.debug("Calculating discordance...")
         results[i] = seqtools.propDiscordant(focal_trees, speciesTree)
+        #TODO: Add catch here. If # that follow is very low, restart loop with higher value for n
 
         log.debug("Calculating discordance...")
         #TODO: This is extremely slow for some reason. Speed up discordant calc.
@@ -181,9 +199,23 @@ def main(*args):
 
         cleanup()
 
+    summary = summarize(results, results_alltrees)
 
-    print(results)
-    print(results_alltrees)
+    print(summary)
+
+    print("\nOf the replicates that follow species site pattern: ")
+    print(str(summary[0]) + " were discordant\n" + str(summary[1]-summary[0]) + " were concordant\n")
+
+
+    print("Of the replicates that did not follow the species site pattern: ")
+    print(str(summary[2]) + " were discordant\n" + str(summary[3]-summary[2]) + " were concordant\n")
+
+    odds, pval = fishers_exact(summary)
+    print("Fisher's Exact Test:")
+    print("Odds ratio: " + str(odds))
+    print("P-val: " + str(pval))
+
+
 if __name__ == "__main__":
     main(*sys.argv)
 

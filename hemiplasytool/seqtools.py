@@ -70,6 +70,7 @@ def getTrees(treefile, matchlist):
     """
     focal_trees = []
     all_trees = []
+    trees_dont_follow = []
     trees = open(treefile, 'r')
     for i, line in enumerate(trees):
         l = line.replace('\n','')
@@ -79,7 +80,9 @@ def getTrees(treefile, matchlist):
     for i, tree in enumerate(all_trees):
         if i in matchlist:
             focal_trees.append(tree)
-    return(focal_trees, all_trees)
+        else:
+            trees_dont_follow.append(tree)
+    return(focal_trees, trees_dont_follow)
             
 def compareToSpecies(speciesTree, geneTree):
     """
