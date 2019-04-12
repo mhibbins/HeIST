@@ -105,10 +105,14 @@ def sedTrees(treefile, taxalist):
         if (key not in seen):
             seen.append(key)
             seen.append(val)
-	        #TODO: deal with .bak call for mac vs. linux systems
-            call = "sed -i '.bak' 's/" + str(key) + "/~~" + "/g; s/" + str(val) + "/" + str(key) + "/g; s/~~/" + str(val) + "/g' " + treefile 
-            log.debug("Fixing taxa names...")
-            os.system(call)
+            if platform == "darwin":
+                call = "sed -i '.bak' 's/" + str(key) + "/~~" + "/g; s/" + str(val) + "/" + str(key) + "/g; s/~~/" + str(val) + "/g' " + treefile 
+                log.debug("Fixing taxa names...")
+                os.system(call)
+            elif platform == "linux" or platform == "linux2":
+                call = "sed -i 's/" + str(key) + "/~~" + "/g; s/" + str(val) + "/" + str(key) + "/g; s/~~/" + str(val) + "/g' " + treefile 
+                log.debug("Fixing taxa names...")
+                os.system(call)
 
 def main(*args):
     parser = argparse.ArgumentParser(description="Calculate the probability that convergent trait patterns are due to hemiplasy")
