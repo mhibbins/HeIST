@@ -7,7 +7,8 @@ Mark Hibbins (mhibbins@indiana.edu)
 ## Dependencies:
 * ms  
 * seq-gen  
-* ete3   
+* ete3 
+* scipy
 
 ### Install ete3 with Anaconda
 ```
@@ -16,32 +17,24 @@ conda install -c etetoolkit ete3 ete_toolchain
 
 ## Usage
 ```
-usage: hemiplasytool.py [-h] [-v] [-s SPLITTIMES] [-t TRAITS] [-b SPECIESTREE]
-                        [-n REPLICATES] [-x BATCHES] [-p MSPATH]
-                        [-g SEQGENPATH] [-o OUTPUTDIR]
+usage: hemiplasytool.py [-h] [-v] [-n] [-x] [-p] [-g] [-o] splits traits tree
 
 Calculate the probability that convergent trait patterns are due to hemiplasy
 
+positional arguments:
+  splits              Split times file, ordered from oldest to newest. In
+                      units of 4N generations.
+  traits              Traits file
+  tree                Species topology in Newick format on one line.
+
 optional arguments:
-  -h, --help            show this help message and exit
-  -v, --verbose         Enable debugging messages to be displayed
-  -s SPLITTIMES, --splittimes SPLITTIMES
-                        Split times file, ordered from oldest to newest. In
-                        units of 4N generations.
-  -t TRAITS, --traits TRAITS
-                        Traits file
-  -b SPECIESTREE, --speciestree SPECIESTREE
-                        Species topology in Newick format on one line.
-  -n REPLICATES, --replicates REPLICATES
-                        Number of replicates per batch
-  -x BATCHES, --batches BATCHES
-                        Number of batches
-  -p MSPATH, --mspath MSPATH
-                        Path to ms
-  -g SEQGENPATH, --seqgenpath SEQGENPATH
-                        Path to seq-gen
-  -o OUTPUTDIR, --outputdir OUTPUTDIR
-                        Output directory
+  -h, --help          show this help message and exit
+  -v, --verbose       Enable debugging messages to be displayed
+  -n , --replicates   Number of replicates per batch
+  -x , --batches      Number of batches
+  -p , --mspath       Path to ms
+  -g , --seqgenpath   Path to seq-gen
+  -o , --outputdir    Output directory
 ```
 
 ## Input files
@@ -82,5 +75,5 @@ The species tree file specifies the tree topology in Newick format. Again, taxa 
 
 ## Example:
 ```
-python hemiplasytool.py -s ../splits_test.txt -n 1000000 -x 2 -p ~/bin/ms -t ../traits_test.txt -g  ~/bin/seq-gen -b ../test_species.txt -v
+python hemiplasytool.py -n 1000000 -x 3 -p ~/bin/ms -g  ~/bin/seq-gen -v ../splits_test.txt ../traits_test.txt ../test_species.txt
 ```
