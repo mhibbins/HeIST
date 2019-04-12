@@ -1,21 +1,37 @@
+"""
+Scripts that do the parsing of gene trees and sequences.
+"""
+
 from ete3 import Tree
 from itertools import zip_longest
 
 def grouper(iterable, n, fillvalue=None):
+    """
+    Utility function
+    """
     args = [iter(iterable)] * n
     return(zip_longest(*args, fillvalue=fillvalue))
 
 def cluster(d):
+    """
+    Utility function
+    """
     clusters = {}
     for key, val in d.items():
         clusters.setdefault(val, []).append(key)
     return(clusters)
 
 def checkEqual(lst):
-   return(lst[1:] == lst[:-1])
+    """
+    Utility function
+    """
+    return(lst[1:] == lst[:-1])
 
-
-def readSeqs(seqs, ntaxa, speciesPattern=None):
+def readSeqs(seqs, ntaxa, speciesPattern):
+    """
+    Reads in sequences, determines if gene tree site pattern matches species tree
+    site pattern. Returns indices of those which do.
+    """
     indices = []
     c = cluster(speciesPattern)
     shouldMatch1 = c['0']
@@ -48,6 +64,9 @@ def readSeqs(seqs, ntaxa, speciesPattern=None):
     return(indices)
                     
 def getTrees(treefile, matchlist):
+    """
+    Returns list of trees at indices obtained from readSeqs
+    """
     focal_trees = []
     all_trees = []
     trees = open(treefile, 'r')
@@ -62,6 +81,9 @@ def getTrees(treefile, matchlist):
     return(focal_trees)
             
 def compareToSpecies(speciesTree, geneTree):
+    """
+    Determines if two trees have the same topology.
+    """
     speciesTree = Tree(speciesTree)
     geneTree = Tree(geneTree)
     r = speciesTree.compare(geneTree)['rf']
@@ -72,6 +94,10 @@ def compareToSpecies(speciesTree, geneTree):
         return(False)
 
 def propDiscordant(focal_trees, species_tree):
+    """
+    Determines the proportion of focal_trees (which have the same site pattern as the
+    species tree) which are discordant (i.e. have a different topology)
+    """
     countDis = 0
 
     for tree in focal_trees:

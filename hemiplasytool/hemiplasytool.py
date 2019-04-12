@@ -8,12 +8,14 @@ import sys
 import os
 import logging as log
 import seqtools
+from ete3 import Tree
 
 def read_splits(file):
     """
     Splits file should have three values per line: Timing of split (4N gens) \t Source pop \t Dest pop.
     Splits should be ordered oldest to most recent.
     """
+    log.debug("Reading splits...")
     input1 = open(file, 'r')
     splits = []
     taxa = []
@@ -29,6 +31,7 @@ def read_traits(file):
     Traits file should have three values per line: Taxa # \t Binary trait value (0 or 1) \t Timing of sampling, if tree is non-ultrametric, relative to longest terminal branch. 
     The longest terminal branch should have a value of 0. If species tree is ultrametric, please specify all 0s in the third column.
     """
+    log.debug("Reading traits...")
     input1 = open(file, 'r')
     traits = {}
     sample_times = {}
@@ -37,6 +40,11 @@ def read_traits(file):
         traits[l[0]] = l[1]
         sample_times[l[0]] = l[2]
     return(traits, sample_times)
+
+def read_tree(file):
+    log.debug("Reading tree...")
+    with open(file) as f:
+        return(f.readline().replace('\n',''))
 
 def splits_to_ms(splitTimes, taxa, reps, sampleTimes, path_to_ms):
     """
@@ -94,10 +102,10 @@ def sedTrees(treefile, taxalist):
         newTaxa[t] = max1 - t + 1
     seen = []
     for key,val in newTaxa.items():
-	 if (key not in seen):
+        if (key not in seen):
             seen.append(key)
             seen.append(val)
-	    #TODO: deal with .bak call for mac vs. linux systems
+	        #TODO: deal with .bak call for mac vs. linux systems
             call = "sed -i '.bak' 's/" + str(key) + "/~~" + "/g; s/" + str(val) + "/" + str(key) + "/g; s/~~/" + str(val) + "/g' " + treefile 
             log.debug("Fixing taxa names...")
             os.system(call)
@@ -137,10 +145,18 @@ def main(*args):
     #Call ms and seq-gen
     call_programs(ms_call, seqgencall, 'trees.tmp', taxalist)
 
+    #Gets indices of trees with site patterns that match speecies pattern
     match_species_pattern = seqtools.readSeqs("seqs.tmp",len(taxalist), traits)
     print(match_species_pattern)
+
+    #Gets thee trees at these indices
     focal_trees = seqtools.getTrees('trees.tmp', match_species_pattern)
-    speciesTree  = "(1,(2,((6,5),(4,3))));"
+
+    #Read in species tree
+    speciesTree = read_tree(args.speciestree)
+
+    #Out of those trees which follow the species site pattern, get the number
+    #of trees which are discordant. 
     print(seqtools.propDiscordant(focal_trees, speciesTree))
 
 if __name__ == "__main__":
