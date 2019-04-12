@@ -1,5 +1,9 @@
 # HemiplasyTool
 
+## Authors:
+Matt Gibson (gibsomat@indiana.edu)  
+Mark Hibbins (mhibbins@indiana.edu)
+
 ## Dependencies:
 * ms  
 * seq-gen  
