@@ -106,11 +106,11 @@ def sedTrees(treefile, taxalist):
             seen.append(key)
             seen.append(val)
             if sys.platform == "darwin":
-                call = "sed -i '.bak' 's/" + str(key) + "/~~" + "/g; s/" + str(val) + "/" + str(key) + "/g; s/~~/" + str(val) + "/g' " + treefile 
+                call = "sed -i '.bak' 's/" + str(key) + ":/~~" + "/g; s/" + str(val) + ":/" + str(key) + ":/g; s/~~/" + str(val) + ":/g' " + treefile 
                 log.debug("Fixing taxa names...")
                 os.system(call)
             elif sys.platform == "linux" or sys.platform == "linux2":
-                call = "sed -i 's/" + str(key) + "/~~" + "/g; s/" + str(val) + "/" + str(key) + "/g; s/~~/" + str(val) + "/g' " + treefile 
+                call = "sed -i 's/" + str(key) + ":/~~" + "/g; s/" + str(val) + ":/" + str(key) + ":/g; s/~~/" + str(val) + ":/g' " + treefile 
                 log.debug("Fixing taxa names...")
                 os.system(call)
     if sys.platform == "darwin":
@@ -123,14 +123,14 @@ def cleanup():
 def main(*args):
     parser = argparse.ArgumentParser(description="Calculate the probability that convergent trait patterns are due to hemiplasy")
     parser.add_argument("-v", "--verbose", help="Enable debugging messages to be displayed", action='store_true')
-    parser.add_argument("-s","--splittimes", help="Split times file, ordered from oldest to newest. In units of 4N generations.")
-    parser.add_argument("-t","--traits", help="Traits file")
-    parser.add_argument("-b","--speciestree", help="Species topology in Newick format on one line.")
-    parser.add_argument("-n","--replicates", help="Number of replicates per batch")
-    parser.add_argument("-x","--batches", help="Number of batches")
-    parser.add_argument("-p","--mspath", help="Path to ms")
-    parser.add_argument("-g","--seqgenpath", help="Path to seq-gen")
-    parser.add_argument("-o","--outputdir", help="Output directory")
+    parser.add_argument("splittimes", metavar='splits', help="Split times file, ordered from oldest to newest. In units of 4N generations.")
+    parser.add_argument("traits", metavar='traits', help="Traits file")
+    parser.add_argument("speciestree", metavar="tree", help="Species topology in Newick format on one line.")
+    parser.add_argument("-n","--replicates", metavar="", help="Number of replicates per batch", default=1000000)
+    parser.add_argument("-x","--batches", metavar="", help="Number of batches", default=3)
+    parser.add_argument("-p","--mspath", metavar="", help="Path to ms", default="./msdir")
+    parser.add_argument("-g","--seqgenpath", metavar="", help="Path to seq-gen", default="./seq-gen")
+    parser.add_argument("-o","--outputdir", metavar="", help="Output directory")
     args = parser.parse_args()
 
     #Setup logging
@@ -170,14 +170,13 @@ def main(*args):
         #Gets the trees at these indices
         focal_trees, all_trees = seqtools.getTrees('trees.tmp', match_species_pattern)
 
-
-        #Read in species tree
-
         #Out of those trees which follow the species site pattern, get the number
         #of trees which are discordant.
         log.debug("Calculating discordance...")
         results[i] = seqtools.propDiscordant(focal_trees, speciesTree)
+
         log.debug("Calculating discordance...")
+        #TODO: This is extremely slow for some reason. Speed up discordant calc.
         results_alltrees[i] = seqtools.propDiscordant(all_trees, speciesTree)
 
         cleanup()
