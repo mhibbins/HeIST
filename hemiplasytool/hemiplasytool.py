@@ -105,14 +105,20 @@ def sedTrees(treefile, taxalist):
         if (key not in seen):
             seen.append(key)
             seen.append(val)
-            if platform == "darwin":
+            if sys.platform == "darwin":
                 call = "sed -i '.bak' 's/" + str(key) + "/~~" + "/g; s/" + str(val) + "/" + str(key) + "/g; s/~~/" + str(val) + "/g' " + treefile 
                 log.debug("Fixing taxa names...")
                 os.system(call)
-            elif platform == "linux" or platform == "linux2":
+            elif sys.platform == "linux" or sys.platform == "linux2":
                 call = "sed -i 's/" + str(key) + "/~~" + "/g; s/" + str(val) + "/" + str(key) + "/g; s/~~/" + str(val) + "/g' " + treefile 
                 log.debug("Fixing taxa names...")
                 os.system(call)
+    if sys.platform == "darwin":
+        os.system("rm " + treefile + ".bak")
+
+def cleanup():
+    os.system("rm trees.tmp")
+    os.system("rm seqs.tmp")
 
 def main(*args):
     parser = argparse.ArgumentParser(description="Calculate the probability that convergent trait patterns are due to hemiplasy")
@@ -120,7 +126,8 @@ def main(*args):
     parser.add_argument("-s","--splittimes", help="Split times file, ordered from oldest to newest. In units of 4N generations.")
     parser.add_argument("-t","--traits", help="Traits file")
     parser.add_argument("-b","--speciestree", help="Species topology in Newick format on one line.")
-    parser.add_argument("-n","--replicates", help="Number of replicates")
+    parser.add_argument("-n","--replicates", help="Number of replicates per batch")
+    parser.add_argument("-x","--batches", help="Number of batches")
     parser.add_argument("-p","--mspath", help="Path to ms")
     parser.add_argument("-g","--seqgenpath", help="Path to seq-gen")
     parser.add_argument("-o","--outputdir", help="Output directory")
@@ -138,31 +145,46 @@ def main(*args):
     splits, taxa = read_splits(args.splittimes)
     traits, sample_times = read_traits(args.traits)
 
-    #Make program calls
-    ms_call = splits_to_ms(splits, taxa, args.replicates, sample_times, args.mspath)
-    seqgencall = seq_gen_call('trees.tmp', args.seqgenpath)
-
-    taxalist = []
-    for s in sample_times.keys():
-        taxalist.append(int(s))
-
-    #Call ms and seq-gen
-    call_programs(ms_call, seqgencall, 'trees.tmp', taxalist)
-
-    #Gets indices of trees with site patterns that match speecies pattern
-    match_species_pattern = seqtools.readSeqs("seqs.tmp",len(taxalist), traits)
-    print(match_species_pattern)
-
-    #Gets thee trees at these indices
-    focal_trees = seqtools.getTrees('trees.tmp', match_species_pattern)
-
-    #Read in species tree
+    batches = int(args.batches)
     speciesTree = read_tree(args.speciestree)
 
-    #Out of those trees which follow the species site pattern, get the number
-    #of trees which are discordant. 
-    print(seqtools.propDiscordant(focal_trees, speciesTree))
+    results = {}
+    results_alltrees ={}
+    for i in range(0, batches):
 
+        #Make program calls
+        ms_call = splits_to_ms(splits, taxa, args.replicates, sample_times, args.mspath)
+        seqgencall = seq_gen_call('trees.tmp', args.seqgenpath)
+
+        taxalist = []
+        for s in sample_times.keys():
+            taxalist.append(int(s))
+
+        #Call ms and seq-gen
+        call_programs(ms_call, seqgencall, 'trees.tmp', taxalist)
+
+        #Gets indices of trees with site patterns that match speecies pattern
+        match_species_pattern = seqtools.readSeqs("seqs.tmp",len(taxalist), traits)
+        #print(match_species_pattern)
+
+        #Gets the trees at these indices
+        focal_trees, all_trees = seqtools.getTrees('trees.tmp', match_species_pattern)
+
+
+        #Read in species tree
+
+        #Out of those trees which follow the species site pattern, get the number
+        #of trees which are discordant.
+        log.debug("Calculating discordance...")
+        results[i] = seqtools.propDiscordant(focal_trees, speciesTree)
+        log.debug("Calculating discordance...")
+        results_alltrees[i] = seqtools.propDiscordant(all_trees, speciesTree)
+
+        cleanup()
+
+
+    print(results)
+    print(results_alltrees)
 if __name__ == "__main__":
     main(*sys.argv)
 

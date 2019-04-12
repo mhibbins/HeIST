@@ -31,6 +31,7 @@ def readSeqs(seqs, ntaxa, speciesPattern):
     """
     Reads in sequences, determines if gene tree site pattern matches species tree
     site pattern. Returns indices of those which do.
+    TODO: Make able to handle seq-gen output with ancestral sequences. Currently will fail.
     """
     indices = []
     c = cluster(speciesPattern)
@@ -78,7 +79,7 @@ def getTrees(treefile, matchlist):
     for i, tree in enumerate(all_trees):
         if i in matchlist:
             focal_trees.append(tree)
-    return(focal_trees)
+    return(focal_trees, all_trees)
             
 def compareToSpecies(speciesTree, geneTree):
     """
@@ -90,7 +91,7 @@ def compareToSpecies(speciesTree, geneTree):
     if r == 0.0:
         return(True)
     else:
-        print(geneTree)
+        #print(geneTree)
         return(False)
 
 def propDiscordant(focal_trees, species_tree):
