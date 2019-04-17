@@ -38,6 +38,9 @@ def readSeqs(seqs, ntaxa, speciesPattern):
     shouldMatch1 = c['0']
     shouldMatch2 = c['1']
 
+    print(shouldMatch1)
+    print(shouldMatch2)
+
     index = 0
     with open(seqs, 'rU') as f:
         for lines in grouper(f, ntaxa+1, ''):
@@ -48,7 +51,7 @@ def readSeqs(seqs, ntaxa, speciesPattern):
                 if x != 0:
                     l = line.replace('\n', '').split()
                     pattern[l[0]] = l[1]
-
+            #print(pattern)
             levels = set()
             for val in pattern.values():
                 levels.add(val)
@@ -90,7 +93,9 @@ def compareToSpecies(speciesTree, geneTree):
     """
     speciesTree = Tree(speciesTree)
     geneTree = Tree(geneTree)
-    r = speciesTree.compare(geneTree)['rf']
+   #print(speciesTree)
+    #print(geneTree)
+    r = speciesTree.compare(geneTree, unrooted=True)['rf']
     if r == 0.0:
         return(True)
     else:
@@ -107,5 +112,9 @@ def propDiscordant(focal_trees, species_tree):
     for tree in focal_trees:
         if not compareToSpecies(species_tree, tree):
             countDis += 1
-    return(countDis, len(focal_trees), countDis/len(focal_trees))
+    try:
+        return(countDis, len(focal_trees), countDis/len(focal_trees))
+    except:
+        return(countDis, len(focal_trees), 0.0)
+
 

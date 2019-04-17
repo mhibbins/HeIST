@@ -51,26 +51,26 @@ def splits_to_ms(splitTimes, taxa, reps, sampleTimes, path_to_ms):
     """
     Converts inputs into a call to ms
     """
-    for key, val in sampleTimes.items():
-        if (val == '0') or (val == '0.0'):
-            index_of_most_recent = int(key)
+    #for key, val in sampleTimes.items():
+    #    if (val == '0') or (val == '0.0'):
+    #        index_of_most_recent = int(key)
 
     nsamples = len(splitTimes)+1
-    call = path_to_ms + ' ' + '1' + ' ' + str(reps) + ' -T -I ' + str(nsamples) + ' '
+    call = path_to_ms + ' ' + str(nsamples) + ' ' + str(reps) + ' -T -I ' + str(nsamples) + ' '
     for i in range(0, nsamples):
-        if (i+1) == index_of_most_recent:
-            call += '1 '
-        else:
-            call += '0 '
+        call += '1 '
     for x, split in enumerate(splitTimes):
         call += '-ej ' + str(split) + ' ' + str(taxa[x][0]) + ' ' + str(taxa[x][1]) + ' '
-    
+
+    """
     for time in sampleTimes.values():
         if time != '0':
             for taxa, time in sampleTimes.items():
                 if (float(time) > 0):
                     call += '-eA ' + time + ' ' + taxa + ' 1 '
         break
+    """
+
     call += "| tail -n +4 | grep -v // > trees.tmp"
     return(call)
 
@@ -87,7 +87,7 @@ def call_programs(ms_call, seqgencall, treefile, ntaxa):
     log.debug("Calling ms...")
     os.system(ms_call)
 
-    sedTrees(treefile, ntaxa)
+    #sedTrees(treefile, ntaxa)
 
     log.debug("Calling seq-gen...")
     os.system(seqgencall)
@@ -107,7 +107,8 @@ def sedTrees(treefile, taxalist):
             seen.append(key)
             seen.append(val)
             if sys.platform == "darwin":
-                call = "sed -i '.bak' 's/" + str(key) + "/~~" + "/g; s/" + str(val) + "/" + str(key) + "/g; s/~~/" + str(val) + "/g' " + treefile 
+                call = "sed -i '.bak' 's/[[:<:]]" + str(key) + ":[[:>:]]/~~" + "/g; s/[[:<:]]" + str(val) + ":[[:>:]]/[[:<:]]" + str(key) + ":[[:>:]]/g; s/~~/[[:<:]]" + str(val) + ":[[:>:]]/g' " + treefile 
+                print(call)
                 log.debug("Fixing taxa names...")
                 os.system(call)
             elif sys.platform == "linux" or sys.platform == "linux2":
@@ -168,6 +169,8 @@ def main(*args):
     #Make program calls
     ms_call = splits_to_ms(splits, taxa, args.replicates, sample_times, args.mspath)
     seqgencall = seq_gen_call('trees.tmp', args.seqgenpath)
+
+    print(ms_call)
 
     taxalist = []
     for s in sample_times.keys():
