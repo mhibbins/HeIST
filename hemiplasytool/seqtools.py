@@ -54,7 +54,7 @@ def readSeqs(seqs, ntaxa, speciesPattern):
                 if x != 0:
                     l = line.replace('\n', '').split()
                     pattern[l[0]] = l[1]
-            print(pattern)
+            #print(pattern)
             levels = set()
             for val in pattern.values():
                 levels.add(val)
