@@ -108,7 +108,7 @@ def sedTrees(treefile, taxalist):
             seen.append(val)
             if sys.platform == "darwin":
                 call = "sed -i '.bak' 's/[[:<:]]" + str(key) + ":[[:>:]]/~~" + "/g; s/[[:<:]]" + str(val) + ":[[:>:]]/[[:<:]]" + str(key) + ":[[:>:]]/g; s/~~/[[:<:]]" + str(val) + ":[[:>:]]/g' " + treefile 
-                print(call)
+                #print(call)
                 log.debug("Fixing taxa names...")
                 os.system(call)
             elif sys.platform == "linux" or sys.platform == "linux2":

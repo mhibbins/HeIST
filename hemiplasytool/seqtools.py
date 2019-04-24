@@ -4,6 +4,9 @@ Scripts that do the parsing of gene trees and sequences.
 
 from ete3 import Tree
 from itertools import zip_longest
+from Bio.Phylo.Consensus import _BitString
+from Bio import Phylo
+import io
 
 def grouper(iterable, n, fillvalue=None):
     """
@@ -51,7 +54,7 @@ def readSeqs(seqs, ntaxa, speciesPattern):
                 if x != 0:
                     l = line.replace('\n', '').split()
                     pattern[l[0]] = l[1]
-            #print(pattern)
+            print(pattern)
             levels = set()
             for val in pattern.values():
                 levels.add(val)
@@ -86,21 +89,50 @@ def getTrees(treefile, matchlist):
         else:
             trees_dont_follow.append(tree)
     return(focal_trees, trees_dont_follow)
-            
+
+def _bitstrs(tree):
+    bitstrs = set()
+    term_names = [term.name for term in tree.get_terminals()]
+    term_names.sort()
+    for clade in tree.get_nonterminals():
+        clade_term_names = [term.name for term in clade.get_terminals()]
+        boolvals = [name in clade_term_names for name in term_names]
+        bitstr = _BitString(''.join(map(str, map(int, boolvals))))
+        bitstrs.add(bitstr)
+    return bitstrs
+
+def compareToSpecies(tree1, tree2):
+    tree1 = tree1.replace(";", '')
+    tree2 = tree2.replace(';', '')
+    tree1 = Phylo.read(io.StringIO(tree1), "newick")
+    tree2 = Phylo.read(io.StringIO(tree2), "newick")
+    term_names1 = [term.name for term in tree1.get_terminals()]
+    term_names2 = [term.name for term in tree2.get_terminals()]
+    # false if terminals are not the same
+    if set(term_names1) != set(term_names2):
+        return False
+    # true if _BitStrings are the same
+    if _bitstrs(tree1) == _bitstrs(tree2):
+        return True
+    else:
+        return False
+
+"""
+Depricated
 def compareToSpecies(speciesTree, geneTree):
-    """
-    Determines if two trees have the same topology.
-    """
+
     speciesTree = Tree(speciesTree)
     geneTree = Tree(geneTree)
-   #print(speciesTree)
-    #print(geneTree)
-    r = speciesTree.compare(geneTree, unrooted=True)['rf']
+    print(speciesTree)
+    print(geneTree)
+    r = speciesTree.compare(geneTree, unrooted=False)['rf']
+    print(r)
     if r == 0.0:
         return(True)
     else:
         #print(geneTree)
         return(False)
+"""
 
 def propDiscordant(focal_trees, species_tree):
     """
