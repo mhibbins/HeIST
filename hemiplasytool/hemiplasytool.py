@@ -10,6 +10,7 @@ import logging as log
 import seqtools
 from ete3 import Tree
 from scipy.stats import fisher_exact
+import time
 
 def read_splits(file):
     """
@@ -78,7 +79,7 @@ def seq_gen_call(treefile, path):
     """
     Make seq-gen call. TODO: Add option to change seq-gen parameters.
     """
-    return(path + ' -m HKY -l 1 -s 0.01 <"' + treefile + '" > seqs.tmp')
+    return(path + ' -m HKY -l 1 -s 0.05 <"' + treefile + '" > seqs.tmp')
 
 def call_programs(ms_call, seqgencall, treefile, ntaxa):
     """
@@ -176,6 +177,8 @@ def main(*args):
     for s in sample_times.keys():
         taxalist.append(int(s))
 
+    start = time.time()
+
 
     results = {}
     results_alltrees ={}
@@ -193,12 +196,12 @@ def main(*args):
         #Out of those trees which follow the species site pattern, get the number
         #of trees which are discordant.
         log.debug("Calculating discordance...")
-        results[i] = seqtools.propDiscordant(focal_trees, speciesTree)
+        results[i] = seqtools.propDiscordant_async(focal_trees, speciesTree)
         #TODO: Add catch here. If # that follow is very low, restart loop with higher value for n
 
         log.debug("Calculating discordance...")
         #TODO: This is extremely slow for some reason. Speed up discordant calc.
-        results_alltrees[i] = seqtools.propDiscordant(all_trees, speciesTree)
+        results_alltrees[i] = seqtools.propDiscordant_async(all_trees, speciesTree)
 
         cleanup()
 
@@ -217,7 +220,8 @@ def main(*args):
     print("Fisher's Exact Test:")
     print("Odds ratio: " + str(odds))
     print("P-val: " + str(pval))
-
+    end = time.time()
+    print(end - start)
 
 if __name__ == "__main__":
     main(*sys.argv)
