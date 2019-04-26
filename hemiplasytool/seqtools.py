@@ -114,10 +114,13 @@ def _bitstrs(tree):
         bitstrs.add(bitstr)
     return bitstrs
 
+def rev(sis):
+    return((sis[1],sis[0]))
+
 def compareToSpecies(tree1, tree2, spp_sisters):
     sisters = getSisters(tree2)
     for s in sisters:
-        if s not in spp_sisters:
+        if (s not in spp_sisters) and (rev(s) not in spp_sisters):
             return(False)
     
     tree1 = tree1.replace(";", '')
@@ -162,7 +165,6 @@ def propDiscordant(focal_trees, species_tree):
     countDis = 0
     spp_sisters = getSisters(species_tree,'s')
     for tree in focal_trees:
-        print(i)
         if not compareToSpecies(species_tree, tree, spp_sisters):
             countDis += 1
         i += 1

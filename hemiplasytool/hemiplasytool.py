@@ -202,7 +202,7 @@ def main(*args):
         log.debug("Calculating discordance...")
         #TODO: This is extremely slow for some reason. Speed up discordant calc.
         results_alltrees[i] = seqtools.propDiscordant_async(all_trees, speciesTree)
-
+        resultss =  0
         cleanup()
 
     summary = summarize(results, results_alltrees)
@@ -221,7 +221,7 @@ def main(*args):
     print("Odds ratio: " + str(odds))
     print("P-val: " + str(pval))
     end = time.time()
-    print(end - start)
+    print("\nTime elapsed: " + str(end - start) + " seconds")
 
 if __name__ == "__main__":
     main(*sys.argv)
