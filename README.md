@@ -7,13 +7,9 @@ Mark Hibbins (mhibbins@indiana.edu)
 ## Dependencies:
 * ms  
 * seq-gen  
-* ete3 
+* biopython
 * scipy
 
-### Install ete3 with Anaconda
-```
-conda install -c etetoolkit ete3 ete_toolchain
-```
 
 ## Usage
 ```

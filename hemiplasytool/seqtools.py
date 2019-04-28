@@ -2,7 +2,6 @@
 Scripts that do the parsing of gene trees and sequences.
 """
 
-from ete3 import Tree
 from itertools import zip_longest
 from Bio.Phylo.Consensus import _BitString
 from Bio import Phylo
