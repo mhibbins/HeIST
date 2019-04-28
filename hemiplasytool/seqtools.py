@@ -209,21 +209,25 @@ def propDiscordant_async(focal_trees, species_tree):
     Determines the proportion of focal_trees (which have the same site pattern as the
     species tree) which are discordant (i.e. have a different topology)
     """
+    global resultss
     pool = mp.Pool(mp.cpu_count())
     i = 0
     countDis = 0
     spp_sisters = getSisters(species_tree,'s')
 
     for tree in focal_trees:
-        pool.apply_async(call, args=(species_tree, tree, spp_sisters), callback=collect_result)
+        pool.apply_async(call, args=(species_tree, tree, spp_sisters),  callback=collect_result)
     
     pool.close()
     pool.join()
+
     countDis = resultss
     
     try:
+        resultss = 0
         return(countDis, len(focal_trees), countDis/len(focal_trees))
     except:
+        resultss = 0
         return(countDis, len(focal_trees), 0.0)
 
 def collect_result(result):

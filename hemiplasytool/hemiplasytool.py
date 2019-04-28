@@ -12,6 +12,8 @@ from ete3 import Tree
 from scipy.stats import fisher_exact
 import time
 
+
+
 def read_splits(file):
     """
     Splits file should have three values per line: Timing of split (4N gens) \t Source pop \t Dest pop.
@@ -202,7 +204,6 @@ def main(*args):
         log.debug("Calculating discordance...")
         #TODO: This is extremely slow for some reason. Speed up discordant calc.
         results_alltrees[i] = seqtools.propDiscordant_async(all_trees, speciesTree)
-        resultss =  0
         cleanup()
 
     summary = summarize(results, results_alltrees)
