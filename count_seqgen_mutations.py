@@ -1,5 +1,5 @@
 import sys 
-import ret
+import re
 
 '''
 Reads in a set of single nucleotides simulated on gene trees
