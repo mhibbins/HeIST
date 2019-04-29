@@ -1,6 +1,5 @@
 import sys 
-import re
-from collections import OrderedDict
+import ret
 
 '''
 Reads in a set of single nucleotides simulated on gene trees
@@ -23,7 +22,6 @@ def parse_seqgen(seqfile, ntaxa):
     lines = [lines[i].replace('\t', ' ') for i in range(len(lines))] #replaces tabs with space
 	
     trees = [lines[i:i+(ntaxa*2)-1] for i in range(0, len(lines), (ntaxa*2)-1)] #splits into gene trees
-	
 
     return trees	
 
@@ -31,7 +29,7 @@ def count_mutations(tree, ntaxa):
     '''
     Takes pairs of taxa/nodes and alleles, 
     and returns the number of mutations that 
-    happened along the tree. Dictionary must be ordered
+    happened along the tree. Pairs must be ordered
     in same way as seq-gen output. 
     '''	
 
