@@ -8,7 +8,6 @@ import sys
 import os
 import logging as log
 import seqtools
-from ete3 import Tree
 from scipy.stats import fisher_exact
 import time
 

@@ -71,5 +71,22 @@ The species tree file specifies the tree topology in Newick format. Again, taxa 
 
 ## Example:
 ```
-python hemiplasytool.py -n 1000000 -x 3 -p ~/bin/ms -g  ~/bin/seq-gen -v ../splits_test.txt ../traits_test.txt ../test_species.txt
+python hemiplasytool.py -n 100000 -x 2 -p ~/bin/ms -g  ~/bin/seq-gen -v ../splits_test.txt ../traits_test.txt ../test_species.txt
+```
+
+### Output:
+```
+Of the replicates that follow species site pattern:
+35 were discordant
+19 were concordant
+
+Of the replicates that did not follow the species site pattern:
+113901 were discordant
+86045 were concordant
+
+Fisher's Exact Test:
+Odds ratio: 1.3915939927517849
+P-val: 0.2730071310105504
+
+Time elapsed: 29.542541980743408 seconds
 ```
