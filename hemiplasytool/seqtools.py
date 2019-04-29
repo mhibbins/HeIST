@@ -28,14 +28,13 @@ def cluster(d):
     return(clusters)
 
 def getSisters(tree, t='g'):
-    """Some nasty regex"""
+    """Some nasty regex to get pairs of sister taxa (only at terminal branches)"""
     if t=='s':
         l = re.findall("\(([1-9][0-9]|\d),([1-9][0-9]|\d)\)", tree)
     else:
         l = re.findall("\(([1-9][0-9]|\d):\d\.\d\d\d,([1-9][0-9]|\d):\d\.\d\d\d\)", tree)
     return(l)
     
-
 def checkEqual(lst):
     """
     Utility function
@@ -46,15 +45,14 @@ def readSeqs(seqs, ntaxa, speciesPattern):
     """
     Reads in sequences, determines if gene tree site pattern matches species tree
     site pattern. Returns indices of those which do.
-    TODO: Make able to handle seq-gen output with ancestral sequences. Currently will fail.
     """
     indices = []
     c = cluster(speciesPattern)
     shouldMatch1 = c['0']
     shouldMatch2 = c['1']
 
-    print(shouldMatch1)
-    print(shouldMatch2)
+    #print(shouldMatch1)
+    #print(shouldMatch2)
 
     index = 0
     with open(seqs, 'rU') as f:
@@ -114,9 +112,13 @@ def _bitstrs(tree):
     return bitstrs
 
 def rev(sis):
+    """Utility function"""
     return((sis[1],sis[0]))
 
 def compareToSpecies(tree1, tree2, spp_sisters):
+    """Compares tree topologies. Will first check if sister taxa in the species tree are also sister 
+    in the gene tree, returning false at the first non-shared occurence. If all sister taxa are present,
+    it will calculate a bitstring distance with Biopython Phylo."""
     sisters = getSisters(tree2)
     for s in sisters:
         if (s not in spp_sisters) and (rev(s) not in spp_sisters):

@@ -45,6 +45,7 @@ def read_traits(file):
     return(traits, sample_times)
 
 def read_tree(file):
+    """Reads in the species tree (in Newick format, no branch lengths)"""
     log.debug("Reading tree...")
     with open(file) as f:
         return(f.readline().replace('\n',''))
@@ -53,10 +54,6 @@ def splits_to_ms(splitTimes, taxa, reps, sampleTimes, path_to_ms):
     """
     Converts inputs into a call to ms
     """
-    #for key, val in sampleTimes.items():
-    #    if (val == '0') or (val == '0.0'):
-    #        index_of_most_recent = int(key)
-
     nsamples = len(splitTimes)+1
     call = path_to_ms + ' ' + str(nsamples) + ' ' + str(reps) + ' -T -I ' + str(nsamples) + ' '
     for i in range(0, nsamples):
@@ -98,6 +95,7 @@ def call_programs(ms_call, seqgencall, treefile, ntaxa):
 def sedTrees(treefile, taxalist):
     """
     Flips taxa IDs with sed. They become reversed when taking "ancient" samples.
+    Currently not used.**
     """
     newTaxa = {}
     max1 = max(taxalist)
@@ -121,10 +119,12 @@ def sedTrees(treefile, taxalist):
         os.system("rm " + treefile + ".bak")
 
 def cleanup():
+    """Remove gene trees and sequences files. For use between batches."""
     os.system("rm trees.tmp")
     os.system("rm seqs.tmp")
 
 def summarize(results, alltrees):
+    """Summarizes simulations from multiple batches"""
     c_disc_follow = 0
     c_conc_follow = 0
     c_disc_others = 0
@@ -138,9 +138,11 @@ def summarize(results, alltrees):
     return([c_disc_follow, c_conc_follow, c_disc_others, c_conc_others])
 
 def fishers_exact(counts):
+    """Scipy fishers exact test"""
     return(fisher_exact([[counts[0], (counts[1]-counts[0])],[counts[2], (counts[3]-counts[2])]]))
 
 def main(*args):
+    start = time.time()
     parser = argparse.ArgumentParser(description="Calculate the probability that convergent trait patterns are due to hemiplasy")
     parser.add_argument("-v", "--verbose", help="Enable debugging messages to be displayed", action='store_true')
     parser.add_argument("splittimes", metavar='splits', help="Split times file, ordered from oldest to newest. In units of 4N generations.")
@@ -177,9 +179,6 @@ def main(*args):
     taxalist = []
     for s in sample_times.keys():
         taxalist.append(int(s))
-
-    start = time.time()
-
 
     results = {}
     results_alltrees ={}
