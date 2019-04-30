@@ -41,7 +41,7 @@ def checkEqual(lst):
     """
     return(lst[1:] == lst[:-1])
 
-def readSeqs(seqs, ntaxa, speciesPattern):
+def readSeqs(seqs, ntaxa, speciesPattern, nodes):
     """
     Reads in sequences, determines if gene tree site pattern matches species tree
     site pattern. Returns indices of those which do.
@@ -51,23 +51,24 @@ def readSeqs(seqs, ntaxa, speciesPattern):
     shouldMatch1 = c['0']
     shouldMatch2 = c['1']
 
+    tmpFocal = open("focaltrees.tmp",'w')
     #print(shouldMatch1)
     #print(shouldMatch2)
 
     index = 0
     with open(seqs, 'rU') as f:
-        for lines in grouper(f, ntaxa+1, ''):
-            assert len(lines) == ntaxa+1
+        for lines in grouper(f, ntaxa+nodes+1, ''):
+            assert len(lines) == ntaxa+nodes+1
             pattern = {}
             index += 1
             for x, line in enumerate(lines):
                 if x != 0:
                     l = line.replace('\n', '').split()
                     pattern[l[0]] = l[1]
-            #print(pattern)
             levels = set()
-            for val in pattern.values():
-                levels.add(val)
+            for key, val in pattern.items():
+                if int(key) in range(1,ntaxa+1):
+                    levels.add(val)
             if len(levels) == 2:
                 a = []
                 for taxa in shouldMatch1:
@@ -78,6 +79,9 @@ def readSeqs(seqs, ntaxa, speciesPattern):
                         b.append(pattern[taxa])
                     if (checkEqual(b)):
                         indices.append(index)
+                        for y in lines:
+                            tmpFocal.write(y)
+    tmpFocal.close()
     return(indices)
                     
 def getTrees(treefile, matchlist):
@@ -126,6 +130,7 @@ def compareToSpecies(tree1, tree2, spp_sisters):
     
     tree1 = tree1.replace(";", '')
     tree2 = tree2.replace(';', '')
+ 
     tree1 = Phylo.read(io.StringIO(tree1), "newick")
     tree2 = Phylo.read(io.StringIO(tree2), "newick")
     term_names1 = [term.name for term in tree1.get_terminals()]
@@ -215,7 +220,7 @@ def propDiscordant_async(focal_trees, species_tree):
     i = 0
     countDis = 0
     spp_sisters = getSisters(species_tree,'s')
-
+    #print(spp_sisters)
     for tree in focal_trees:
         pool.apply_async(call, args=(species_tree, tree, spp_sisters),  callback=collect_result)
     
@@ -235,3 +240,58 @@ def collect_result(result):
     """Callback function for asynchronous pooling"""
     global resultss
     resultss += result
+
+def parse_seqgen(seqfile, ntaxa):
+    '''
+    Parses seq-gen file. Returns a list of ordered 
+    taxon-allele pairs for each tree.   
+    '''
+    lines = []
+
+    with open(seqfile) as seqs:
+        for line in seqs:
+            if re.match(r'\w', line): #if line starts with character
+                lines.append(str.strip(line))
+
+    lines = [lines[i].replace('\t', ' ') for i in range(len(lines))] #replaces tabs with space
+	
+    trees = [lines[i:i+(ntaxa*2)-1] for i in range(0, len(lines), (ntaxa*2)-1)] #splits into gene trees
+
+    return trees	
+
+def count_mutations(tree, ntaxa):
+    '''
+    Takes pairs of taxa/nodes and alleles, 
+    and returns the number of mutations that 
+    happened along the tree. Pairs must be ordered
+    in same way as seq-gen output. 
+    '''	
+
+    labels = [int(tree[i].split()[0]) for i in range(len(tree))] #node/taxon IDs
+    alleles = [tree[i].split()[1] for i in range(len(tree))] #corresponding alleles 
+    root = ntaxa + 1 #node label for root of the whole tree
+    comparisons = [] #to keep track of which comparisons have already been made 
+    current_taxon = 1 #to keep track of which taxon we are currently following 
+    mutations = 0 #mutation counter 
+
+    while current_taxon <= ntaxa:
+        for i in range(len(labels)):
+
+            if labels[i] > root and labels[i-1] >= root: #if the current label is an ancestral node other than the root, and the previous label is an ancestral node
+                if [labels[i], labels[i-1]] not in comparisons: #if this comparison between nodes has not already been made 
+                    if alleles[i] != alleles[i-1]: #if there was a mutation 
+                        mutations += 1
+                        comparisons.append([labels[i], labels[i-1]])
+                    else:
+                        comparisons.append([labels[i], labels[i-1]])
+
+            if labels[i] == current_taxon: #if the label is the current tip taxon
+                if labels[i-1] >= root: #if i - 1 is the subtending node
+                    if alleles[i] != alleles[i-1]: #if there was a mutation 
+                        mutations += 1
+                elif labels[i-2] >= root: #if i-2 is the subtending node
+                    if alleles[i] != alleles[i-2]: #if there was a mutation
+                        mutations += 1
+                current_taxon += 1 #update current taxon
+                    
+    return mutations

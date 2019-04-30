@@ -77,7 +77,7 @@ def seq_gen_call(treefile, path):
     """
     Make seq-gen call. TODO: Add option to change seq-gen parameters.
     """
-    return(path + ' -m HKY -l 1 -s 0.05 <"' + treefile + '" > seqs.tmp')
+    return(path + ' -m HKY -l 1 -s 0.05 -wa <"' + treefile + '" > seqs.tmp')
 
 def call_programs(ms_call, seqgencall, treefile, ntaxa):
     """
@@ -123,6 +123,7 @@ def cleanup():
     os.system("rm trees.tmp")
     os.system("rm seqs.tmp")
 
+
 def summarize(results, alltrees):
     """Summarizes simulations from multiple batches"""
     c_disc_follow = 0
@@ -166,7 +167,6 @@ def main(*args):
     #read input files
     splits, taxa = read_splits(args.splittimes)
     traits, sample_times = read_traits(args.traits)
-
     batches = int(args.batches)
     speciesTree = read_tree(args.speciestree)
 
@@ -174,7 +174,7 @@ def main(*args):
     ms_call = splits_to_ms(splits, taxa, args.replicates, sample_times, args.mspath)
     seqgencall = seq_gen_call('trees.tmp', args.seqgenpath)
 
-    print(ms_call)
+    log.debug(ms_call)
 
     taxalist = []
     for s in sample_times.keys():
@@ -187,7 +187,7 @@ def main(*args):
         call_programs(ms_call, seqgencall, 'trees.tmp', taxalist)
 
         #Gets indices of trees with site patterns that match speecies pattern
-        match_species_pattern = seqtools.readSeqs("seqs.tmp",len(taxalist), traits)
+        match_species_pattern = seqtools.readSeqs("seqs.tmp",len(taxalist), traits, len(splits))
         #print(match_species_pattern)
 
         #Gets the trees at these indices
@@ -206,7 +206,7 @@ def main(*args):
 
     summary = summarize(results, results_alltrees)
 
-    print(summary)
+    print("\n####################RESULTS####################\n###############################################")
 
     print("\nOf the replicates that follow species site pattern: ")
     print(str(summary[0]) + " were discordant\n" + str(summary[1]-summary[0]) + " were concordant\n")
@@ -219,6 +219,23 @@ def main(*args):
     print("Fisher's Exact Test:")
     print("Odds ratio: " + str(odds))
     print("P-val: " + str(pval))
+
+
+    focaltrees = seqtools.parse_seqgen("focaltrees.tmp", len(taxalist))
+    n_mutations = []
+    #print('Tree', '# of mutations')
+
+    for index, tree in enumerate(focaltrees):
+	    n_mutations.append(seqtools.count_mutations(tree, len(taxalist)))
+    
+    mutation_counts = [[x,n_mutations.count(x)] for x in set(n_mutations)]
+
+    print("\n# Mutations\t# Trees")
+    for item in  mutation_counts:
+        print(str(item[0]) + '\t\t' + str(item[1]))
+
+
+    os.system("rm focaltrees.tmp")
     end = time.time()
     print("\nTime elapsed: " + str(end - start) + " seconds")
 
