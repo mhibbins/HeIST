@@ -224,7 +224,7 @@ def main(*args):
     focaltrees = seqtools.parse_seqgen("focaltrees.tmp", len(taxalist))
     n_mutations = []
     #print('Tree', '# of mutations')
-
+ 
     for index, tree in enumerate(focaltrees):
 	    n_mutations.append(seqtools.count_mutations(tree, len(taxalist)))
     
@@ -235,7 +235,7 @@ def main(*args):
         print(str(item[0]) + '\t\t' + str(item[1]))
 
 
-    os.system("rm focaltrees.tmp")
+    #os.system("rm focaltrees.tmp")
     end = time.time()
     print("\nTime elapsed: " + str(end - start) + " seconds")
 

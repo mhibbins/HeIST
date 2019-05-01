@@ -284,6 +284,20 @@ def count_mutations(tree, ntaxa):
                         comparisons.append([labels[i], labels[i-1]])
                     else:
                         comparisons.append([labels[i], labels[i-1]])
+            elif labels[i] > root and labels[i-2] >= root: #if the current label is an ancestral node, and the previous ancestral node has 1 taxon descending from it
+                if [labels[i], labels[i-2]] not in comparisons: #if this comparison between nodes has not already been made 
+                    if alleles[i] != alleles[i-2]: #if there was a mutation 
+                        mutations += 1
+                        comparisons.append([labels[i], labels[i-2]])
+                    else:
+                      comparisons.append([labels[i], labels[i-2]])
+            elif labels[i] > root and labels[i-3] >= root: #if the current label is an ancestral node, and the previous ancestral node has 2 taxa descending from it
+                if [labels[i], labels[i-3]] not in comparisons: #if this comparison between nodes has not already been made 
+                    if alleles[i] != alleles[i-3]: #if there was a mutation 
+                        mutations += 1
+                        comparisons.append([labels[i], labels[i-3]])
+                    else:
+                      comparisons.append([labels[i], labels[i-3]])
 
             if labels[i] == current_taxon: #if the label is the current tip taxon
                 if labels[i-1] >= root: #if i - 1 is the subtending node
@@ -291,7 +305,7 @@ def count_mutations(tree, ntaxa):
                         mutations += 1
                 elif labels[i-2] >= root: #if i-2 is the subtending node
                     if alleles[i] != alleles[i-2]: #if there was a mutation
-                        mutations += 1
-                current_taxon += 1 #update current taxon
-                    
+                        mutations += 1  
+        current_taxon += 1 #update current taxon
+              
     return mutations
