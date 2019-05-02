@@ -177,7 +177,7 @@ def plot_mutations(results_c, results_d):
     ax.set_xticklabels(labels)
     plt.ylabel('Count')
     plt.xlabel('# Mutations')
-    ax.legend((p1[0], p2[0]), ('Condordant trees', 'Discordant trees'))
+    ax.legend((p1[0], p2[0]), ('Concordant trees', 'Discordant trees'))
     plt.savefig('mutation_dist.png', dpi=250)
     
 def fishers_exact(counts):
@@ -279,7 +279,7 @@ def main(*args):
     print("Odds ratio: " + str(odds))
     print("P-val: " + str(pval))
 
-    print("\nOn concorant trees:")
+    print("\nOn concordant trees:")
     print("# Mutations\t# Trees")
     for item in  mutation_counts_c:
         print(str(item[0]) + '\t\t' + str(item[1]))
