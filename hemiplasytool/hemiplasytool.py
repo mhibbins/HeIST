@@ -73,11 +73,11 @@ def splits_to_ms(splitTimes, taxa, reps, sampleTimes, path_to_ms):
     call += "| tail -n +4 | grep -v // > trees.tmp"
     return(call)
 
-def seq_gen_call(treefile, path):
+def seq_gen_call(treefile, path, s=0.05):
     """
     Make seq-gen call. TODO: Add option to change seq-gen parameters.
     """
-    return(path + ' -m HKY -l 1 -s 0.05 -wa <"' + treefile + '" > seqs.tmp')
+    return(path + ' -m HKY -l 1 -s ' + str(s) + ' -wa <"' + treefile + '" > seqs.tmp')
 
 def call_programs(ms_call, seqgencall, treefile, ntaxa):
     """
@@ -177,7 +177,7 @@ def plot_mutations(results_c, results_d):
     ax.set_xticklabels(labels)
     plt.ylabel('Count')
     plt.xlabel('# Mutations')
-    ax.legend((p1[0], p2[0]), ('Condordant trees', 'Discordant trees'))
+    ax.legend((p1[0], p2[0]), ('Concordant trees', 'Discordant trees'))
     plt.savefig('mutation_dist.png', dpi=250)
     
 def fishers_exact(counts):
@@ -195,6 +195,7 @@ def main(*args):
     parser.add_argument("-x","--batches", metavar="", help="Number of batches", default=3)
     parser.add_argument("-p","--mspath", metavar="", help="Path to ms", default="./msdir")
     parser.add_argument("-g","--seqgenpath", metavar="", help="Path to seq-gen", default="./seq-gen")
+    parser.add_argument("-s","--mutationrate", metavar="", help="Seq-gen mutation rate (default 0.05)", default=0.05)
     parser.add_argument("-o","--outputdir", metavar="", help="Output directory")
     args = parser.parse_args()
 
@@ -218,7 +219,7 @@ def main(*args):
 
     #Make program calls
     ms_call = splits_to_ms(splits, taxa, args.replicates, sample_times, args.mspath)
-    seqgencall = seq_gen_call('trees.tmp', args.seqgenpath)
+    seqgencall = seq_gen_call('trees.tmp', args.seqgenpath, args.mutationrate)
 
     log.debug(ms_call)
 
@@ -279,7 +280,7 @@ def main(*args):
     print("Odds ratio: " + str(odds))
     print("P-val: " + str(pval))
 
-    print("\nOn concorant trees:")
+    print("\nOn concordant trees:")
     print("# Mutations\t# Trees")
     for item in  mutation_counts_c:
         print(str(item[0]) + '\t\t' + str(item[1]))
