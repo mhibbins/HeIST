@@ -10,8 +10,8 @@ import re
 import multiprocessing as mp
 
 resultss = 0
-disc = []
-conc = []
+disc_g = []
+conc_g = []
 
 def grouper(iterable, n, fillvalue=None):
     """
@@ -219,8 +219,8 @@ def propDiscordant_async(focal_trees, species_tree):
     species tree) which are discordant (i.e. have a different topology)
     """
     global resultss
-    global disc
-    global conc
+    global disc_g
+    global conc_g
     pool = mp.Pool(mp.cpu_count())
     i = 0
     countDis = 0
@@ -250,8 +250,8 @@ def propDiscordant_async(focal_trees, species_tree):
 def collect_result(result):
     """Callback function for asynchronous pooling"""
     global resultss
-    global disc
-    global conc
+    global disc_g
+    global conc_g
     if result[0] == 1:
         disc.append(result[1])
     elif result[0] == 0:
