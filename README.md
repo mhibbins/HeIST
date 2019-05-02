@@ -9,6 +9,7 @@ Mark Hibbins (mhibbins@indiana.edu)
 * seq-gen  
 * biopython
 * scipy
+* numpy
 
 
 ## Usage
@@ -71,22 +72,42 @@ The species tree file specifies the tree topology in Newick format. Again, taxa 
 
 ## Example:
 ```
-python hemiplasytool.py -n 100000 -x 2 -p ~/bin/ms -g  ~/bin/seq-gen -v ../splits_test.txt ../traits_test.txt ../test_species.txt
+python hemiplasytool/hemiplasytool.py -v -n 1000000 -p ~/bin/ms -g ~/bin/seq-gen -x 2 test/test_splits.txt test/test_traits.txt test/test_topology.txt
 ```
 
 ### Output:
 ```
 Of the replicates that follow species site pattern:
-35 were discordant
-19 were concordant
+324 were discordant
+229 were concordant
 
 Of the replicates that did not follow the species site pattern:
-113901 were discordant
-86045 were concordant
+1137961 were discordant
+861486 were concordant
 
-Fisher's Exact Test:
-Odds ratio: 1.3915939927517849
-P-val: 0.2730071310105504
+Odds ratio: 1.0711008741372166
+P-val: 0.4397051096565977
 
-Time elapsed: 29.542541980743408 seconds
+On concorant trees:
+# Mutations	# Trees
+1		5
+2		35
+3		175
+4		13
+5		1
+
+On discordant trees:
+# Mutations	# Trees
+1		9
+2		43
+3		250
+4		17
+5		4
+6		1
+
+DEBUG:root:Plotting...
+
+Time elapsed: 324.11109495162964 seconds
 ```
+
+![Mutation distribution](mutation_dist.png)

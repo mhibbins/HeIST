@@ -10,8 +10,8 @@ import logging as log
 import seqtools
 from scipy.stats import fisher_exact
 import time
-
-
+import matplotlib.pyplot as plt
+import numpy as np
 
 def read_splits(file):
     """
@@ -122,7 +122,7 @@ def cleanup():
     """Remove gene trees and sequences files. For use between batches."""
     os.system("rm trees.tmp")
     os.system("rm seqs.tmp")
-
+    os.system("rm focaltrees.tmp")
 
 def summarize(results, alltrees):
     """Summarizes simulations from multiple batches"""
@@ -138,6 +138,48 @@ def summarize(results, alltrees):
         c_conc_others += val[1]
     return([c_disc_follow, c_conc_follow, c_disc_others, c_conc_others])
 
+def write_output(result1, result2, outfile):
+    return(0)
+
+def plot_mutations(results_c, results_d):
+    objs_c = [i[0] for i in results_c]
+    objs_d = [i[0] for i in results_d]
+    conc_dic = {}
+    disc_dic = {}
+    objs = objs_c  + objs_d
+    objs = set(objs)
+    x = np.array(list(range(1,max(objs)+1)))
+    y1 = []
+    y2 = []
+    width = 0.2
+    for v in results_c:
+        conc_dic[v[0]] = v[1]
+    for v in results_d:
+        disc_dic[v[0]] = v[1]
+
+    for i in x:
+        if i in conc_dic.keys():
+            y1.append(conc_dic[i])
+        else:
+            y1.append(0)
+        if i in disc_dic.keys():
+            y2.append(disc_dic[i])
+        else:
+            y2.append(0)
+
+    labels = []
+    for o in x:
+        labels.append(str(o))
+    _, ax = plt.subplots()
+    p1 = ax.bar(x, y1, width, color='#484041')
+    p2 = ax.bar(x+width, y2, width, color='#70ee9c')
+    ax.set_xticks(x + width / 2)
+    ax.set_xticklabels(labels)
+    plt.ylabel('Count')
+    plt.xlabel('# Mutations')
+    ax.legend((p1[0], p2[0]), ('Condordant trees', 'Discordant trees'))
+    plt.savefig('mutation_dist.png', dpi=250)
+    
 def fishers_exact(counts):
     """Scipy fishers exact test"""
     return(fisher_exact([[counts[0], (counts[1]-counts[0])],[counts[2], (counts[3]-counts[2])]]))
@@ -163,7 +205,11 @@ def main(*args):
         logger.disabled = False
     else:
         logger.disabled =  True
-    
+    #Silence matplotlib debug logging
+    mpl_logger = log.getLogger('matplotlib')
+    mpl_logger.setLevel(log.WARNING) 
+
+
     #read input files
     splits, taxa = read_splits(args.splittimes)
     traits, sample_times = read_traits(args.traits)
@@ -182,6 +228,8 @@ def main(*args):
 
     results = {}
     results_alltrees ={}
+    n_mutations_d = []
+    n_mutations_c = []
     for i in range(0, batches):
         #Call ms and seq-gen
         call_programs(ms_call, seqgencall, 'trees.tmp', taxalist)
@@ -196,13 +244,25 @@ def main(*args):
         #Out of those trees which follow the species site pattern, get the number
         #of trees which are discordant.
         log.debug("Calculating discordance...")
-        results[i] = seqtools.propDiscordant_async(focal_trees, speciesTree)
+        results[i], disc, conc = seqtools.propDiscordant_async(focal_trees, speciesTree)
         #TODO: Add catch here. If # that follow is very low, restart loop with higher value for n
 
         log.debug("Calculating discordance...")
-        #TODO: This is extremely slow for some reason. Speed up discordant calc.
-        results_alltrees[i] = seqtools.propDiscordant_async(all_trees, speciesTree)
+        results_alltrees[i], _, _ = seqtools.propDiscordant_async(all_trees, speciesTree)
+        focaltrees_d = seqtools.parse_seqgen("focaltrees.tmp", len(taxalist), disc)
+        focaltrees_c = seqtools.parse_seqgen("focaltrees.tmp", len(taxalist), conc)
+    
+        for index, tree in enumerate(focaltrees_d):
+	        n_mutations_d.append(seqtools.count_mutations(tree, len(taxalist)))
+        for index, tree in enumerate(focaltrees_c):
+	        n_mutations_c.append(seqtools.count_mutations(tree, len(taxalist)))
+        
+        #Clean up temporary files from this batch
         cleanup()
+        
+    
+    mutation_counts_d = [[x,n_mutations_d.count(x)] for x in set(n_mutations_d)]
+    mutation_counts_c = [[x,n_mutations_c.count(x)] for x in set(n_mutations_c)]
 
     summary = summarize(results, results_alltrees)
 
@@ -216,26 +276,20 @@ def main(*args):
     print(str(summary[2]) + " were discordant\n" + str(summary[3]-summary[2]) + " were concordant\n")
 
     odds, pval = fishers_exact(summary)
-    print("Fisher's Exact Test:")
     print("Odds ratio: " + str(odds))
     print("P-val: " + str(pval))
 
-
-    focaltrees = seqtools.parse_seqgen("focaltrees.tmp", len(taxalist))
-    n_mutations = []
-    #print('Tree', '# of mutations')
- 
-    for index, tree in enumerate(focaltrees):
-	    n_mutations.append(seqtools.count_mutations(tree, len(taxalist)))
-    
-    mutation_counts = [[x,n_mutations.count(x)] for x in set(n_mutations)]
-
-    print("\n# Mutations\t# Trees")
-    for item in  mutation_counts:
+    print("\nOn concorant trees:")
+    print("# Mutations\t# Trees")
+    for item in  mutation_counts_c:
         print(str(item[0]) + '\t\t' + str(item[1]))
-
-
-    #os.system("rm focaltrees.tmp")
+    print("\nOn discordant trees:")
+    print("# Mutations\t# Trees")
+    for item in  mutation_counts_d:
+        print(str(item[0]) + '\t\t' + str(item[1]))
+    
+    log.debug("Plotting...")
+    plot_mutations(mutation_counts_c, mutation_counts_d)
     end = time.time()
     print("\nTime elapsed: " + str(end - start) + " seconds")
 

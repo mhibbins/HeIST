@@ -10,6 +10,8 @@ import re
 import multiprocessing as mp
 
 resultss = 0
+disc = []
+conc = []
 
 def grouper(iterable, n, fillvalue=None):
     """
@@ -104,6 +106,7 @@ def getTrees(treefile, matchlist):
             trees_dont_follow.append(tree)
     return(focal_trees, trees_dont_follow)
 
+
 def _bitstrs(tree):
     bitstrs = set()
     term_names = [term.name for term in tree.get_terminals()]
@@ -179,12 +182,12 @@ def propDiscordant(focal_trees, species_tree):
     except:
         return(countDis, len(focal_trees), 0.0)
 
-def call(species_tree, tree, spp_sisters):
+def call(species_tree, tree, spp_sisters, i):
     """Function to make parallel calling easier"""
     if not compareToSpecies(species_tree, tree,spp_sisters):
-        return(1)
+        return([1, i])
     else:
-        return(0)
+        return([0, i])
 
 def propDiscordant_par(focal_trees, species_tree):
     """
@@ -216,32 +219,46 @@ def propDiscordant_async(focal_trees, species_tree):
     species tree) which are discordant (i.e. have a different topology)
     """
     global resultss
+    global disc
+    global conc
     pool = mp.Pool(mp.cpu_count())
     i = 0
     countDis = 0
     spp_sisters = getSisters(species_tree,'s')
     #print(spp_sisters)
-    for tree in focal_trees:
-        pool.apply_async(call, args=(species_tree, tree, spp_sisters),  callback=collect_result)
+    for i, tree in enumerate(focal_trees):
+        pool.apply_async(call, args=(species_tree, tree, spp_sisters, i),  callback=collect_result)
     
     pool.close()
     pool.join()
 
     countDis = resultss
+    d = disc
+    c = conc
     
     try:
         resultss = 0
-        return(countDis, len(focal_trees), countDis/len(focal_trees))
+        disc = []
+        conc = []
+        return([countDis, len(focal_trees), countDis/len(focal_trees)], d, c)
     except:
         resultss = 0
-        return(countDis, len(focal_trees), 0.0)
+        disc = []
+        conc = []
+        return([countDis, len(focal_trees), 0.0], d, c)
 
 def collect_result(result):
     """Callback function for asynchronous pooling"""
     global resultss
-    resultss += result
+    global disc
+    global conc
+    if result[0] == 1:
+        disc.append(result[1])
+    elif result[0] == 0:
+        conc.append(result[1])
+    resultss += result[0]
 
-def parse_seqgen(seqfile, ntaxa):
+def parse_seqgen(seqfile, ntaxa, mask):
     '''
     Parses seq-gen file. Returns a list of ordered 
     taxon-allele pairs for each tree.   
@@ -257,7 +274,7 @@ def parse_seqgen(seqfile, ntaxa):
 	
     trees = [lines[i:i+(ntaxa*2)-1] for i in range(0, len(lines), (ntaxa*2)-1)] #splits into gene trees
 
-    return trees	
+    return [trees[i] for i in mask]
 
 def count_mutations(tree, ntaxa):
     '''
