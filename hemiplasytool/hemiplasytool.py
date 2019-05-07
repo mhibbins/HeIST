@@ -247,9 +247,18 @@ def main(*args):
         log.debug("Calculating discordance...")
         results[i], disc, conc = seqtools.propDiscordant_async(focal_trees, speciesTree)
         #TODO: Add catch here. If # that follow is very low, restart loop with higher value for n
+        print(conc)
+        print(disc)
+
+        #Write concordant trees out
+        focal_trees_conc_tmp = open("focal_trees_conc.tmp", 'w')
+        for i in conc:
+            focal_trees_conc_tmp.write(focal_trees[i] + '\n')
+        focal_trees_conc_tmp.close()
 
         log.debug("Calculating discordance...")
         results_alltrees[i], _, _ = seqtools.propDiscordant_async(all_trees, speciesTree)
+        
         focaltrees_d = seqtools.parse_seqgen("focaltrees.tmp", len(taxalist), disc)
         focaltrees_c = seqtools.parse_seqgen("focaltrees.tmp", len(taxalist), conc)
     
@@ -259,9 +268,10 @@ def main(*args):
 	        n_mutations_c.append(seqtools.count_mutations(tree, len(taxalist)))
         
         #Clean up temporary files from this batch
-        cleanup()
+        #cleanup()
         
-    
+    print(n_mutations_c)
+    print(n_mutations_d)
     mutation_counts_d = [[x,n_mutations_d.count(x)] for x in set(n_mutations_d)]
     mutation_counts_c = [[x,n_mutations_c.count(x)] for x in set(n_mutations_c)]
 

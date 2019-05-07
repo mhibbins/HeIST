@@ -184,7 +184,7 @@ def propDiscordant(focal_trees, species_tree):
 
 def call(species_tree, tree, spp_sisters, i):
     """Function to make parallel calling easier"""
-    if not compareToSpecies(species_tree, tree,spp_sisters):
+    if compareToSpecies(species_tree, tree,spp_sisters) == False:
         return([1, i])
     else:
         return([0, i])
@@ -222,7 +222,6 @@ def propDiscordant_async(focal_trees, species_tree):
     global disc_g
     global conc_g
     pool = mp.Pool(mp.cpu_count())
-    i = 0
     countDis = 0
     spp_sisters = getSisters(species_tree,'s')
     #print(spp_sisters)
@@ -233,18 +232,18 @@ def propDiscordant_async(focal_trees, species_tree):
     pool.join()
 
     countDis = resultss
-    d = disc
-    c = conc
+    d = disc_g
+    c = conc_g
     
     try:
         resultss = 0
-        disc = []
-        conc = []
+        disc_g = []
+        conc_g = []
         return([countDis, len(focal_trees), countDis/len(focal_trees)], d, c)
     except:
         resultss = 0
-        disc = []
-        conc = []
+        disc_g = []
+        conc_g = []
         return([countDis, len(focal_trees), 0.0], d, c)
 
 def collect_result(result):
@@ -253,9 +252,9 @@ def collect_result(result):
     global disc_g
     global conc_g
     if result[0] == 1:
-        disc.append(result[1])
+        disc_g.append(result[1])
     elif result[0] == 0:
-        conc.append(result[1])
+        conc_g.append(result[1])
     resultss += result[0]
 
 def parse_seqgen(seqfile, ntaxa, mask):
@@ -273,7 +272,6 @@ def parse_seqgen(seqfile, ntaxa, mask):
     lines = [lines[i].replace('\t', ' ') for i in range(len(lines))] #replaces tabs with space
 	
     trees = [lines[i:i+(ntaxa*2)-1] for i in range(0, len(lines), (ntaxa*2)-1)] #splits into gene trees
-
     return [trees[i] for i in mask]
 
 def count_mutations(tree, ntaxa):
