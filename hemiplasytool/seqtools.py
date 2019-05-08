@@ -10,8 +10,8 @@ import re
 import multiprocessing as mp
 
 resultss = 0
-disc_g = []
-conc_g = []
+#disc_g = []
+#conc_g = []
 
 def grouper(iterable, n, fillvalue=None):
     """
@@ -147,22 +147,6 @@ def compareToSpecies(tree1, tree2, spp_sisters):
     else:
         return(False)
 
-"""
-Depricated
-def compareToSpecies(speciesTree, geneTree):
-
-    speciesTree = Tree(speciesTree)
-    geneTree = Tree(geneTree)
-    print(speciesTree)
-    print(geneTree)
-    r = speciesTree.compare(geneTree, unrooted=False)['rf']
-    print(r)
-    if r == 0.0:
-        return(True)
-    else:
-        #print(geneTree)
-        return(False)
-"""
 
 def propDiscordant(focal_trees, species_tree):
     """
@@ -172,15 +156,21 @@ def propDiscordant(focal_trees, species_tree):
     """
     i = 0
     countDis = 0
+    disc_g = []
+    conc_g = []
+
     spp_sisters = getSisters(species_tree,'s')
-    for tree in focal_trees:
-        if not compareToSpecies(species_tree, tree, spp_sisters):
+    for i, tree in enumerate(focal_trees):
+        r = call(species_tree, tree, spp_sisters, i)
+        if r[0] == 1:
+            disc_g.append(r[1])
             countDis += 1
-        i += 1
+        elif r[0] == 0:
+            conc_g.append(r[1])
     try:
-        return(countDis, len(focal_trees), countDis/len(focal_trees))
+        return([countDis, len(focal_trees), countDis/len(focal_trees)], disc_g, conc_g)
     except:
-        return(countDis, len(focal_trees), 0.0)
+        return([countDis, len(focal_trees), 0.0], disc_g, conc_g)
 
 def call(species_tree, tree, spp_sisters, i):
     """Function to make parallel calling easier"""
@@ -188,29 +178,6 @@ def call(species_tree, tree, spp_sisters, i):
         return([1, i])
     else:
         return([0, i])
-
-def propDiscordant_par(focal_trees, species_tree):
-    """
-    Synchronous pooling
-    Determines the proportion of focal_trees (which have the same site pattern as the
-    species tree) which are discordant (i.e. have a different topology)
-    """
-
-    pool = mp.Pool(mp.cpu_count())
-    i = 0
-    countDis = 0
-    spp_sisters = getSisters(species_tree,'s')
-    
-    results = [pool.apply(call, args = (species_tree, tree, spp_sisters)) for tree in focal_trees]
-    pool.close()
-
-    countDis = sum(results)
-    #print(results)
-
-    try:
-        return(countDis, len(focal_trees), countDis/len(focal_trees))
-    except:
-        return(countDis, len(focal_trees), 0.0)
 
 def propDiscordant_async(focal_trees, species_tree):
     """
