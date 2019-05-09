@@ -213,7 +213,7 @@ def main(*args):
     seqgencall = seq_gen_call('trees.tmp', args.seqgenpath, args.mutationrate)
 
     log.debug(ms_call)
-    log.debug(seq_gen_call)
+    log.debug(seqgencall)
 
 
     taxalist = []
@@ -229,13 +229,13 @@ def main(*args):
         call_programs(ms_call, seqgencall, 'trees.tmp', taxalist)
 
         #Gets indices of trees with site patterns that match speecies pattern
-        match_species_pattern = seqtools.readSeqs("seqs.tmp",len(taxalist), traits, len(splits))
+        log.debug("Extracting trees that match species trait pattern...")
+        match_species_pattern = seqtools.readSeqs("seqs.tmp",len(taxalist), traits, len(splits), i)
         #print(match_species_pattern)
 
         #Gets the trees at these indices
-        focal_trees, all_trees = seqtools.getTrees('trees.tmp', match_species_pattern)
+        focal_trees, _ = seqtools.getTrees('trees.tmp', match_species_pattern)
 
-        assert len(match_species_pattern) > 0, "Not enough replicates for this topology. Increase -n"
 
         #Out of those trees which follow the species site pattern, get the number
         #of trees which are discordant.
@@ -248,8 +248,8 @@ def main(*args):
         #log.debug("Calculating discordance...")
         #results_alltrees[i], _, _ = seqtools.propDiscordant_async(all_trees, speciesTree)
         
-        focaltrees_d = seqtools.parse_seqgen("focaltrees.tmp", len(taxalist), disc)
-        focaltrees_c = seqtools.parse_seqgen("focaltrees.tmp", len(taxalist), conc)
+        focaltrees_d = seqtools.parse_seqgen("focaltrees" + str(i) + ".tmp", len(taxalist), disc)
+        focaltrees_c = seqtools.parse_seqgen("focaltrees" + str(i) + ".tmp", len(taxalist), conc)
         
         ones = []
         twos = []

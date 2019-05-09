@@ -43,7 +43,7 @@ def checkEqual(lst):
     """
     return(lst[1:] == lst[:-1])
 
-def readSeqs(seqs, ntaxa, speciesPattern, nodes):
+def readSeqs(seqs, ntaxa, speciesPattern, nodes, batch):
     """
     Reads in sequences, determines if gene tree site pattern matches species tree
     site pattern. Returns indices of those which do.
@@ -53,9 +53,8 @@ def readSeqs(seqs, ntaxa, speciesPattern, nodes):
     shouldMatch1 = c['0']
     shouldMatch2 = c['1']
 
-    tmpFocal = open("focaltrees.tmp",'w')
-    #print(shouldMatch1)
-    #print(shouldMatch2)
+    
+    tmpFocal = open('focaltrees' + str(batch) + '.tmp', 'w')
 
     index = 0
     with open(seqs, 'rU') as f:
@@ -106,7 +105,6 @@ def getTrees(treefile, matchlist):
             trees_dont_follow.append(tree)
     return(focal_trees, trees_dont_follow)
 
-
 def _bitstrs(tree):
     bitstrs = set()
     term_names = [term.name for term in tree.get_terminals()]
@@ -146,7 +144,6 @@ def compareToSpecies(tree1, tree2, spp_sisters):
         return(True)
     else:
         return(False)
-
 
 def propDiscordant(focal_trees, species_tree):
     """
