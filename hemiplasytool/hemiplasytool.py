@@ -53,6 +53,7 @@ def read_tree(file):
 def splits_to_ms(splitTimes, taxa, reps, sampleTimes, path_to_ms):
     """
     Converts inputs into a call to ms
+    TODO: Add introgression
     """
     nsamples = len(splitTimes)+1
     call = path_to_ms + ' ' + str(nsamples) + ' ' + str(reps) + ' -T -I ' + str(nsamples) + ' '
@@ -61,21 +62,12 @@ def splits_to_ms(splitTimes, taxa, reps, sampleTimes, path_to_ms):
     for x, split in enumerate(splitTimes):
         call += '-ej ' + str(split) + ' ' + str(taxa[x][0]) + ' ' + str(taxa[x][1]) + ' '
 
-    """
-    for time in sampleTimes.values():
-        if time != '0':
-            for taxa, time in sampleTimes.items():
-                if (float(time) > 0):
-                    call += '-eA ' + time + ' ' + taxa + ' 1 '
-        break
-    """
-
     call += "| tail -n +4 | grep -v // > trees.tmp"
     return(call)
 
 def seq_gen_call(treefile, path, s=0.05):
     """
-    Make seq-gen call. TODO: Add option to change seq-gen parameters.
+    Make seq-gen call.
     """
     return(path + ' -m HKY -l 1 -s ' + str(s) + ' -wa <"' + treefile + '" > seqs.tmp')
 
@@ -134,9 +126,13 @@ def summarize(results):
     return([c_disc_follow, c_conc_follow])
 
 def write_output(result1, result2, outfile):
+    """TODO"""
     return(0)
 
 def plot_mutations(results_c, results_d):
+    """
+    Plot mutation distribution with matplotlib
+    """
     objs_c = [i[0] for i in results_c]
     objs_d = [i[0] for i in results_d]
     conc_dic = {}
@@ -217,6 +213,8 @@ def main(*args):
     seqgencall = seq_gen_call('trees.tmp', args.seqgenpath, args.mutationrate)
 
     log.debug(ms_call)
+    log.debug(seq_gen_call)
+
 
     taxalist = []
     for s in sample_times.keys():
@@ -236,6 +234,8 @@ def main(*args):
 
         #Gets the trees at these indices
         focal_trees, all_trees = seqtools.getTrees('trees.tmp', match_species_pattern)
+
+        assert len(match_species_pattern) > 0, "Not enough replicates for this topology. Increase -n"
 
         #Out of those trees which follow the species site pattern, get the number
         #of trees which are discordant.
