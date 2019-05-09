@@ -13,44 +13,8 @@ import time
 import matplotlib.pyplot as plt
 import numpy as np
 
-def read_splits(file):
-    """
-    Splits file should have three values per line: Timing of split (4N gens) \t Source pop \t Dest pop.
-    Splits should be ordered oldest to most recent.
-    """
-    log.debug("Reading splits...")
-    input1 = open(file, 'r')
-    splits = []
-    taxa = []
-    for i, line in enumerate(input1):
-        l = line.replace("\n", "").split()
-        splits.append(float(l[0]))
-        taxa.append((int(l[1]), int(l[2])))
-    input1.close()
-    return(splits, taxa)
 
-def read_traits(file):
-    """
-    Traits file should have three values per line: Taxa # \t Binary trait value (0 or 1) \t Timing of sampling, if tree is non-ultrametric, relative to longest terminal branch. 
-    The longest terminal branch should have a value of 0. If species tree is ultrametric, please specify all 0s in the third column.
-    """
-    log.debug("Reading traits...")
-    input1 = open(file, 'r')
-    traits = {}
-    sample_times = {}
-    for i, line in enumerate(input1):
-        l = line.replace('\n','').split()
-        traits[l[0]] = l[1]
-        sample_times[l[0]] = l[2]
-    return(traits, sample_times)
-
-def read_tree(file):
-    """Reads in the species tree (in Newick format, no branch lengths)"""
-    log.debug("Reading tree...")
-    with open(file) as f:
-        return(f.readline().replace('\n',''))
-
-def splits_to_ms(splitTimes, taxa, reps, sampleTimes, path_to_ms):
+def splits_to_ms(splitTimes, taxa, reps, path_to_ms):
     """
     Converts inputs into a call to ms
     TODO: Add introgression
@@ -175,13 +139,40 @@ def fishers_exact(counts):
     """Scipy fishers exact test"""
     return(fisher_exact([[counts[0], (counts[1]-counts[0])],[counts[2], (counts[3]-counts[2])]]))
 
+
+def readInput(file):
+    f = open(file, 'r')
+    splits = []
+    taxa = []
+    traits = {}
+
+    cnt = 0
+    for i, line in enumerate(f):
+        if line.startswith("#"):
+            cnt += 1
+            continue
+        if len(line) <= 1:
+            continue
+        
+        elif cnt == 1:
+            l = line.replace("\n", "").split()
+            splits.append(float(l[0]))
+            taxa.append((int(l[1]), int(l[2])))
+        
+        elif cnt == 2:
+            l = line.replace("\n", "").split()
+            traits[l[0]] = l[1]
+        
+        elif cnt == 3:
+            tree = line.replace("\n","")
+    return(splits, taxa, traits, tree)
+
+    
 def main(*args):
     start = time.time()
     parser = argparse.ArgumentParser(description="Calculate the probability that convergent trait patterns are due to hemiplasy")
     parser.add_argument("-v", "--verbose", help="Enable debugging messages to be displayed", action='store_true')
-    parser.add_argument("splittimes", metavar='splits', help="Split times file, ordered from oldest to newest. In units of 4N generations.")
-    parser.add_argument("traits", metavar='traits', help="Traits file")
-    parser.add_argument("speciestree", metavar="tree", help="Species topology in Newick format on one line.")
+    parser.add_argument("input", metavar='splits', help="Input file describing split times, trait pattern, and topology")
     parser.add_argument("-n","--replicates", metavar="", help="Number of replicates per batch", default=1000000)
     parser.add_argument("-x","--batches", metavar="", help="Number of batches", default=3)
     parser.add_argument("-p","--mspath", metavar="", help="Path to ms", default="./msdir")
@@ -202,14 +193,14 @@ def main(*args):
     mpl_logger.setLevel(log.WARNING) 
 
 
-    #read input files
-    splits, taxa = read_splits(args.splittimes)
-    traits, sample_times = read_traits(args.traits)
+    #read input file
+    log.debug("Reading input file...")
+    splits, taxa, traits, speciesTree = readInput(args.input)
+
     batches = int(args.batches)
-    speciesTree = read_tree(args.speciestree)
 
     #Make program calls
-    ms_call = splits_to_ms(splits, taxa, args.replicates, sample_times, args.mspath)
+    ms_call = splits_to_ms(splits, taxa, args.replicates, args.mspath)
     seqgencall = seq_gen_call('trees.tmp', args.seqgenpath, args.mutationrate)
 
     log.debug(ms_call)
@@ -217,7 +208,7 @@ def main(*args):
 
 
     taxalist = []
-    for s in sample_times.keys():
+    for s in traits.keys():
         taxalist.append(int(s))
 
     results = {}
