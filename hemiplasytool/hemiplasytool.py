@@ -8,7 +8,6 @@ import sys
 import os
 import logging as log
 import seqtools
-from scipy.stats import fisher_exact
 import time
 import matplotlib.pyplot as plt
 import numpy as np
@@ -135,9 +134,9 @@ def plot_mutations(results_c, results_d):
     ax.legend((p1[0], p2[0]), ('Concordant trees', 'Discordant trees'))
     plt.savefig('mutation_dist.png', dpi=250)
     
-def fishers_exact(counts):
-    """Scipy fishers exact test"""
-    return(fisher_exact([[counts[0], (counts[1]-counts[0])],[counts[2], (counts[3]-counts[2])]]))
+#def fishers_exact(counts):
+#    """Scipy fishers exact test"""
+#    return(fisher_exact([[counts[0], (counts[1]-counts[0])],[counts[2], (counts[3]-counts[2])]]))
 
 
 def readInput(file):
