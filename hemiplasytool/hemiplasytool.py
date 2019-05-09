@@ -124,19 +124,14 @@ def cleanup():
     os.system("rm seqs.tmp")
     os.system("rm focaltrees.tmp")
 
-def summarize(results, alltrees):
+def summarize(results):
     """Summarizes simulations from multiple batches"""
     c_disc_follow = 0
     c_conc_follow = 0
-    c_disc_others = 0
-    c_conc_others = 0
     for key, val in results.items():
         c_disc_follow += val[0]
         c_conc_follow += val[1]
-    for key, val in alltrees.items():
-        c_disc_others += val[0]
-        c_conc_others += val[1]
-    return([c_disc_follow, c_conc_follow, c_disc_others, c_conc_others])
+    return([c_disc_follow, c_conc_follow])
 
 def write_output(result1, result2, outfile):
     return(0)
@@ -245,27 +240,30 @@ def main(*args):
         #Out of those trees which follow the species site pattern, get the number
         #of trees which are discordant.
         log.debug("Calculating discordance...")
-        results[i], disc, conc = seqtools.propDiscordant_async(focal_trees, speciesTree)
+        results[i], disc, conc = seqtools.propDiscordant(focal_trees, speciesTree)
         #TODO: Add catch here. If # that follow is very low, restart loop with higher value for n
         print(conc)
         print(disc)
 
-        #Write concordant trees out
-        focal_trees_conc_tmp = open("focal_trees_conc.tmp", 'w')
-        for i in conc:
-            focal_trees_conc_tmp.write(focal_trees[i] + '\n')
-        focal_trees_conc_tmp.close()
-
-        log.debug("Calculating discordance...")
-        results_alltrees[i], _, _ = seqtools.propDiscordant_async(all_trees, speciesTree)
+        #log.debug("Calculating discordance...")
+        #results_alltrees[i], _, _ = seqtools.propDiscordant_async(all_trees, speciesTree)
         
         focaltrees_d = seqtools.parse_seqgen("focaltrees.tmp", len(taxalist), disc)
         focaltrees_c = seqtools.parse_seqgen("focaltrees.tmp", len(taxalist), conc)
-    
+        
+        ones = []
+        twos = []
+
         for index, tree in enumerate(focaltrees_d):
 	        n_mutations_d.append(seqtools.count_mutations(tree, len(taxalist)))
         for index, tree in enumerate(focaltrees_c):
-	        n_mutations_c.append(seqtools.count_mutations(tree, len(taxalist)))
+            cnt = seqtools.count_mutations(tree, len(taxalist))
+            if cnt == 1:
+                ones.append(index)
+            elif cnt == 2:
+                twos.append(index)
+
+            n_mutations_c.append(cnt)
         
         #Clean up temporary files from this batch
         #cleanup()
@@ -275,7 +273,7 @@ def main(*args):
     mutation_counts_d = [[x,n_mutations_d.count(x)] for x in set(n_mutations_d)]
     mutation_counts_c = [[x,n_mutations_c.count(x)] for x in set(n_mutations_c)]
 
-    summary = summarize(results, results_alltrees)
+    summary = summarize(results)
 
     print("\n####################RESULTS####################\n###############################################")
 
@@ -283,13 +281,7 @@ def main(*args):
     print(str(summary[0]) + " were discordant\n" + str(summary[1]-summary[0]) + " were concordant\n")
 
 
-    print("Of the replicates that did not follow the species site pattern: ")
-    print(str(summary[2]) + " were discordant\n" + str(summary[3]-summary[2]) + " were concordant\n")
-
-    odds, pval = fishers_exact(summary)
-    print("Odds ratio: " + str(odds))
-    print("P-val: " + str(pval))
-
+  
     print("\nOn concordant trees:")
     print("# Mutations\t# Trees")
     for item in  mutation_counts_c:
