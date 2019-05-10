@@ -3,11 +3,13 @@ Scripts that do the parsing of gene trees and sequences.
 """
 
 from itertools import zip_longest
+from itertools import combinations
 from Bio.Phylo.Consensus import _BitString
 from Bio import Phylo
 import io
 import re
 import multiprocessing as mp
+import operator
 
 resultss = 0
 #disc_g = []
@@ -120,11 +122,51 @@ def rev(sis):
     """Utility function"""
     return((sis[1],sis[0]))
 
-def compareToSpecies(tree1, tree2, spp_sisters):
+def calcDistance(tree):
+    distances = {}
+    for x,y in combinations(tree.get_terminals(), 2):
+        distances[(x.name, y.name)] = round(tree.distance(x,y),2)
+    return(distances)
+
+def judgeDistances(speciesDistances, focalDistances):
+    """
+    Returns true if distances between taxa match up. 
+    """
+    #TODO: These can be calculated prior to calling this function to speed up...
+    sp_d = {v: k for k, v in speciesDistances.items()}
+    sp = {v: k for k, v in sp_d.items()}
+    
+    #This is the dictionary containing unique distances. They establish the rules
+    #for coales times
+    sorted_spdis = sorted(sp.items(), key=operator.itemgetter(1))[::-1]
+    
+    focal = {}
+    for key, val in focalDistances.items():
+        if (key in sp.keys()) or (rev(key) in sp.keys()):
+            focal[key] =val
+    focal = sorted(focal.items(), key=operator.itemgetter(1))[::-1]
+
+    print(sorted_spdis)
+    print(focal)
+
+    for i in range(0, len(sorted_spdis)):
+        spp = sorted_spdis[i][0]
+        gene = focal[i][0]
+        print(spp, gene)
+        if (spp == gene) or (rev(spp) == gene) or (spp == rev(gene)) or (rev(spp) == rev(gene)):
+            continue
+        else:
+            return(False)
+    return(True)
+
+    #Now need to check that 
+
+def compareToSpecies(tree1, tree2, spp_sisters, species_distances):
     """Compares tree topologies. Will first check if sister taxa in the species tree are also sister 
     in the gene tree, returning false at the first non-shared occurence. If all sister taxa are present,
     it will calculate a bitstring distance with Biopython Phylo."""
     sisters = getSisters(tree2)
+    top = bool
     for s in sisters:
         if (s not in spp_sisters) and (rev(s) not in spp_sisters):
             return(False)
@@ -138,12 +180,21 @@ def compareToSpecies(tree1, tree2, spp_sisters):
     term_names2 = [term.name for term in tree2.get_terminals()]
     # false if terminals are not the same
     if set(term_names1) != set(term_names2):
-        return(False)
+        top = False
     # true if _BitStrings are the same
     if _bitstrs(tree1) == _bitstrs(tree2):
+        top = True
+    else:
+        top = False
+
+    distances = calcDistance(tree2)
+    dists = bool
+    #print(species_distances)
+    if judgeDistances(species_distances, distances) and (top == True):
         return(True)
     else:
         return(False)
+
 
 def propDiscordant(focal_trees, species_tree):
     """
@@ -156,9 +207,11 @@ def propDiscordant(focal_trees, species_tree):
     disc_g = []
     conc_g = []
 
-    spp_sisters = getSisters(species_tree,'s')
+    speciesDistances = calcDistance(Phylo.read(io.StringIO(species_tree), "newick"))
+
+    spp_sisters = getSisters(species_tree,'g')
     for i, tree in enumerate(focal_trees):
-        r = call(species_tree, tree, spp_sisters, i)
+        r = call(species_tree, tree, spp_sisters, i, speciesDistances)
         if r[0] == 1:
             disc_g.append(r[1])
             countDis += 1
@@ -169,9 +222,9 @@ def propDiscordant(focal_trees, species_tree):
     except:
         return([countDis, len(focal_trees), 0.0], disc_g, conc_g)
 
-def call(species_tree, tree, spp_sisters, i):
+def call(species_tree, tree, spp_sisters, i, species_distances):
     """Function to make parallel calling easier"""
-    if compareToSpecies(species_tree, tree,spp_sisters) == False:
+    if compareToSpecies(species_tree, tree,spp_sisters, species_distances) == False:
         return([1, i])
     else:
         return([0, i])
