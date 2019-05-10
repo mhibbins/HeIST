@@ -38,14 +38,14 @@ optional arguments:
 The input file has three sections:  split times, traits, and species tree. They must be specified in this order and delimited by a '#'. See below for descriptions of each section
 
 ```
-#Split times
+#splits
 6   2   1
 3   3   2
 1.5 5   3
 1.25    6   5
 1   4   3
 
-#Traits
+#traits
 1   0 
 2   1
 3   0
@@ -53,8 +53,8 @@ The input file has three sections:  split times, traits, and species tree. They 
 5   0
 6   1
 
-#Species tree
-(1,(2,((6,5),(4,3))));
+#tree
+(1:6.000,(2:3.000,((6:1.250,5:1.250):0.250,(4:1.000,3:1.000):0.500):1.500):3.000);
 
 ```
 
@@ -81,23 +81,24 @@ python hemiplasytool/hemiplasytool.py -v -n 1000000 -p ~/bin/ms -g ~/bin/seq-gen
 ### Output:
 ```
 Of the replicates that follow species site pattern:
-12 were discordant
-11 were concordant
+39 were discordant
+14 were concordant
 
 
 On concordant trees:
 # Mutations	# Trees
-2		1
-3		10
+3		14
 
 On discordant trees:
 # Mutations	# Trees
-2		2
-3		9
-4		1
+1		1
+2		8
+3		25
+4		4
+5		1
 DEBUG:root:Plotting...
 
-Time elapsed: 4.960004091262817 seconds
+Time elapsed: 9.448280096054077 seconds
 ```
 
 ![Mutation distribution](mutation_dist.png)
