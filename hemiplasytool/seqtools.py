@@ -56,14 +56,13 @@ def readSeqs(seqs, ntaxa, speciesPattern, nodes, batch):
     shouldMatch2 = c['1']
 
     
-    tmpFocal = open('focaltrees' + str(batch) + '.tmp', 'w')
+    tmpFocal = open('focaltrees.tmp', 'w')
 
     index = 0
     with open(seqs, 'rU') as f:
         for lines in grouper(f, ntaxa+nodes+1, ''):
             assert len(lines) == ntaxa+nodes+1
             pattern = {}
-            index += 1
             for x, line in enumerate(lines):
                 if x != 0:
                     l = line.replace('\n', '').split()
@@ -84,6 +83,7 @@ def readSeqs(seqs, ntaxa, speciesPattern, nodes, batch):
                         indices.append(index)
                         for y in lines:
                             tmpFocal.write(y)
+            index += 1
     tmpFocal.close()
     return(indices)
                     
@@ -146,13 +146,13 @@ def judgeDistances(speciesDistances, focalDistances):
             focal[key] =val
     focal = sorted(focal.items(), key=operator.itemgetter(1))[::-1]
 
-    print(sorted_spdis)
-    print(focal)
+    #print(sorted_spdis)
+    #print(focal)
 
     for i in range(0, len(sorted_spdis)):
         spp = sorted_spdis[i][0]
         gene = focal[i][0]
-        print(spp, gene)
+        #print(spp, gene)
         if (spp == gene) or (rev(spp) == gene) or (spp == rev(gene)) or (rev(spp) == rev(gene)):
             continue
         else:
@@ -173,7 +173,7 @@ def compareToSpecies(tree1, tree2, spp_sisters, species_distances):
     
     tree1 = tree1.replace(";", '')
     tree2 = tree2.replace(';', '')
- 
+    treetwo = tree2
     tree1 = Phylo.read(io.StringIO(tree1), "newick")
     tree2 = Phylo.read(io.StringIO(tree2), "newick")
     term_names1 = [term.name for term in tree1.get_terminals()]
@@ -188,7 +188,6 @@ def compareToSpecies(tree1, tree2, spp_sisters, species_distances):
         top = False
 
     distances = calcDistance(tree2)
-    dists = bool
     #print(species_distances)
     if judgeDistances(species_distances, distances) and (top == True):
         return(True)
@@ -263,16 +262,22 @@ def propDiscordant_async(focal_trees, species_tree):
         conc_g = []
         return([countDis, len(focal_trees), 0.0], d, c)
 
-def collect_result(result):
-    """Callback function for asynchronous pooling"""
-    global resultss
-    global disc_g
-    global conc_g
-    if result[0] == 1:
-        disc_g.append(result[1])
-    elif result[0] == 0:
-        conc_g.append(result[1])
-    resultss += result[0]
+def parse_seqgen2(seqfile, ntaxa, nodes, mask):
+
+    out = []
+    cnt = 0
+    with open(seqfile, 'rU') as f:
+        for lines in grouper(f, ntaxa+nodes+1, ''):
+            seq = []
+            for x, line in enumerate(lines):
+                if x != 0:
+                    l = line.replace('\n', '').split()
+                    seq.append(l[0] + ' ' + l[1])
+            if cnt in mask:
+                out.append(seq)
+            cnt += 1
+            #print(seq)
+    return out
 
 def parse_seqgen(seqfile, ntaxa, mask):
     '''
@@ -280,7 +285,7 @@ def parse_seqgen(seqfile, ntaxa, mask):
     taxon-allele pairs for each tree.   
     '''
     lines = []
-
+    
     with open(seqfile) as seqs:
         for line in seqs:
             if re.match(r'\w', line): #if line starts with character

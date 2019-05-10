@@ -221,45 +221,36 @@ def main(*args):
         #Gets indices of trees with site patterns that match speecies pattern
         log.debug("Extracting trees that match species trait pattern...")
         match_species_pattern = seqtools.readSeqs("seqs.tmp",len(taxalist), traits, len(splits), i)
-        #print(match_species_pattern)
 
         #Gets the trees at these indices
         focal_trees, _ = seqtools.getTrees('trees.tmp', match_species_pattern)
 
+        assert len(match_species_pattern) == len(focal_trees)
+        out3 = open('focal_newick.tmp', 'w')
+        for z in focal_trees:
+            out3.write(z + '\n')
+        out3.close()
 
         #Out of those trees which follow the species site pattern, get the number
         #of trees which are discordant.
         log.debug("Calculating discordance...")
         results[i], disc, conc = seqtools.propDiscordant(focal_trees, speciesTree)
         #TODO: Add catch here. If # that follow is very low, restart loop with higher value for n
-        print(conc)
-        print(disc)
 
         #log.debug("Calculating discordance...")
         #results_alltrees[i], _, _ = seqtools.propDiscordant_async(all_trees, speciesTree)
         
-        focaltrees_d = seqtools.parse_seqgen("focaltrees" + str(i) + ".tmp", len(taxalist), disc)
-        focaltrees_c = seqtools.parse_seqgen("focaltrees" + str(i) + ".tmp", len(taxalist), conc)
-        
-        ones = []
-        twos = []
+        focaltrees_d = seqtools.parse_seqgen("focaltrees.tmp", len(taxalist), disc)
+        focaltrees_c = seqtools.parse_seqgen("focaltrees.tmp", len(taxalist), conc)
 
         for index, tree in enumerate(focaltrees_d):
 	        n_mutations_d.append(seqtools.count_mutations(tree, len(taxalist)))
         for index, tree in enumerate(focaltrees_c):
-            cnt = seqtools.count_mutations(tree, len(taxalist))
-            if cnt == 1:
-                ones.append(index)
-            elif cnt == 2:
-                twos.append(index)
-
-            n_mutations_c.append(cnt)
+            n_mutations_c.append(seqtools.count_mutations(tree, len(taxalist)))
         
         #Clean up temporary files from this batch
-        #cleanup()
+        cleanup()
         
-    print(n_mutations_c)
-    print(n_mutations_d)
     mutation_counts_d = [[x,n_mutations_d.count(x)] for x in set(n_mutations_d)]
     mutation_counts_c = [[x,n_mutations_c.count(x)] for x in set(n_mutations_c)]
 
