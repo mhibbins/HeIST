@@ -316,21 +316,21 @@ def count_mutations(tree, ntaxa):
                         comparisons.append([labels[i], labels[i-1]])
                     else:
                         comparisons.append([labels[i], labels[i-1]])
-            elif labels[i] > root and labels[i-2] >= root and labels[i] == labels[i-2] + 1: #if the current label is an ancestral node, and the previous ancestral node has 1 taxon descending from it
+            if labels[i] > root and labels[i-2] >= root and labels[i] == labels[i-2] + 1: #if the current label is an ancestral node, and the previous ancestral node has 1 taxon descending from it
                 if [labels[i], labels[i-2]] not in comparisons: #if this comparison between nodes has not already been made 
                     if alleles[i] != alleles[i-2]: #if there was a mutation 
                         mutations += 1
                         comparisons.append([labels[i], labels[i-2]])
                     else:
                       comparisons.append([labels[i], labels[i-2]])
-            elif labels[i] > root and labels[i-3] >= root and labels[i] == labels[i-3] + 1: #if the current label is an ancestral node, and the previous ancestral node has 2 taxa descending from it
+            if labels[i] > root and labels[i-3] >= root and labels[i] == labels[i-3] + 1: #if the current label is an ancestral node, and the previous ancestral node has 2 taxa descending from it
                 if [labels[i], labels[i-3]] not in comparisons: #if this comparison between nodes has not already been made 
                     if alleles[i] != alleles[i-3]: #if there was a mutation 
                         mutations += 1
                         comparisons.append([labels[i], labels[i-3]])
                     else:
                       comparisons.append([labels[i], labels[i-3]])
-            elif labels[i] > root and labels[i-4] >= root and labels[i] == labels[i-4] + 2: #if the current label is an ancestral node, and a clade with a non-subtending ancestral node is listed before it
+            if labels[i] > root and labels[i-4] >= root and labels[i] == labels[i-4] + 2: #if the current label is an ancestral node, and a clade with a non-subtending ancestral node is listed before it
                 if [labels[i], labels[i-4]] not in comparisons: #if this comparison between nodes has not already been made 
                     if alleles[i] != alleles[i-4]: #if there was a mutation 
                         mutations += 1
@@ -345,6 +345,6 @@ def count_mutations(tree, ntaxa):
                 elif labels[i-2] >= root: #if i-2 is the subtending node
                     if alleles[i] != alleles[i-2]: #if there was a mutation
                         mutations += 1  
-        current_taxon += 1 #update current taxon
+                current_taxon += 1 #update current taxon
               
     return mutations
