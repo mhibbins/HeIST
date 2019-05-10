@@ -13,24 +13,23 @@ Mark Hibbins (mhibbins@indiana.edu)
 
 ## Usage
 ```
-usage: hemiplasytool.py [-h] [-v] [-n] [-x] [-p] [-g] [-o] splits traits tree
+usage: hemiplasytool.py [-h] [-v] [-n] [-x] [-p] [-g] [-s] [-o] splits
 
 Calculate the probability that convergent trait patterns are due to hemiplasy
 
 positional arguments:
-  splits              Split times file, ordered from oldest to newest. In
-                      units of 4N generations.
-  traits              Traits file
-  tree                Species topology in Newick format on one line.
+  splits                Input file describing split times, trait pattern, and
+                        topology
 
 optional arguments:
-  -h, --help          show this help message and exit
-  -v, --verbose       Enable debugging messages to be displayed
-  -n , --replicates   Number of replicates per batch
-  -x , --batches      Number of batches
-  -p , --mspath       Path to ms
-  -g , --seqgenpath   Path to seq-gen
-  -o , --outputdir    Output directory
+  -h, --help            show this help message and exit
+  -v, --verbose         Enable debugging messages to be displayed
+  -n , --replicates     Number of replicates per batch
+  -x , --batches        Number of batches
+  -p , --mspath         Path to ms
+  -g , --seqgenpath     Path to seq-gen
+  -s , --mutationrate   Seq-gen mutation rate (default 0.05)
+  -o , --outputdir      Output directory
 ```
 
 ## Input file
