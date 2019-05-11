@@ -11,9 +11,23 @@ Mark Hibbins (mhibbins@indiana.edu)
 * numpy
 
 
+## Installation
+
+### Install from source
+```
+git clone https://github.com/mhibbins/hemiplasytool
+cd hemiplasytool
+python setup.py install
+```
+
+### Install from PyPI
+```
+pip install hemiplasytool
+```
+
 ## Usage
 ```
-usage: hemiplasytool.py [-h] [-v] [-n] [-x] [-p] [-g] [-s] [-o] splits
+usage: hemiplasytool [-h] [-v] [-n] [-x] [-p] [-g] [-s] [-o] splits
 
 Calculate the probability that convergent trait patterns are due to hemiplasy
 
@@ -74,7 +88,7 @@ The species tree in Newick format. Again, taxa IDs must correspond to those in t
 
 ## Example:
 ```
-python hemiplasytool/hemiplasytool.py -v -n 1000000 -p ~/bin/ms -g ~/bin/seq-gen -x 1 ./input_test.txt
+hemiplasytool -v -n 1000000 -p ~/bin/ms -g ~/bin/seq-gen -x 1 ./input_test.txt
 ```
 
 ### Output:
