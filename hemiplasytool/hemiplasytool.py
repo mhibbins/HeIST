@@ -88,9 +88,21 @@ def summarize(results):
         c_conc_follow += val[1]
     return([c_disc_follow, c_conc_follow])
 
-def write_output(result1, result2, outfile):
-    """TODO"""
-    return(0)
+def write_output(summary, mutation_counts_c, mutation_counts_d, filename):
+    out1 = open(filename, 'w')
+
+    out1.write("Of the replicates that follow species site pattern:\n")
+    out1.write(str(summary[0]) + " were discordant\n" + str(summary[1]-summary[0]) + " were concordant\n")
+
+    out1.write("\nOn concordant trees:\n")
+    out1.write("# Mutations\t# Trees\n")
+    for item in  mutation_counts_c:
+        out1.write(str(item[0]) + '\t\t' + str(item[1]) + '\n')
+    out1.write("\nOn discordant trees:\n")
+    out1.write("# Mutations\t# Trees\n")
+    for item in  mutation_counts_d:
+        out1.write(str(item[0]) + '\t\t' + str(item[1]) + '\n')
+    out1.close()
 
 def plot_mutations(results_c, results_d):
     """
@@ -274,6 +286,10 @@ def main(*args):
     
     log.debug("Plotting...")
     plot_mutations(mutation_counts_c, mutation_counts_d)
+
+
+    write_output(summary, mutation_counts_c, mutation_counts_d, args.outputdir)
+
     end = time.time()
     print("\nTime elapsed: " + str(end - start) + " seconds")
 
