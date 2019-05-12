@@ -24,6 +24,7 @@ def main(*args):
     parser.add_argument("-p","--mspath", metavar="", help="Path to ms", default="./msdir")
     parser.add_argument("-g","--seqgenpath", metavar="", help="Path to seq-gen", default="./seq-gen")
     parser.add_argument("-s","--mutationrate", metavar="", help="Seq-gen mutation rate (default 0.05)", default=0.05)
+    parser.add_argument("-d","--delta", metavar="", help="Delta parameter for controlling amount of admixture", default=0.05)
     parser.add_argument("-o","--outputdir", metavar="", help="Output directory")
     args = parser.parse_args()
 
@@ -41,12 +42,16 @@ def main(*args):
 
     #read input file
     log.debug("Reading input file...")
-    splits, taxa, traits, speciesTree = hemiplasytool.readInput(args.input)
-
+    splits, taxa, traits, speciesTree, admix = hemiplasytool.readInput(args.input)
+    print(admix)
     batches = int(args.batches)
 
     #Make program calls
-    ms_call = hemiplasytool.splits_to_ms(splits, taxa, args.replicates, args.mspath)
+    if len(admix) != 0:
+        ms_call = hemiplasytool.splits_to_ms(splits, taxa, args.replicates, args.mspath, admix)
+    else:
+        ms_call = hemiplasytool.splits_to_ms(splits, taxa, args.replicates, args.mspath)
+
     seqgencall = hemiplasytool.seq_gen_call('trees.tmp', args.seqgenpath, args.mutationrate)
 
     log.debug(ms_call)

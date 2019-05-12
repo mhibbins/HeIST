@@ -10,19 +10,25 @@ import logging as log
 import os
 
 
-def splits_to_ms(splitTimes, taxa, reps, path_to_ms):
+def splits_to_ms(splitTimes, taxa, reps, path_to_ms, admix=None):
     """
     Converts inputs into a call to ms
     TODO: Add introgression
     """
     nsamples = len(splitTimes)+1
-    call = path_to_ms + ' ' + str(nsamples) + ' ' + str(reps) + ' -T -I ' + str(nsamples) + ' '
+    call = path_to_ms + ' ' + str(nsamples) + ' ' + str(reps) + ' -T -I ' + str(nsamples)
     for i in range(0, nsamples):
-        call += '1 '
+        call += ' 1'
     for x, split in enumerate(splitTimes):
-        call += '-ej ' + str(split) + ' ' + str(taxa[x][0]) + ' ' + str(taxa[x][1]) + ' '
+        call += ' -ej ' + str(split) + ' ' + str(taxa[x][0]) + ' ' + str(taxa[x][1])
 
-    call += "| tail -n +4 | grep -v // > trees.tmp"
+    if admix != None:
+        for i, event in enumerate(admix):
+            call += ' -es ' + event[0] + ' ' + event[2] + ' ' + str(1-float(event[1])) + ' -ej ' + event[0] + ' ' + str(nsamples+1) + ' ' + event[3]
+
+    #-es tbs 4 tbs -ej tbs 5 2 
+
+    call += " | tail -n +4 | grep -v // > trees.tmp"
     return(call)
 
 def seq_gen_call(treefile, path, s=0.05):
@@ -153,6 +159,7 @@ def readInput(file):
     splits = []
     taxa = []
     traits = {}
+    admix = []
 
     cnt = 0
     for i, line in enumerate(f):
@@ -173,7 +180,11 @@ def readInput(file):
         
         elif cnt == 3:
             tree = line.replace("\n","")
-    return(splits, taxa, traits, tree)
+        elif cnt == 4:
+            l = line.replace("\n","").split()
+            admix.append(l)
+        
+    return(splits, taxa, traits, tree, admix)
 
     
 
