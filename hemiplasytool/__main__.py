@@ -62,6 +62,8 @@ def main(*args):
     for s in traits.keys():
         taxalist.append(int(s))
 
+    inherited = []
+
     results = {}
     results_alltrees ={}
     n_mutations_d = []
@@ -101,13 +103,12 @@ def main(*args):
         for trait in traits.values():
             if trait == '1':
                 nderived += 1
-        print(nderived)
-        print(len(traits.keys()))
+
 
         interesting = seqtools.get_interesting(focaltrees_d, nderived, len(traits.keys()))
         for item in interesting:
             test_summarize = seqtools.summarize_interesting(item, len(traits.keys()))
-            print(test_summarize)
+            inherited = inherited + test_summarize
 
         #Clean up temporary files from this batch
         hemiplasytool.cleanup()
@@ -133,9 +134,14 @@ def main(*args):
     for item in  mutation_counts_d:
         print(str(item[0]) + '\t\t' + str(item[1]))
     
+    if len(inherited) > 0:
+        hemiplasytool.summarize_inherited(inherited)
+    else:
+        log.debug("Not enough 'interesting' cases to provide mutation inheritance patterns")
+
+    print()
     log.debug("Plotting...")
     hemiplasytool.plot_mutations(mutation_counts_c, mutation_counts_d)
-
 
     hemiplasytool.write_output(summary, mutation_counts_c, mutation_counts_d, args.outputdir)
 

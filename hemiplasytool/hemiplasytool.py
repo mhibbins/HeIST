@@ -187,5 +187,36 @@ def readInput(file):
     return(splits, taxa, traits, tree, admix)
 
     
+def summarize_inherited(inherited):
+    rows = []
+    cols = []
+    for event in inherited:
+        if event[0] not in rows:
+            rows.append(event[0])
+        if event[2] not in cols:
+            cols.append(event[2])
+
+    rows.sort()
+    cols.sort()
+    cc = cols.copy()
+    if cols[0] == '0':
+        cc[0] = 'Term'
+
+    table = np.zeros(shape = (len(rows), len(cols)))
+    for event in inherited:
+        y = rows.index(event[0])
+        x = cols.index(event[2])
+        table[y,x] = table[y,x] + 1
+    
+
+    print('\nDerived mutation inheritance patterns for trees with fewer mutations than derived taxa:')
+    print('\t' + '\t'.join(cc))
+    for i,row in enumerate(table):
+        l = list(row)
+        l = [str(x) for x in l]
+        print('Taxa ' + rows[i] + '\t' + '\t'.join(l))
+    return(table, rows, cols)
+
+
 
 

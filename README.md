@@ -94,24 +94,33 @@ hemiplasytool -v -n 1000000 -p ~/bin/ms -g ~/bin/seq-gen -x 1 ./input_test.txt
 ### Output:
 ```
 Of the replicates that follow species site pattern:
-39 were discordant
-14 were concordant
+92 were discordant
+28 were concordant
 
 
 On concordant trees:
 # Mutations	# Trees
-3		14
+3		24
+4		2
+5		2
 
 On discordant trees:
 # Mutations	# Trees
-1		1
-2		8
-3		25
+1		7
+2		20
+3		59
 4		4
-5		1
+5		2
+
+Derived mutation inheritance patterns for trees with fewer mutations than derived taxa:
+	Term	10	11	8	9
+Taxa 2	11.0	0.0	0.0	7.0	2.0
+Taxa 4	0.0	6.0	13.0	0.0	1.0
+Taxa 6	0.0	8.0	11.0	0.0	1.0
+
 DEBUG:root:Plotting...
 
-Time elapsed: 9.448280096054077 seconds
+Time elapsed: 46.20633292198181 seconds
 ```
 
 ![Mutation distribution](mutation_dist.png)

@@ -80,9 +80,10 @@ def readSeqs(seqs, ntaxa, speciesPattern, nodes, batch):
                     for taxa in shouldMatch2:
                         b.append(pattern[taxa])
                     if (checkEqual(b)):
-                        indices.append(index)
-                        for y in lines:
-                            tmpFocal.write(y)
+                        if b[0] != pattern[str(ntaxa+1)]:
+                            indices.append(index)
+                            for y in lines:
+                                tmpFocal.write(y)
             index += 1
     tmpFocal.close()
     return(indices)
@@ -347,14 +348,14 @@ def summarize_interesting(tree, ntaxa):
                 elif alleles[i] != ancestral_allele: #if taxon has the derived state
                     if labels[i-1] >= root: #if i-1 is the subtending node 
                         if alleles[i] != alleles[i-1]: #if there was a mutation on the tip branch
-                            summary.append('Taxon ' + str(labels[i]) + ' mutated to the derived state')
+                            summary.append((str(labels[i]), 1, str(0)))
                         else: #if the derived state was inherited from an ancestor
-                            summary.append('Taxon ' + str(labels[i]) + ' inherited the derived state from ancestral node ' + str(labels[i-1]))
+                            summary.append((str(labels[i]), 0, str(labels[i-1])))
                     elif labels[i-2] >= root: #if i-2 is the subtending node 
                         if alleles[i] != alleles[i-2]: #if there was a tip mutation
-                            summary.append('Taxon ' + str(labels[i]) + ' mutated to the derived state')
+                            summary.append((str(labels[i]), 1, str(0)))
                         else: #if derived state was inherited
-                            summary.append('Taxon ' + str(labels[i]) + ' inherited the derived state from ancestral node ' + str(labels[i-2]))
+                            summary.append((str(labels[i]), 0, str(labels[i-2])))
                     current_taxon += 1 #update current taxon  
   
     return summary
