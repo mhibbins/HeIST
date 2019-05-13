@@ -304,3 +304,57 @@ def count_mutations(tree, ntaxa):
                 current_taxon += 1 #update current taxon
               
     return mutations
+
+def get_interesting(trees, nderived, ntaxa):
+    '''
+    This function uses count_mutations to 
+    pull out all the "interesting" cases of 
+    incongruence. For now, these are cases 
+    where the number of mutations is greater
+    than 1 but less than the number of derived 
+    taxa. 
+    '''
+    interesting = [] #list of interesting trees
+    
+    for index, tree in enumerate(trees):
+        
+        if count_mutations(tree, ntaxa) > 1 and count_mutations(tree, ntaxa) < nderived: 
+            interesting.append(tree)
+            
+
+    return interesting 
+
+def summarize_interesting(tree, ntaxa):
+    '''
+    Summarizes the mutations that have occurred
+    on the given tree.
+    '''
+    labels = [int(tree[i].split()[0]) for i in range(len(tree))] #node/taxon IDs
+    alleles = [tree[i].split()[1] for i in range(len(tree))] #alleles
+    root = ntaxa + 1
+    current_taxon = 1 #current taxon tracker 
+    ancestral_allele = alleles[labels.index(root)] #ancestral allele for the tree
+    summary = [] #list of how each taxon got its mutation 
+
+    while current_taxon <= ntaxa:
+        for i in range(len(labels)):
+   
+            if labels[i] == current_taxon:
+                
+                if alleles[i] == ancestral_allele: #if the taxon has ancestral state
+                    current_taxon += 1 #move on 
+
+                elif alleles[i] != ancestral_allele: #if taxon has the derived state
+                    if labels[i-1] >= root: #if i-1 is the subtending node 
+                        if alleles[i] != alleles[i-1]: #if there was a mutation on the tip branch
+                            summary.append('Taxon ' + str(labels[i]) + ' mutated to the derived state')
+                        else: #if the derived state was inherited from an ancestor
+                            summary.append('Taxon ' + str(labels[i]) + ' inherited the derived state from ancestral node ' + str(labels[i-1]))
+                    elif labels[i-2] >= root: #if i-2 is the subtending node 
+                        if alleles[i] != alleles[i-2]: #if there was a tip mutation
+                            summary.append('Taxon ' + str(labels[i]) + ' mutated to the derived state')
+                        else: #if derived state was inherited
+                            summary.append('Taxon ' + str(labels[i]) + ' inherited the derived state from ancestral node ' + str(labels[i-2]))
+                    current_taxon += 1 #update current taxon  
+  
+    return summary

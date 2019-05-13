@@ -97,6 +97,18 @@ def main(*args):
         for index, tree in enumerate(focaltrees_c):
             n_mutations_c.append(seqtools.count_mutations(tree, len(taxalist)))
         
+        nderived = 0
+        for trait in traits.values():
+            if trait == '1':
+                nderived += 1
+        print(nderived)
+        print(len(traits.keys()))
+
+        interesting = seqtools.get_interesting(focaltrees_d, nderived, len(traits.keys()))
+        for item in interesting:
+            test_summarize = seqtools.summarize_interesting(item, len(traits.keys()))
+            print(test_summarize)
+
         #Clean up temporary files from this batch
         hemiplasytool.cleanup()
         
