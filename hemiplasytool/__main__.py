@@ -135,15 +135,16 @@ def main(*args):
         print(str(item[0]) + '\t\t' + str(item[1]))
     
     if len(inherited) > 0:
-        hemiplasytool.summarize_inherited(inherited)
+        mutation_pat = hemiplasytool.summarize_inherited(inherited)
     else:
+        mutation_pat = None
         log.debug("Not enough 'interesting' cases to provide mutation inheritance patterns")
 
     print()
     log.debug("Plotting...")
     hemiplasytool.plot_mutations(mutation_counts_c, mutation_counts_d)
 
-    hemiplasytool.write_output(summary, mutation_counts_c, mutation_counts_d, args.outputdir)
+    hemiplasytool.write_output(summary, mutation_counts_c, mutation_counts_d, mutation_pat, args.outputdir)
 
     end = time.time()
     print("\nTime elapsed: " + str(end - start) + " seconds")

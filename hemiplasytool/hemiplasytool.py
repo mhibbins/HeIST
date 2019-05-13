@@ -91,7 +91,7 @@ def summarize(results):
         c_conc_follow += val[1]
     return([c_disc_follow, c_conc_follow])
 
-def write_output(summary, mutation_counts_c, mutation_counts_d, filename):
+def write_output(summary, mutation_counts_c, mutation_counts_d, reduced, filename):
     out1 = open(filename, 'w')
 
     out1.write("Of the replicates that follow species site pattern:\n")
@@ -105,6 +105,14 @@ def write_output(summary, mutation_counts_c, mutation_counts_d, filename):
     out1.write("# Mutations\t# Trees\n")
     for item in  mutation_counts_d:
         out1.write(str(item[0]) + '\t\t' + str(item[1]) + '\n')
+
+    if reduced != None:
+        out1.write('\nDerived mutation inheritance patterns for trees with fewer mutations than derived taxa:\n')
+        out1.write('\tTerm\tInherited from anc node\n')
+        for key, val in reduced.items():
+            val = [str(v) for v in val]
+            out1.write('Taxa ' + key + '\t' + '\t'.join(val) + '\n')
+
     out1.close()
 
 def plot_mutations(results_c, results_d):
@@ -188,34 +196,27 @@ def readInput(file):
 
     
 def summarize_inherited(inherited):
-    rows = []
-    cols = []
+    reduced = {}
+    #(new,anc)
     for event in inherited:
-        if event[0] not in rows:
-            rows.append(event[0])
-        if event[2] not in cols:
-            cols.append(event[2])
+        if event[0] not in reduced.keys():
+            if event[1] == 1:
+                reduced[event[0]] = [1,0]
+            elif event[1] == 0:
+                reduced[event[0]] = [0,1]
+        elif event[0] in reduced.keys():
+            if event[1] == 1:
+                reduced[event[0]][0] += 1
+            elif event[1] == 0:
+                reduced[event[0]][1] += 1
 
-    rows.sort()
-    cols.sort()
-    cc = cols.copy()
-    if cols[0] == '0':
-        cc[0] = 'Term'
 
-    table = np.zeros(shape = (len(rows), len(cols)))
-    for event in inherited:
-        y = rows.index(event[0])
-        x = cols.index(event[2])
-        table[y,x] = table[y,x] + 1
-    
-
-    print('\nDerived mutation inheritance patterns for trees with fewer mutations than derived taxa:')
-    print('\t' + '\t'.join(cc))
-    for i,row in enumerate(table):
-        l = list(row)
-        l = [str(x) for x in l]
-        print('Taxa ' + rows[i] + '\t' + '\t'.join(l))
-    return(table, rows, cols)
+    print('\nDerived mutation inheritance patterns for trees with fewer mutations than derived taxa:\n')
+    print('\tTerm\tInherited from anc node')
+    for key, val in reduced.items():
+        val = [str(v) for v in val]
+        print('Taxa ' + key + '\t' + '\t'.join(val))
+    return(reduced)
 
 
 
