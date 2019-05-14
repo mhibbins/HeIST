@@ -160,7 +160,7 @@ def propDiscordant(focal_trees, species_tree):
     disc_g = []
     conc_g = []
 
-    spp_sisters = getSisters(species_tree,'g')
+    spp_sisters = getSisters(species_tree,'s')
     for i, tree in enumerate(focal_trees):
         r = call(species_tree, tree, spp_sisters, i)
         if r[0] == 1:

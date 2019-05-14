@@ -67,7 +67,11 @@ The input file has three sections:  split times, traits, and species tree. They 
 6   1
 
 #tree
-(1:6.000,(2:3.000,((6:1.250,5:1.250):0.250,(4:1.000,3:1.000):0.500):1.500):3.000);
+(1,(2,((6,5),(4,3))));
+
+#admixture (time, source, dest, probability)
+0.25    3   2   0.1
+0.5 5   6   0.1
 
 ```
 
@@ -93,36 +97,35 @@ hemiplasytool -v -n 1000000 -p ~/bin/ms -g ~/bin/seq-gen -x 1 ./input_test.txt
 
 ### Output:
 ```
-
 Of the replicates that follow species site pattern:
-120 were discordant
-35 were concordant
+118 were discordant
+32 were concordant
 
 
 On concordant trees:
 # Mutations	# Trees
-3		30
-4		4
+3		28
+4		3
 5		1
 
 On discordant trees:
 # Mutations	# Trees
-1		12
-2		24
-3		73
-4		10
-5		1
+1		5
+2		21
+3		70
+4		20
+5		2
 
 Derived mutation inheritance patterns for trees with fewer mutations than derived taxa:
 
 	Term	Inherited from anc node
-Taxa 2	8	16
-Taxa 4	2	22
-Taxa 6	1	23
+Taxa 2	15	6
+Taxa 4	0	21
+Taxa 6	1	20
 
 DEBUG:root:Plotting...
 
-Time elapsed: 47.871474742889404 seconds
+Time elapsed: 47.09378099441528 seconds
 ```
 
 ![Mutation distribution](mutation_dist.png)

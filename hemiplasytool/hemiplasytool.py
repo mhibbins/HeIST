@@ -10,7 +10,7 @@ import logging as log
 import os
 
 
-def splits_to_ms(splitTimes, taxa, reps, path_to_ms, admix=None):
+def splits_to_ms(splitTimes, taxa, reps, path_to_ms, admix=None, r=None):
     """
     Converts inputs into a call to ms
     TODO: Add introgression
@@ -23,12 +23,13 @@ def splits_to_ms(splitTimes, taxa, reps, path_to_ms, admix=None):
         call += ' -ej ' + str(split) + ' ' + str(taxa[x][0]) + ' ' + str(taxa[x][1])
 
     if admix != None:
-        for i, event in enumerate(admix):
-            call += ' -es ' + event[0] + ' ' + event[2] + ' ' + str(1-float(event[1])) + ' -ej ' + event[0] + ' ' + str(nsamples+1) + ' ' + event[3]
+        call += ' -es ' + admix[0] + ' ' + admix[1] + ' ' + '1' + ' -ej ' + admix[0] + ' ' + str(nsamples+1) + ' ' + admix[2]
 
-    #-es tbs 4 tbs -ej tbs 5 2 
 
-    call += " | tail -n +4 | grep -v // > trees.tmp"
+    if admix != None:
+        call += " | tail -n +4 | grep -v // > trees" + str(r) + ".tmp"
+    else:
+        call += " | tail -n +4 | grep -v // > trees.tmp"
     return(call)
 
 def seq_gen_call(treefile, path, s=0.05):
@@ -41,8 +42,20 @@ def call_programs(ms_call, seqgencall, treefile, ntaxa):
     """
     Calls ms and seq-gen
     """
-    log.debug("Calling ms...")
-    os.system(ms_call)
+
+    if type(ms_call) is list:
+        for call in ms_call:
+            log.debug("Calling ms...")
+            os.system(call)
+    
+        concatCall = "cat "
+        for i, call in enumerate(ms_call):
+            concatCall += "trees" + str(i) + ".tmp "
+        concatCall += "> trees.tmp"
+        os.system(concatCall)
+    else:
+        log.debug("Calling ms...")
+        os.system(ms_call)
 
     #sedTrees(treefile, ntaxa)
 

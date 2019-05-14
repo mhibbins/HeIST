@@ -43,19 +43,30 @@ def main(*args):
     #read input file
     log.debug("Reading input file...")
     splits, taxa, traits, speciesTree, admix = hemiplasytool.readInput(args.input)
-    print(admix)
     batches = int(args.batches)
 
+    reps = int(args.replicates)
+
+    log.debug("Introgression events specified")
     #Make program calls
     if len(admix) != 0:
-        ms_call = hemiplasytool.splits_to_ms(splits, taxa, args.replicates, args.mspath, admix)
+        ms_call = []
+        summ = 0.0
+
+        #intogression trees
+        for i, event in enumerate(admix):
+            summ += float(event[3])
+            ms_call.append(hemiplasytool.splits_to_ms(splits, taxa, int(reps*float(event[3])), args.mspath, event, i))
+        
+        #species tree
+        ms_call.append(hemiplasytool.splits_to_ms(splits, taxa, int(reps*(1-summ)), args.mspath, event, i+1))
     else:
         ms_call = hemiplasytool.splits_to_ms(splits, taxa, args.replicates, args.mspath)
 
     seqgencall = hemiplasytool.seq_gen_call('trees.tmp', args.seqgenpath, args.mutationrate)
 
-    log.debug(ms_call)
-    log.debug(seqgencall)
+    #log.debug(ms_call)
+    #log.debug(seqgencall)
 
 
     taxalist = []
@@ -69,7 +80,8 @@ def main(*args):
     n_mutations_d = []
     n_mutations_c = []
     for i in range(0, batches):
-        #Call ms and seq-gen
+
+
         hemiplasytool.call_programs(ms_call, seqgencall, 'trees.tmp', taxalist)
 
         #Gets indices of trees with site patterns that match speecies pattern
