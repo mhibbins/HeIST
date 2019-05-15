@@ -5,10 +5,11 @@ Matt Gibson (gibsomat@indiana.edu)
 Mark Hibbins (mhibbins@indiana.edu)
 
 ## Dependencies:
-* ms  
-* seq-gen  
+* [ms](http://home.uchicago.edu/~rhudson1/source.html)  
+* [seq-gen](http://tree.bio.ed.ac.uk/software/seqgen/)
 * biopython
 * numpy
+* matplotlib
 
 
 ## Installation
