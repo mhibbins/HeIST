@@ -8,7 +8,7 @@ HERE = pathlib.Path(__file__).parent
 README = (HERE / "README.md").read_text()
 
 # specify requirements of your package here
-REQUIREMENTS = ['Bio', 'numpy', 'matplotlib']
+REQUIREMENTS = ['biopython', 'numpy', 'matplotlib']
 
 setup(name='hemiplasytool',
       version='1.0.0',
