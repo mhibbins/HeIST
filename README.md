@@ -1,5 +1,7 @@
 # HemiplasyTool
 
+
+![](https://img.shields.io/github/release-pre/mhibbins/hemiplasytool.svg)
 ## Authors:
 Matt Gibson (gibsomat@indiana.edu)  
 Mark Hibbins (mhibbins@indiana.edu)
