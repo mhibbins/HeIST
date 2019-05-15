@@ -2,6 +2,7 @@
 
 
 ![](https://img.shields.io/github/release-pre/mhibbins/hemiplasytool.svg)
+![](https://img.shields.io/github/release-date-pre/mhibbins/hemiplasytool.svg)
 ## Authors:
 Matt Gibson (gibsomat@indiana.edu)  
 Mark Hibbins (mhibbins@indiana.edu)
