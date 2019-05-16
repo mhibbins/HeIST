@@ -1,0 +1,18 @@
+
+####################RESULTS####################
+###############################################
+
+Of the replicates that follow species site pattern: 
+36 were discordant
+5 were concordant
+
+
+On concordant trees:
+# Mutations	# Trees
+2		5
+
+On discordant trees:
+# Mutations	# Trees
+1		23
+2		13
+

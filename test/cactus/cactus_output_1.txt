@@ -1,0 +1,27 @@
+
+####################RESULTS####################
+###############################################
+
+Of the replicates that follow species site pattern: 
+151 were discordant
+27 were concordant
+
+
+On concordant trees:
+# Mutations	# Trees
+2		26
+3		1
+
+On discordant trees:
+# Mutations	# Trees
+1		125
+2		23
+3		3
+
+Derived mutation inheritance patterns for trees with fewer mutations than derived taxa:
+
+	Term	Inherited from anc node
+Taxa 2	1	22
+Taxa 4	1	22
+Taxa 5	1	22
+
