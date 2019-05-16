@@ -12,9 +12,13 @@ North American columnar cacti. *PNAS* 114(45): 12003 - 12008.
 We used the following labelling conventions for the tree:
 
 1: *Pereskia humboldtii*
+
 2: *Stenocereus thurberi*
+
 3: *Lophocereus schottii*
+
 4: *Carnegiea gigantea*
+
 5: *Pacycereus pringlei*
 
 ## Demographic parameters
@@ -26,9 +30,12 @@ generations:
 Generation time: 45 years
 Effective population size: 30,000
 
-1/2 split: (27 mya / 45) / (4 * 30,000) = 5 
+1/2 split: (27 mya / 45) / (4 * 30,000) = 5
+ 
 2/3 split: (8 mya / 45) / (4 * 30,000) = 1.5
+
 3/4 split: (5 mya / 45) / (4 * 30,000) = 0.9
+
 4/5 split: (3 mya / 45) / (4 * 30,000) = 0.5
 
 We also specify the mutation rate in units of per site per 4N 
