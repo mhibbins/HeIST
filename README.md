@@ -1,35 +1,34 @@
 # HemiplasyTool
 
+
+![](https://img.shields.io/github/release-pre/mhibbins/hemiplasytool.svg)
+![](https://img.shields.io/github/release-date-pre/mhibbins/hemiplasytool.svg)
 ## Authors:
 Matt Gibson (gibsomat@indiana.edu)  
 Mark Hibbins (mhibbins@indiana.edu)
 
 ## Dependencies:
-* ms  
-* seq-gen  
+* [ms](http://home.uchicago.edu/~rhudson1/source.html)  
+* [seq-gen](http://tree.bio.ed.ac.uk/software/seqgen/)
 * biopython
 * numpy
+* matplotlib
 
 
 ## Installation
 
-### Install from source
 ```
 git clone https://github.com/mhibbins/hemiplasytool
 cd hemiplasytool
 python setup.py install
 ```
 
-### Install from PyPI
-```
-pip install hemiplasytool
-```
 
 ## Usage
 ```
 usage: hemiplasytool [-h] [-v] [-n] [-x] [-p] [-g] [-s] [-o] splits
 
-Calculate the probability that convergent trait patterns are due to hemiplasy
+Tool for characterising hemiplasy given traits mapped onto a species tree
 
 positional arguments:
   splits                Input file describing split times, trait pattern, and
@@ -69,7 +68,7 @@ The input file has three sections:  split times, traits, and species tree. They 
 #tree
 (1,(2,((6,5),(4,3))));
 
-#admixture (time, source, dest, probability)
+#introgression (time, source, dest, probability; optional)
 0.25    3   2   0.1
 0.5 5   6   0.1
 
@@ -89,6 +88,9 @@ The traits section describes the observed species trait pattern. Each line speci
 
 The species tree in Newick format. Again, taxa IDs must correspond to those in the split times and traits sections.
 
+### Introgression
+
+Introgression events. Each line should specify the timing (in 4N generations), source taxon, destination taxon, and probability of introgression. Events can be specified in any order.
 
 ## Example:
 ```
