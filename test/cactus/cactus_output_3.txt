@@ -3,17 +3,17 @@
 ###############################################
 
 Of the replicates that follow species site pattern: 
-55 were discordant
-10 were concordant
+45 were discordant
+5 were concordant
 
 
 On concordant trees:
 # Mutations	# Trees
-2		10
+2		5
 
 On discordant trees:
 # Mutations	# Trees
-1		39
-2		14
-3		2
+1		29
+2		15
+3		1
 
