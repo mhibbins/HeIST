@@ -11,8 +11,6 @@ Indiana University
 """
 
 
-
-
 def splits_to_ms(splitTimes, taxa, reps, path_to_ms, admix=None, r=None):
     """
     Converts inputs into a call to ms

@@ -12,6 +12,7 @@ Authors: Matt Gibson, Mark Hibbins
 Indiana University
 """
 
+
 def main(*args):
     start = time.time()
     parser = argparse.ArgumentParser(description="Tool for characterising \
