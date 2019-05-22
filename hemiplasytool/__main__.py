@@ -85,6 +85,9 @@ def main(*args):
     results = {}
     n_mutations_d = []
     n_mutations_c = []
+
+    all_focal_trees = []
+
     for i in range(0, batches):
 
 
@@ -96,6 +99,7 @@ def main(*args):
 
         # Gets the trees at these indices
         focal_trees, _ = seqtools.getTrees('trees.tmp', match_species_pattern)
+        all_focal_trees = all_focal_trees + focal_trees
 
         assert len(match_species_pattern) == len(focal_trees)
 
@@ -137,9 +141,6 @@ def main(*args):
 
     print("\n####################RESULTS####################\n###############################################")
 
-    print("\nOf the replicates that follow species site pattern: ")
-    print(str(summary[0]) + " were discordant\n" + str(summary[1]-summary[0]) + " were concordant\n")
-
     print("\nOn concordant trees:")
     print("# Mutations\t# Trees")
     for item in mutation_counts_c:
@@ -155,11 +156,16 @@ def main(*args):
         mutation_pat = None
         log.debug("Not enough 'interesting' cases to provide mutation inheritance patterns")
 
+    print("\nOf the replicates that follow species site pattern: ")
+    print(str(summary[0]) + " were discordant\n" + str(summary[1]-summary[0]) + " were concordant\n")
+
     print()
     log.debug("Plotting...")
     hemiplasytool.plot_mutations(mutation_counts_c, mutation_counts_d)
 
+    log.debug("Writing output file...")
     hemiplasytool.write_output(summary, mutation_counts_c, mutation_counts_d, mutation_pat, args.outputdir)
+    hemiplasytool.write_unique_trees(all_focal_trees, args.outputdir)
 
     end = time.time()
     print("\nTime elapsed: " + str(end - start) + " seconds")

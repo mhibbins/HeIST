@@ -4,7 +4,6 @@ from Bio.Phylo.Consensus import _BitString
 from Bio import Phylo
 import io
 import re
-import multiprocessing as mp
 
 """
 Hemiplasy Tool
@@ -133,10 +132,12 @@ def rev(sis):
     return((sis[1], sis[0]))
 
 
-def compareToSpecies(tree1, tree2, spp_sisters):
+def compareToSpecies(tree1, tree2, spp_sisters=None):
     """Compares tree topologies. Will first check if sister taxa in the species tree are also sister 
     in the gene tree, returning false at the first non-shared occurence. If all sister taxa are present,
     it will calculate a bitstring distance with Biopython Phylo."""
+    if spp_sisters == None:
+        spp_sisters = getSisters(tree1)
     sisters = getSisters(tree2)
     top = bool
     for s in sisters:

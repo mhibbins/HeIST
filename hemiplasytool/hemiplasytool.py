@@ -3,6 +3,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 import logging as log
 import os
+import io
+from Bio import Phylo
+from hemiplasytool import seqtools
+
 
 """
 Hemiplasy Tool
@@ -86,11 +90,7 @@ def summarize(results):
 def write_output(summary, mutation_counts_c, mutation_counts_d, reduced, filename):
     out1 = open(filename, 'w')
 
-    out1.write("Of the replicates that follow species site pattern:\n")
-    out1.write(str(summary[0]) + " were discordant\n" + 
-        str(summary[1]-summary[0]) + " were concordant\n")
-
-    out1.write("\nOn concordant trees:\n")
+    out1.write("On concordant trees:\n")
     out1.write("# Mutations\t# Trees\n")
     for item in mutation_counts_c:
         out1.write(str(item[0]) + '\t\t' + str(item[1]) + '\n')
@@ -100,12 +100,17 @@ def write_output(summary, mutation_counts_c, mutation_counts_d, reduced, filenam
         out1.write(str(item[0]) + '\t\t' + str(item[1]) + '\n')
 
     if reduced is not None:
-        out1.write('\nDerived mutation inheritance patterns for trees \
-            with fewer mutations than derived taxa:\n')
+        out1.write('\nDerived mutation inheritance patterns for trees with fewer mutations than derived taxa:\n')
         out1.write('\tTerm\tInherited from anc node\n')
         for key, val in reduced.items():
             val = [str(v) for v in val]
             out1.write('Taxa ' + key + '\t' + '\t'.join(val) + '\n')
+    
+    out1.write("\nOf the replicates that follow species site pattern:\n")
+    out1.write(str(summary[0]) + " were discordant\n" + 
+    str(summary[1]-summary[0]) + " were concordant\n")
+
+
     out1.close()
 
 
@@ -206,3 +211,41 @@ def summarize_inherited(inherited):
         val = [str(v) for v in val]
         print('Taxa ' + key + '\t' + '\t'.join(val))
     return(reduced)
+
+
+def update_count(tree, dic):
+    for key, val in dic.items():
+        if seqtools.compareToSpecies(key, tree):
+            dic[key] += 1
+    return(dic)
+
+
+def write_unique_trees(focal_trees, filename):
+    unique = []
+    counts = {}
+    out1 = open(filename, 'a')
+
+    for i, tree in enumerate(focal_trees):
+        if i == 0:
+            unique.append(tree)
+            counts[tree] = 1
+        else:
+            uniq = True
+            for tree2 in unique:
+                if seqtools.compareToSpecies(tree, tree2):
+                    uniq = False
+                    counts = update_count(tree, counts)
+            if uniq is True:
+                unique.append(tree)
+                counts[tree] = 1
+
+    for tree in unique:
+        t = tree.replace(";", '')
+        t = Phylo.read(io.StringIO(tree), "newick")
+        Phylo.draw_ascii(t, out1, column_width=40)
+        for key, val in counts.items():
+
+            if seqtools.compareToSpecies(key, tree):
+                out1.write("This topology occured " + str(val) + " time(s)\n")
+
+    out1.close()
