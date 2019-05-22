@@ -145,7 +145,7 @@ def main(*args):
     mutation_counts_c = [[x,n_mutations_c.count(x)] for x in set(n_mutations_c)]
 
     summary = hemiplasytool.summarize(results)
-    
+
     counts_by_tree = seqtools.sum_counts_by_tree(counts_by_tree)
 
     print("\n####################RESULTS####################\n###############################################")

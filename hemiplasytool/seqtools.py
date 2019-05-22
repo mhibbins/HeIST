@@ -62,6 +62,8 @@ def readSeqs(seqs, ntaxa, speciesPattern, nodes, batch, breaks=[]):
     shouldMatch2 = c['1']
     if len(breaks) != 0:
         counts = [0]*len(breaks)
+    else:
+        counts = [0]
     tmpFocal = open('focaltrees.tmp', 'w')
 
     index = 0
@@ -100,9 +102,11 @@ def readSeqs(seqs, ntaxa, speciesPattern, nodes, batch, breaks=[]):
                                         if (index <= breakpoint):
                                             tree_class = i
                                 counts[tree_class] += 1
-
+                            else:
+                                counts[0] += 1
             index += 1
     tmpFocal.close()
+
     return(indices, counts)
 
 
