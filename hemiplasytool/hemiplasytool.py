@@ -87,7 +87,7 @@ def summarize(results):
     return([c_disc_follow, c_conc_follow])
 
 
-def write_output(summary, mutation_counts_c, mutation_counts_d, reduced, filename):
+def write_output(summary, mutation_counts_c, mutation_counts_d, reduced, counts, filename):
     out1 = open(filename, 'w')
 
     out1.write("On concordant trees:\n")
@@ -105,11 +105,15 @@ def write_output(summary, mutation_counts_c, mutation_counts_d, reduced, filenam
         for key, val in reduced.items():
             val = [str(v) for v in val]
             out1.write('Taxa ' + key + '\t' + '\t'.join(val) + '\n')
-    
+ 
     out1.write("\nOf the replicates that follow species site pattern:\n")
-    out1.write(str(summary[0]) + " were discordant\n" + 
-    str(summary[1]-summary[0]) + " were concordant\n")
+    out1.write(str(summary[0]) + " were discordant\n" + str(summary[1]-summary[0]) + " were concordant\n\n")
 
+    for i, topology_count in enumerate(counts):
+        if i != len(counts)-1:
+            out1.write(str(topology_count) + " replicates matching the species pattern were from introgression tree " + str(i+1) + "\n")
+        else:
+            out1.write(str(topology_count) + " replicates matching the species pattern were from the species tree\n")
 
     out1.close()
 

@@ -58,19 +58,26 @@ def main(*args):
     batches = int(args.batches)
     reps = int(args.replicates)
 
+    breaks = []
+
     # Make program calls
     if len(admix) != 0:
+        breaks = [0]*len(admix)
         log.debug("Introgression events specified")
         ms_call = []
         summ = 0.0
-
         # Intogression trees
         for i, event in enumerate(admix):
             summ += float(event[3])
+            if i == 0:
+                breaks[i] = int(reps*float(event[3]))
+            else:
+                breaks[i] = int(reps*float(event[3]))+breaks[i-1]
             ms_call.append(hemiplasytool.splits_to_ms(splits, taxa, int(reps*float(event[3])), args.mspath, event, i))
-        
+
         # Species tree
         ms_call.append(hemiplasytool.splits_to_ms(splits, taxa, int(reps*(1-summ)), args.mspath, event, i+1))
+        breaks.append(int(reps*(1-summ)) + breaks[len(breaks)-1])
     else:
         ms_call = hemiplasytool.splits_to_ms(splits, taxa, args.replicates, args.mspath)
 
@@ -87,7 +94,7 @@ def main(*args):
     n_mutations_c = []
 
     all_focal_trees = []
-
+    counts_by_tree = []
     for i in range(0, batches):
 
 
@@ -95,8 +102,8 @@ def main(*args):
 
         # Gets indices of trees with site patterns that match speecies pattern
         log.debug("Extracting trees that match species trait pattern...")
-        match_species_pattern = seqtools.readSeqs("seqs.tmp", len(taxalist), traits, len(splits), i)
-
+        match_species_pattern, counts = seqtools.readSeqs("seqs.tmp", len(taxalist), traits, len(splits), i, breaks)
+        counts_by_tree.append(counts)
         # Gets the trees at these indices
         focal_trees, _ = seqtools.getTrees('trees.tmp', match_species_pattern)
         all_focal_trees = all_focal_trees + focal_trees
@@ -138,6 +145,8 @@ def main(*args):
     mutation_counts_c = [[x,n_mutations_c.count(x)] for x in set(n_mutations_c)]
 
     summary = hemiplasytool.summarize(results)
+    
+    counts_by_tree = seqtools.sum_counts_by_tree(counts_by_tree)
 
     print("\n####################RESULTS####################\n###############################################")
 
@@ -159,12 +168,18 @@ def main(*args):
     print("\nOf the replicates that follow species site pattern: ")
     print(str(summary[0]) + " were discordant\n" + str(summary[1]-summary[0]) + " were concordant\n")
 
+    for i, topology_count in enumerate(counts_by_tree):
+        if i != len(counts_by_tree)-1:
+            print(str(topology_count) + " replicates matching the species pattern were from introgression tree " + str(i+1))
+        else:
+            print(str(topology_count) + " replicates matching the species pattern were from the species tree")
+
     print()
     log.debug("Plotting...")
     hemiplasytool.plot_mutations(mutation_counts_c, mutation_counts_d)
 
     log.debug("Writing output file...")
-    hemiplasytool.write_output(summary, mutation_counts_c, mutation_counts_d, mutation_pat, args.outputdir)
+    hemiplasytool.write_output(summary, mutation_counts_c, mutation_counts_d, mutation_pat, counts_by_tree, args.outputdir)
     hemiplasytool.write_unique_trees(all_focal_trees, args.outputdir)
 
     end = time.time()

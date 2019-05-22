@@ -51,7 +51,7 @@ def checkEqual(lst):
     return(lst[1:] == lst[:-1])
 
 
-def readSeqs(seqs, ntaxa, speciesPattern, nodes, batch):
+def readSeqs(seqs, ntaxa, speciesPattern, nodes, batch, breaks=[]):
     """
     Reads in sequences, determines if gene tree site pattern matches species tree
     site pattern. Returns indices of those which do.
@@ -60,7 +60,8 @@ def readSeqs(seqs, ntaxa, speciesPattern, nodes, batch):
     c = cluster(speciesPattern)
     shouldMatch1 = c['0']
     shouldMatch2 = c['1']
-
+    if len(breaks) != 0:
+        counts = [0]*len(breaks)
     tmpFocal = open('focaltrees.tmp', 'w')
 
     index = 0
@@ -89,9 +90,20 @@ def readSeqs(seqs, ntaxa, speciesPattern, nodes, batch):
                             indices.append(index)
                             for y in lines:
                                 tmpFocal.write(y)
+                            if len(breaks) != 0:
+                                tree_class = 0
+                                for i, breakpoint in enumerate(breaks):
+                                    if i != 0:
+                                        if (index <= breakpoint) and (index > breaks[i-1]):
+                                            tree_class = i
+                                    else:
+                                        if (index <= breakpoint):
+                                            tree_class = i
+                                counts[tree_class] += 1
+
             index += 1
     tmpFocal.close()
-    return(indices)
+    return(indices, counts)
 
 
 def getTrees(treefile, matchlist):
@@ -130,6 +142,8 @@ def _bitstrs(tree):
 def rev(sis):
     """Utility function"""
     return((sis[1], sis[0]))
+
+
 
 
 def compareToSpecies(tree1, tree2, spp_sisters=None):
@@ -323,3 +337,11 @@ def summarize_interesting(tree, ntaxa):
                     current_taxon += 1 #update current taxon  
   
     return(summary)
+
+def sum_counts_by_tree(counts):
+    newcounts = [0]*len(counts[0])
+
+    for batch in counts:
+        for i, c in enumerate(batch):
+            newcounts[i] += c
+    return(newcounts)
