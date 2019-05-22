@@ -94,40 +94,46 @@ Introgression events. Each line should specify the timing (in 4N generations), s
 
 ## Example:
 ```
-hemiplasytool -v -n 1000000 -p ~/bin/ms -g ~/bin/seq-gen -x 1 ./input_test.txt
+python -m hemiplasytool -v -n 1000000 -p ~/bin/ms -g ~/bin/seq-gen -x 1 ./test/input_test_small.txt -o outtest.txt
 ```
 
 ### Output:
 ```
-Of the replicates that follow species site pattern:
-118 were discordant
-32 were concordant
-
-
-On concordant trees:
+OOn concordant trees:
 # Mutations	# Trees
-3		28
-4		3
-5		1
+3		25
+4		2
+5		2
 
 On discordant trees:
 # Mutations	# Trees
 1		5
-2		21
-3		70
-4		20
-5		2
+2		23
+3		79
+4		9
+5		3
 
-Derived mutation inheritance patterns for trees with fewer mutations than derived taxa:
+Derived mutation inheritance patterns for trees with fewer         mutations than derived taxa:
 
 	Term	Inherited from anc node
-Taxa 2	15	6
-Taxa 4	0	21
-Taxa 6	1	20
+Taxa 2	9	14
+Taxa 4	1	22
+Taxa 6	2	21
+
+Of the replicates that follow species site pattern:
+119 were discordant
+29 were concordant
+
+9 replicates matching the species pattern were from introgression tree 1
+18 replicates matching the species pattern were from introgression tree 2
+121 replicates matching the species pattern were from the species tree
 
 DEBUG:root:Plotting...
+DEBUG:root:Writing output file...
 
-Time elapsed: 47.09378099441528 seconds
+Time elapsed: 50.345940828323364 seconds
 ```
+
+See `outtest.txt` for full output.
 
 ![Mutation distribution](mutation_dist.png)

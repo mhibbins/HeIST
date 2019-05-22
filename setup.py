@@ -11,7 +11,7 @@ README = (HERE / "README.md").read_text()
 REQUIREMENTS = ['biopython', 'numpy', 'matplotlib']
 
 setup(name='hemiplasytool',
-      version='0.0.0',
+      version='0.1.0',
       description='Tool for characterising hemiplasy given traits mapped onto a species tree',
       long_description=README,
       long_description_content_type="text/markdown",
