@@ -10,25 +10,25 @@ Introgression from taxon 5 into taxon 6 occurs at time 0.5 with proportion 0.1
 
 ### OUTPUT SUMMARY ###
 
-There are 148 loci with the incongruent trait pattern under study
+There are 146 loci with the incongruent trait pattern under study
 
-"True" hemiplasy (1 mutation) occurs 5 times
+"True" hemiplasy (1 mutation) occurs 10 times
 
-Combinations of hemiplasy and homoplasy (1 < # of mutations < 3) occur 23 times
+Combinations of hemiplasy and homoplasy (1 < # of mutations < 3) occur 17 times
 
-"True" homoplasy (>= 3 mutations) occurs 120 times
+"True" homoplasy (>= 3 mutations) occurs 121 times
 
-119 loci have a discordant gene tree
-29 loci are concordant with the species tree
+120 loci have a discordant gene tree
+26 loci are concordant with the species tree
 
-27 loci originate from an introgressed history
-121 loci originate from the species history
+32 loci originate from an introgressed history
+114 loci originate from the species history
 
 In cases with combinations of hemiplasy and homoplasy:
 
-Taxon 2 mutated to the derived state 9 times, and inherited it from an ancestral population 14 times
-Taxon 4 mutated to the derived state 1 times, and inherited it from an ancestral population 22 times
-Taxon 6 mutated to the derived state 2 times, and inherited it from an ancestral population 21 times
+Taxon 2 mutated to the derived state 4 times, and inherited it from an ancestral population 13 times
+Taxon 4 mutated to the derived state 0 times, and inherited it from an ancestral population 17 times
+Taxon 6 mutated to the derived state 0 times, and inherited it from an ancestral population 17 times
 
 ### DETAILED OUTPUT ###
 
