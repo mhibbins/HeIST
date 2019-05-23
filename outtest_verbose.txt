@@ -1,0 +1,307 @@
+### INPUT SUMMARY ###
+
+The species tree is (1,(2,((6,5),(4,3))));
+
+3 taxa have the derived state: 2, 4, and 6
+
+Introgression from taxon 3 into taxon 2 occurs at time 0.25 with proportion 0.1
+Introgression from taxon 5 into taxon 6 occurs at time 0.5 with proportion 0.1
+
+
+### OUTPUT SUMMARY ###
+
+There are 148 loci with the incongruent trait pattern under study
+
+"True" hemiplasy (1 mutation) occurs 5 times
+
+Combinations of hemiplasy and homoplasy (1 < # of mutations < 3) occur 23 times
+
+"True" homoplasy (>= 3 mutations) occurs 120 times
+
+119 loci have a discordant gene tree
+29 loci are concordant with the species tree
+
+27 loci originate from an introgressed history
+121 loci originate from the species history
+
+In cases with combinations of hemiplasy and homoplasy:
+
+Taxon 2 mutated to the derived state 9 times, and inherited it from an ancestral population 14 times
+Taxon 4 mutated to the derived state 1 times, and inherited it from an ancestral population 22 times
+Taxon 6 mutated to the derived state 2 times, and inherited it from an ancestral population 21 times
+
+### DETAILED OUTPUT ###
+
+On concordant trees:
+# Mutations	# Trees
+3		24
+4		2
+
+On discordant trees:
+# Mutations	# Trees
+1		10
+2		17
+3		78
+4		13
+5		2
+
+Derived mutation inheritance patterns for trees with fewer mutations than derived taxa:
+	Term	Inherited from anc node
+Taxa 2	4	13
+Taxa 4	0	17
+Taxa 6	0	17
+
+Of the replicates that follow species site pattern:
+120 were discordant
+26 were concordant
+
+15 replicates matching the species pattern were from introgression tree 1
+17 replicates matching the species pattern were from introgression tree 2
+114 replicates matching the species pattern were from the species tree
+  _________________________________ 1
+_|
+ |             ____________________ 2
+ |____________|
+              |       _____________ 6
+              |______|
+                     |     _________ 5
+                     |____|
+                          |   _____ 3
+                          |__|
+                             |_____ 4
+
+This topology occured 22 time(s)
+  __________________________________ 1
+ |
+_|                          ________ 3
+ |               __________|
+ |              |          |________ 5
+ |______________|
+                |  ________________ 2
+                |_|
+                  |         _______ 4
+                  |________|
+                           |_______ 6
+
+This topology occured 12 time(s)
+  _________________________________ 1
+_|
+ |                  _______________ 2
+ |_________________|
+                   |     __________ 3
+                   |____|
+                        |   ________ 4
+                        |__|
+                           | ______ 5
+                           ||
+                            |______ 6
+
+This topology occured 10 time(s)
+  _________________________________ 1
+ |
+_|                 ________________ 2
+ |                |
+ |________________|           ______ 3
+                  |     _____|
+                  |    |     |______ 4
+                  |____|
+                       |    _______ 5
+                       |___|
+                           |_______ 6
+
+This topology occured 26 time(s)
+  _________________________________ 1
+_|
+ |                    _____________ 2
+ |___________________|
+                     | ____________ 4
+                     ||
+                      |     ________ 3
+                      |____|
+                           |  ______ 5
+                           |_|
+                             |______ 6
+
+This topology occured 8 time(s)
+  __________________________________ 1
+ |
+_|                  _______________ 2
+ |                 |
+ |_________________|         ______ 3
+                   |       _|
+                   |      | |______ 5
+                   |______|
+                          | _______ 4
+                          ||
+                           |_______ 6
+
+This topology occured 27 time(s)
+  __________________________________ 1
+_|
+ |                  _______________ 2
+ |_________________|
+                   |     ___________ 5
+                   |____|
+                        |   ________ 6
+                        |__|
+                           | ______ 3
+                           ||
+                            |______ 4
+
+This topology occured 13 time(s)
+  __________________________________ 1
+_|
+ |                 _________________ 3
+ |________________|
+                  | ________________ 2
+                  ||
+                   |        ________ 4
+                   |_______|
+                           |  ______ 5
+                           |_|
+                             |______ 6
+
+This topology occured 1 time(s)
+  __________________________________ 1
+_|
+ |                   _______________ 2
+ |__________________|
+                    |       ________ 4
+                    |______|
+                           |________ 5
+                           |
+                           | _______ 3
+                           ||
+                            |_______ 6
+
+This topology occured 3 time(s)
+  _________________________________ 1
+ |
+_|                          _______ 4
+ |                _________|
+ |               |         |_______ 6
+ |_______________|
+                 | _________________ 2
+                 ||
+                  |         ________ 3
+                  |________|
+                           |________ 5
+
+This topology occured 6 time(s)
+  __________________________________ 1
+_|
+ |                   ______________ 2
+ |__________________|
+                    |        ______ 5
+                    |_______|
+                            |______ 4
+                            |
+                            |______ 3
+                            |
+                            |______ 6
+
+This topology occured 1 time(s)
+  __________________________________ 1
+_|
+ |                 _________________ 2
+ |________________|
+                  | ________________ 4
+                  ||
+                   |       ________ 6
+                   |______|
+                          | _______ 3
+                          ||
+                           |_______ 5
+
+This topology occured 2 time(s)
+  _________________________________ 1
+_|
+ |             ____________________ 2
+ |____________|
+              |           _________ 5
+              |__________|
+                         |  ________ 3
+                         |_|
+                           |_______ 4
+                           |
+                           |_______ 6
+
+This topology occured 2 time(s)
+  _________________________________ 1
+_|
+ |                  _______________ 2
+ |_________________|
+                   |    ___________ 3
+                   |___|
+                       |   ________ 5
+                       |__|
+                          |  _______ 4
+                          |_|
+                            |_______ 6
+
+This topology occured 5 time(s)
+  __________________________________ 1
+_|
+ |                 _________________ 2
+ |________________|
+                  |      __________ 6
+                  |_____|
+                        |  ________ 4
+                        |_|
+                          | _______ 3
+                          ||
+                           |_______ 5
+
+This topology occured 4 time(s)
+  __________________________________ 1
+ |
+ |                           ______ 4
+_|                  ________|
+ |                 |        |_______ 3
+ |                 |        |
+ |_________________|        |_______ 5
+                   |
+                   | ______________ 2
+                   ||
+                    |______________ 6
+
+This topology occured 1 time(s)
+  _________________________________ 1
+_|
+ |                 ________________ 2
+ |________________|
+                  |   ______________ 6
+                  |__|
+                     |     _________ 3
+                     |____|
+                          | ________ 4
+                          ||
+                           |________ 5
+
+This topology occured 1 time(s)
+  __________________________________ 1
+ |
+_|                  ________________ 2
+ |                 |
+ |_________________|        ________ 3
+                   |   ____|
+                   |  |    |________ 6
+                   |__|
+                      |     _______ 4
+                      |____|
+                           |_______ 5
+
+This topology occured 1 time(s)
+  __________________________________ 1
+_|
+ |              ____________________ 2
+ |_____________|
+               |          __________ 3
+               |_________|
+                         |  ________ 6
+                         |_|
+                           | _______ 4
+                           ||
+                            |_______ 5
+
+This topology occured 1 time(s)
