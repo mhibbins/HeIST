@@ -177,17 +177,6 @@ def main(*args):
 
     counts_by_tree = seqtools.sum_counts_by_tree(counts_by_tree)
 
-    # print("\n####################RESULTS####################\n###############################################")
-
-    # print("\nOn concordant trees:")
-    # print("# Mutations\t# Trees")
-    # for item in mutation_counts_c:
-    #    print(str(item[0]) + '\t\t' + str(item[1]))
-    # print("\nOn discordant trees:")
-    # print("# Mutations\t# Trees")
-    # for item in mutation_counts_d:
-    #    print(str(item[0]) + '\t\t' + str(item[1]))
-
     if len(inherited) > 0:
         mutation_pat = hemiplasytool.summarize_inherited(inherited)
     else:
@@ -196,16 +185,8 @@ def main(*args):
             "Not enough 'interesting' cases to provide mutation inheritance patterns"
         )
 
-    # print("\nOf the replicates that follow species site pattern: ")
-    # print(str(summary[0]) + " were discordant\n" + str(summary[1]-summary[0]) + " were concordant\n")
+    min_mutations_required = hemiplasytool.fitchs_alg(speciesTree, traits)
 
-    # for i, topology_count in enumerate(counts_by_tree):
-    #    if i != len(counts_by_tree)-1:
-    #        print(str(topology_count) + " replicates matching the species pattern were from introgression tree " + str(i+1))
-    #    else:
-    #        print(str(topology_count) + " replicates matching the species pattern were from the species tree")
-
-    # print()
     log.debug("Plotting...")
     hemiplasytool.plot_mutations(mutation_counts_c, mutation_counts_d)
 
@@ -219,6 +200,7 @@ def main(*args):
         speciesTree,
         admix,
         traits,
+        min_mutations_required,
         args.outputdir,
     )
     hemiplasytool.write_unique_trees(all_focal_trees, args.outputdir)
