@@ -250,15 +250,24 @@ def write_output(
         out1.write("In cases with combinations of hemiplasy and homoplasy:\n\n")
         for key, val in reduced.items():
             val = [str(v) for v in val]
-            out1.write(
-                "Taxon "
-                + key
-                + " mutated to the derived state "
-                + val[0]
-                + " time(s), and inherited it from an ancestral population "
-                + val[1]
-                + " time(s)\n"
-            )
+            if key in derived:
+                out1.write(
+                    "Taxon "
+                    + key
+                    + " mutated to the derived state "
+                    + val[0]
+                    + " time(s), and inherited it from an ancestral population "
+                    + val[1]
+                    + " time(s)\n"
+                )
+            else:
+                out1.write(
+                    "Taxon "
+                    + key
+                    + " reverted to the ancestral state "
+                    + val[0]
+                    + " time(s)."
+                )
 
     # DETAILED OUTPUT
     out1.write("\n\n### DETAILED OUTPUT ###\n\n")
