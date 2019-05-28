@@ -117,6 +117,8 @@ _|        ________ 2*
 
 3 taxa have the derived state: 2, 4, 6
 
+The minimum number of mutations required to explain this trait pattern is 3
+
 Introgression from taxon 3 into taxon 2 occurs at time 0.25 with probability 0.1
 Introgression from taxon 5 into taxon 6 occurs at time 0.5 with probability 0.1
 

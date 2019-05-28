@@ -4,7 +4,13 @@ import numpy as np
 import logging as log
 import os
 import io
+import re
 from Bio import Phylo
+from Bio.Alphabet import generic_dna
+from Bio.Seq import Seq
+from Bio.SeqRecord import SeqRecord
+from Bio.Align import MultipleSeqAlignment
+from Bio.Phylo.TreeConstruction import ParsimonyScorer
 from hemiplasytool import seqtools
 
 
@@ -98,6 +104,42 @@ def summarize(results):
     return [c_disc_follow, c_conc_follow]
 
 
+def add_branch_lengths(tree, const=1):
+    """Adds dummy branch lengths to newick tree"""
+    newTree = re.sub(r"(\d+)", r"\1:1", tree)
+    newTree = re.sub(r"(\))", r"\1:1", newTree)
+    newTree = newTree[:-2]
+    return newTree
+
+
+def get_min_mutations(tree, traitpattern):
+    """
+    Gets the minimum number of mutations required
+    to explain the trait pattern without hemiplasy;
+    ie. the parsimony score. Takes a newick tree 
+    and trait pattern in alignment form
+    """
+    scorer = ParsimonyScorer()
+
+    return scorer.get_score(tree, traitpattern)
+
+
+def fitchs_alg(tree, traits):
+    tree = add_branch_lengths(tree)
+    tree = Phylo.read(io.StringIO(tree), "newick")
+
+    records = []
+    for key, val in traits.items():
+        if val == "0":
+            records.append(SeqRecord(Seq("A", generic_dna), id=key))
+        elif val == "1":
+            records.append(SeqRecord(Seq("T", generic_dna), id=key))
+
+    test_pattern = MultipleSeqAlignment(records)
+
+    return get_min_mutations(tree, test_pattern)
+
+
 def write_output(
     summary,
     mutation_counts_c,
@@ -107,6 +149,7 @@ def write_output(
     speciesTree,
     admix,
     traits,
+    min_mutations_required,
     filename,
 ):
     out1 = open(filename, "w")
@@ -118,8 +161,10 @@ def write_output(
         if val == "1":
             derived.append(key)
             tree = tree.replace(key, (key + "*"))
-
-    mix_range = list(range(2, len(derived)))
+    if min_mutations_required != 2:
+        mix_range = list(range(2, min_mutations_required))
+    else:
+        mix_range = [0]
     true_hemi = 0
     mix = 0
     true_homo = 0
@@ -128,10 +173,10 @@ def write_output(
             true_hemi = item[1]
         elif item[0] in mix_range:
             mix += item[1]
-        elif item[0] >= len(derived):
+        elif item[0] >= min_mutations_required:
             true_homo += item[1]
     for item in mutation_counts_c:
-        if item[0] >= len(derived):
+        if item[0] >= min_mutations_required:
             true_homo += item[1]
 
     sum_from_introgression = 0
@@ -156,6 +201,13 @@ def write_output(
         + ", ".join(derived)
         + "\n\n"
     )
+
+    out1.write(
+        "The minimum number of mutations required to explain this trait pattern is "
+        + str(min_mutations_required)
+        + "\n\n"
+    )
+
     for event in admix:
         out1.write(
             "Introgression from taxon "
@@ -175,11 +227,14 @@ def write_output(
     out1.write(
         '"True" hemiplasy (1 mutation) occurs ' + str(true_hemi) + " time(s)\n\n"
     )
-    out1.write(
-        "Combinations of hemiplasy and homoplasy (1 < # mutations < 3) occur "
-        + str(mix)
-        + " time(s)\n\n"
-    )
+    if mix_range != [0]:
+        out1.write(
+            "Combinations of hemiplasy and homoplasy (1 < # mutations < "
+            + str(min_mutations_required)
+            + ") occur "
+            + str(mix)
+            + " time(s)\n\n"
+        )
     out1.write(
         '"True" homoplasy (>= 3 mutations) occurs ' + str(true_homo) + " time(s)\n\n"
     )
@@ -195,15 +250,24 @@ def write_output(
         out1.write("In cases with combinations of hemiplasy and homoplasy:\n\n")
         for key, val in reduced.items():
             val = [str(v) for v in val]
-            out1.write(
-                "Taxon "
-                + key
-                + " mutated to the derived state "
-                + val[0]
-                + " time(s), and inherited it from an ancestral population "
-                + val[1]
-                + " time(s)\n"
-            )
+            if key in derived:
+                out1.write(
+                    "Taxon "
+                    + key
+                    + " mutated to the derived state "
+                    + val[0]
+                    + " time(s), and inherited it from an ancestral population "
+                    + val[1]
+                    + " time(s)\n"
+                )
+            else:
+                out1.write(
+                    "Taxon "
+                    + key
+                    + " reverted to the ancestral state "
+                    + val[0]
+                    + " time(s)."
+                )
 
     # DETAILED OUTPUT
     out1.write("\n\n### DETAILED OUTPUT ###\n\n")
