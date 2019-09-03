@@ -202,6 +202,7 @@ def main(*args):
         traits,
         min_mutations_required,
         args.outputdir,
+        (reps*batches)
     )
     hemiplasytool.write_unique_trees(all_focal_trees, args.outputdir)
 

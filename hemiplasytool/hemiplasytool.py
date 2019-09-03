@@ -52,9 +52,10 @@ def splits_to_ms(splitTimes, taxa, reps, path_to_ms, admix=None, r=None):
         )
 
     if admix is not None:
-        call += " | tail -n +4 | grep -v // > trees" + str(r) + ".tmp"
+        call += " | tail +4 | grep -v // > trees" + str(r) + ".tmp"
     else:
-        call += " | tail -n +4 | grep -v // > trees.tmp"
+        call += " | tail +4 | grep -v // > trees.tmp"
+    print(call)
     return call
 
 
@@ -151,6 +152,7 @@ def write_output(
     traits,
     min_mutations_required,
     filename,
+    reps
 ):
     out1 = open(filename, "w")
 
@@ -221,6 +223,8 @@ def write_output(
             + "\n"
         )
     out1.write("\n")
+
+    out1.write(str(reps) + " simulations performed")
 
     # OUTPUT SUMMARY
     out1.write("\n### OUTPUT SUMMARY ###\n\n")
