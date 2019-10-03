@@ -20,7 +20,6 @@ def subs2coal(newick_string):
 
         scfs = re.findall("\)(.*?)\:", newick_string) #regex to get concordance factors
         scfs = list(filter(None, scfs)) #removes empty values (root has no scf)
-
         coal_internals = []
 
         for i in range(len(scfs)):
@@ -31,7 +30,6 @@ def subs2coal(newick_string):
                         coal_internals.append(np.NaN)
 
         coal_internals = [float(i) for i in coal_internals]
-
         newick_internals = []
         internal_sections = []
         sections = newick_string.split(':')
@@ -58,10 +56,10 @@ def subs2coal(newick_string):
 
                 intercept, slope = poly.polyfit(newick_branches, coal_internals, 1)
 
-                return slope
+                return intercept, slope
 
-        coef = branch_regression(newick_internals, coal_internals)
-
+        intercept, coef = branch_regression(newick_internals, coal_internals)
+        
         tip_sections = []
 
         for i in range(len(sections)): #gets the sections with tip lengths
@@ -78,7 +76,12 @@ def subs2coal(newick_string):
         
         newick_tips = [float(i) for i in newick_tips]
 
-        coal_tips = [newick_tips[i]*coef for i in range(len(newick_tips))]
+        coal_tips = [(newick_tips[i]*coef + intercept) for i in range(len(newick_tips))]
+
+        print(len(newick_tips))
+        print(len(coal_tips))
+
+        coal_internals = [(newick_internals[i]*coef + intercept) if np.isnan(coal_internals[i]) else coal_internals[i] for i in range(len(newick_internals))]
 
         lengths = re.findall("\d+\.\d+", newick_string)
 
@@ -93,9 +96,13 @@ def subs2coal(newick_string):
                         coal_lengths.append(coal_internals[newick_internals.index(float(lengths[i]))])
                 elif float(lengths[i]) in newick_tips:
                         coal_lengths.append(coal_tips[newick_tips.index(float(lengths[i]))])
- 	
-        coal_lengths = [str(coal_lengths[i]) for i in range(len(coal_lengths))]
+                elif float(lengths[i]) == 0: #deals with roots of length 0 in smoothed trees
+                        coal_lengths.append(float(0))
         
+        coal_lengths = [str(coal_lengths[i]) for i in range(len(coal_lengths))]
+       
+        print(lengths)
+        print(coal_lengths) 
         coal_newick_string = newick_string
 
         for i in range(len(lengths)):
@@ -108,5 +115,7 @@ def subs2coal(newick_string):
 
 newick_string = read_newick(sys.argv[1])
 coal_newick_string = subs2coal(newick_string)
-
+print(newick_string)
 print(coal_newick_string)
+
+
