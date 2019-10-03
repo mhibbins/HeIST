@@ -101,8 +101,6 @@ def subs2coal(newick_string):
         
         coal_lengths = [str(coal_lengths[i]) for i in range(len(coal_lengths))]
        
-        print(lengths)
-        print(coal_lengths) 
         coal_newick_string = newick_string
 
         for i in range(len(lengths)):
