@@ -60,8 +60,9 @@ def readSeqs(seqs, ntaxa, speciesPattern, nodes, batch, breaks=[]):
     """
     indices = []
     c = cluster(speciesPattern)
-    shouldMatch1 = c["0"]
-    shouldMatch2 = c["1"]
+    print(c)
+    shouldMatch1 = c[0]
+    shouldMatch2 = c[1]
     if len(breaks) != 0:
         counts = [0] * len(breaks)
     else:
@@ -76,7 +77,7 @@ def readSeqs(seqs, ntaxa, speciesPattern, nodes, batch, breaks=[]):
             for x, line in enumerate(lines):
                 if x != 0:
                     l = line.replace("\n", "").split()
-                    pattern[l[0]] = l[1]
+                    pattern[str(l[0])] = str(l[1])
             levels = set()
             for key, val in pattern.items():
                 if int(key) in range(1, ntaxa + 1):
@@ -84,11 +85,11 @@ def readSeqs(seqs, ntaxa, speciesPattern, nodes, batch, breaks=[]):
             if len(levels) == 2:
                 a = []
                 for taxa in shouldMatch1:
-                    a.append(pattern[taxa])
+                    a.append(pattern[str(taxa)])
                 if checkEqual(a):
                     b = []
                     for taxa in shouldMatch2:
-                        b.append(pattern[taxa])
+                        b.append(pattern[str(taxa)])
                     if checkEqual(b):
                         if b[0] != pattern[str(ntaxa + 1)]:
                             indices.append(index)

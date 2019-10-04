@@ -1,6 +1,7 @@
 # /usr/bin/python3
 import matplotlib.pyplot as plt
 import numpy as np
+import numpy.polynomial.polynomial as poly
 import logging as log
 import os
 import io
@@ -12,13 +13,85 @@ from Bio.SeqRecord import SeqRecord
 from Bio.Align import MultipleSeqAlignment
 from Bio.Phylo.TreeConstruction import ParsimonyScorer
 from hemiplasytool import seqtools
-
+from ete3 import Tree
+from collections import OrderedDict
 
 """
 Hemiplasy Tool
 Authors: Matt Gibson, Mark Hibbins
 Indiana University
 """
+
+def names2ints(newick):
+    t = Tree(newick, format = 1)
+    ntaxa = 0
+    for n1 in t.iter_leaves():
+        ntaxa += 1
+
+    i = 0
+
+    rankings = {}
+
+    for n1 in t.iter_leaves():
+        n_ancestors = len(n1.get_ancestors())
+        rankings[n1.name] = n_ancestors
+
+    s = [(k, rankings[k]) for k in sorted(rankings, key=rankings.get, reverse=False)]
+
+    int_names = [i for i in range(1, len(s)+1)]
+    #print(s)
+    rankings = {}
+
+    for i, item in enumerate(s):
+        name = item[0]
+        new = int_names[i]
+        newick = newick.replace(name, str(new))
+        rankings[name] = new
+    newick = Tree(newick, format = 1)
+    newick.convert_to_ultrametric()
+    return(newick.write(), rankings)
+
+
+
+def newick2ms(newick):
+    """
+    Converts a Newick tree with branch lengths in coalscent units to ms-style splits
+    """
+    t = Tree(newick, format=1)
+
+    ntaxa = 0
+    for n1 in t.iter_leaves():
+        ntaxa += 1
+    i = 0
+    ms_splits = []
+    ms_taxa = []
+    while i < ntaxa+1:
+        distances = []
+        taxa = []
+        for n1 in t.iter_leaves():
+            for n2 in t.iter_leaves():
+                n1n = n1.name
+                n2n = n2.name
+                d = n1.get_distance(n2)
+                if n1n != n2n:
+                    distances.append(d)
+                    taxa.append(n1n + ' ' + n2n)
+        if len(distances) == 0:
+            break
+        minDistance_idx = distances.index(min(distances))
+        minDistance = min(distances)
+
+        taxa_to_collapse = taxa[minDistance_idx].split(' ')
+        taxa_to_collapse = [int(x) for x in taxa_to_collapse]
+
+        ms_splits.append(minDistance/2)
+        ms_taxa.append([max(taxa_to_collapse), min(taxa_to_collapse)])
+
+        for node1 in t.iter_leaves():
+            if node1.name == str(max(taxa_to_collapse)):
+                node1.delete(preserve_branch_length=True)
+        i += 1
+    return(ms_splits, ms_taxa)
 
 
 def splits_to_ms(splitTimes, taxa, reps, path_to_ms, admix=None, r=None):
@@ -59,7 +132,7 @@ def splits_to_ms(splitTimes, taxa, reps, path_to_ms, admix=None, r=None):
     return call
 
 
-def seq_gen_call(treefile, path, s=0.05):
+def seq_gen_call(treefile, path, s):
     """
     Make seq-gen call.
     """
@@ -126,15 +199,15 @@ def get_min_mutations(tree, traitpattern):
 
 
 def fitchs_alg(tree, traits):
-    tree = add_branch_lengths(tree)
+    #tree = add_branch_lengths(tree)
     tree = Phylo.read(io.StringIO(tree), "newick")
 
     records = []
     for key, val in traits.items():
-        if val == "0":
-            records.append(SeqRecord(Seq("A", generic_dna), id=key))
-        elif val == "1":
-            records.append(SeqRecord(Seq("T", generic_dna), id=key))
+        if val == 0:
+            records.append(SeqRecord(Seq("A", generic_dna), id=str(key)))
+        elif val == 1:
+            records.append(SeqRecord(Seq("T", generic_dna), id=str(key)))
 
     test_pattern = MultipleSeqAlignment(records)
 
@@ -152,8 +225,7 @@ def write_output(
     traits,
     min_mutations_required,
     filename,
-    reps
-):
+    reps):
     out1 = open(filename, "w")
 
     # CALCULATE SUMMARY STATS
@@ -361,37 +433,140 @@ def plot_mutations(results_c, results_d):
     plt.savefig("mutation_dist.png", dpi=250)
 
 
+def subs2coal(newick_string):
+        
+        '''
+        Takes a newick string with the nodes labelled with concordance factors,
+        and returns the same string with branch lengths converted to coalescent
+        units.
+        '''
+
+        scfs = re.findall("\)(.*?)\:", newick_string) #regex to get concordance factors
+        scfs = list(filter(None, scfs)) #removes empty values (root has no scf)
+        coal_internals = []
+
+        for i in range(len(scfs)):
+
+                if (float(scfs[i])/100) < 1 and float(scfs[i]) != 1: #catch for missing data / values of 1
+                        coal_internals.append(-1*(np.log(1-(float(scfs[i])/100))))
+                else:
+                        coal_internals.append(np.NaN)
+
+        coal_internals = [float(i) for i in coal_internals]
+        newick_internals = []
+        internal_sections = []
+        sections = newick_string.split(':')
+
+        for i in range(len(sections)):
+                if len(sections[i].split(")")) > 1 and sections[i].split(")")[1] in scfs:
+                                newick_internals.append(newick_string.split(':')[i+1].split(',')[0].split(")")[0])
+                                internal_sections.append(sections[i+1])
+
+        
+        newick_internals = [float(i) for i in newick_internals]
+         
+        def branch_regression(newick_branches, coal_internals):
+
+                '''
+                Returns the regression coefficient of the coalescent branch lengths
+                on the branch lengths in the newick string
+                '''
+
+                for i in range(len(newick_branches)): #drops missing data
+                        if np.isnan(newick_branches[i]) or np.isnan(coal_internals[i]):
+                                del newick_branches[i]
+                                del coal_internals[i]
+
+                intercept, slope = poly.polyfit(newick_branches, coal_internals, 1)
+
+                return intercept, slope
+
+        intercept, coef = branch_regression(newick_internals, coal_internals)
+        
+        tip_sections = []
+
+        for i in range(len(sections)): #gets the sections with tip lengths
+                if sections[i] not in internal_sections:
+                        tip_sections.append(sections[i])
+
+        newick_tips = []
+
+        for i in range(len(tip_sections)): #gets the tip lengths
+                if len(tip_sections[i].split(',')) > 1:
+                        newick_tips.append(tip_sections[i].split(',')[0])
+                elif len(tip_sections[i].split(')')) > 1:
+                        newick_tips.append(tip_sections[i].split(')')[0])
+        
+        newick_tips = [float(i) for i in newick_tips]
+
+        coal_tips = [(newick_tips[i]*coef + intercept) for i in range(len(newick_tips))]
+
+      
+
+        coal_internals = [(newick_internals[i]*coef + intercept) if np.isnan(coal_internals[i]) else coal_internals[i] for i in range(len(newick_internals))]
+
+        lengths = re.findall("\d+\.\d+", newick_string)
+
+        lengths = [lengths[i] for i in range(len(lengths)) if float(lengths[i]) < 1]
+
+        coal_lengths = []
+
+        for i in range(len(lengths)):
+                if newick_internals.count(lengths[i]) > 1 or newick_tips.count(lengths[i]) > 1:
+                        sys.exit('Error: Duplicate branch lengths')
+                elif float(lengths[i]) in newick_internals:
+                        coal_lengths.append(coal_internals[newick_internals.index(float(lengths[i]))])
+                elif float(lengths[i]) in newick_tips:
+                        coal_lengths.append(coal_tips[newick_tips.index(float(lengths[i]))])
+                elif float(lengths[i]) == 0: #deals with roots of length 0 in smoothed trees
+                        coal_lengths.append(float(0))
+        
+        coal_lengths = [str(coal_lengths[i]) for i in range(len(coal_lengths))]
+       
+        coal_newick_string = newick_string
+
+        for i in range(len(lengths)):
+             coal_newick_string = coal_newick_string.replace(str(lengths[i]), str(coal_lengths[i]))
+    
+        for i in range(len(scfs)):
+                coal_newick_string = coal_newick_string.replace(str(scfs[i]), '')    
+        
+        return(coal_newick_string, Tree(coal_newick_string))
+
+
 def readInput(file):
     f = open(file, "r")
-    splits = []
-    taxa = []
-    traits = {}
+    tree = ""
+
+    derived = []
+
     admix = []
 
     cnt = 0
     for i, line in enumerate(f):
-        if line.startswith("#"):
-            cnt += 1
+        if line.startswith("begin trees"):
+            cnt = 1
             continue
-        if len(line) <= 1:
+        if line.startswith("begin hemiplasytool"):
+            cnt = 2
             continue
+        if (len(line) <= 1) or (line.startswith("end")) or (line.startswith("#")):
+            continue
+
 
         elif cnt == 1:
-            l = line.replace("\n", "").split()
-            splits.append(float(l[0]))
-            taxa.append((int(l[1]), int(l[2])))
+            tree = line.replace("\n", "").split('=')[1][1:]
 
         elif cnt == 2:
-            l = line.replace("\n", "").split()
-            traits[l[0]] = l[1]
+            #simulation parameters
+            l = line.replace("\n", "").split('=')
+            if l[0] == "set derived taxon":
+                derived.append(l[1])
+            
+    return(tree, derived, admix)
 
-        elif cnt == 3:
-            tree = line.replace("\n", "")
-        elif cnt == 4:
-            l = line.replace("\n", "").split()
-            admix.append(l)
 
-    return (splits, taxa, traits, tree, admix)
+
 
 
 def summarize_inherited(inherited):

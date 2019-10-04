@@ -23,7 +23,7 @@ setup(name='hemiplasytool',
       install_requires=REQUIREMENTS,
       entry_points={
         "console_scripts": [
-            "hemiplasytool=hemiplasytool.__main__:main",
+            "hemiplasytool=hemiplasytool.__main__:main"
         ]
     },
       keywords='phylogenetics evolution hemiplasy homoplasy'

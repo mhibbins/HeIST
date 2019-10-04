@@ -27,8 +27,8 @@ def main(*args):
     )
     parser.add_argument(
         "input",
-        metavar="splits",
-        help="Input file describing split times, trait pattern, and topology",
+        metavar="input",
+        help="Input NEXUS file",
     )
     parser.add_argument(
         "-n",
@@ -71,7 +71,26 @@ def main(*args):
 
     # Read input file
     log.debug("Reading input file...")
-    splits, taxa, traits, speciesTree, admix = hemiplasytool.readInput(args.input)
+    
+    #splits, taxa, traits, speciesTree, admix = hemiplasytool.readInput(args.input)
+    treeSp, derived, admix = hemiplasytool.readInput(args.input)
+    
+    # Convert ML tree to a coalescent tree based on GCFs
+    treeSp,t = hemiplasytool.subs2coal(treeSp)
+
+    
+    taxalist = [i.name for i in t.iter_leaves()]
+    # Convert coalescent tree to ms splits
+    treeSp, conversions = hemiplasytool.names2ints(treeSp)
+    
+    splits, taxa = hemiplasytool.newick2ms(treeSp)
+    traits = {}
+    for i in taxalist:
+        if i in derived:
+            traits[conversions[i]] = 1
+        else:
+            traits[conversions[i]] = 0
+    
 
     batches = int(args.batches)
     reps = int(args.replicates)
@@ -114,6 +133,7 @@ def main(*args):
     taxalist = []
     for s in traits.keys():
         taxalist.append(int(s))
+    print(traits)
 
     inherited = []
 
@@ -132,6 +152,7 @@ def main(*args):
         match_species_pattern, counts = seqtools.readSeqs(
             "seqs.tmp", len(taxalist), traits, len(splits), i, breaks
         )
+        print(match_species_pattern)
         counts_by_tree.append(counts)
         # Gets the trees at these indices
         focal_trees, _ = seqtools.getTrees("trees.tmp", match_species_pattern)
@@ -145,7 +166,7 @@ def main(*args):
         """
 
         log.debug("Calculating discordance...")
-        results[i], disc, conc = seqtools.propDiscordant(focal_trees, speciesTree)
+        results[i], disc, conc = seqtools.propDiscordant(focal_trees, treeSp)
 
         focaltrees_d = seqtools.parse_seqgen("focaltrees.tmp", len(taxalist), disc)
         focaltrees_c = seqtools.parse_seqgen("focaltrees.tmp", len(taxalist), conc)
@@ -157,9 +178,9 @@ def main(*args):
 
         nderived = 0
         for trait in traits.values():
-            if trait == "1":
+            if trait == 1:
                 nderived += 1
-
+        
         interesting = seqtools.get_interesting(
             focaltrees_d, nderived, len(traits.keys())
         )
@@ -185,10 +206,14 @@ def main(*args):
             "Not enough 'interesting' cases to provide mutation inheritance patterns"
         )
 
-    min_mutations_required = hemiplasytool.fitchs_alg(speciesTree, traits)
+    min_mutations_required = hemiplasytool.fitchs_alg(str(treeSp), traits)
 
     log.debug("Plotting...")
-    hemiplasytool.plot_mutations(mutation_counts_c, mutation_counts_d)
+    try:
+        hemiplasytool.plot_mutations(mutation_counts_c, mutation_counts_d)
+    except:
+        log.debug("Can't plot!")
+
 
     log.debug("Writing output file...")
     hemiplasytool.write_output(
@@ -197,7 +222,7 @@ def main(*args):
         mutation_counts_d,
         mutation_pat,
         counts_by_tree,
-        speciesTree,
+        str(treeSp),
         admix,
         traits,
         min_mutations_required,
