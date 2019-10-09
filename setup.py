@@ -8,7 +8,7 @@ HERE = pathlib.Path(__file__).parent
 README = (HERE / "README.md").read_text()
 
 # specify requirements of your package here
-REQUIREMENTS = ['biopython', 'numpy', 'matplotlib']
+REQUIREMENTS = ['biopython', 'numpy', 'matplotlib', 'ete3']
 
 setup(name='hemiplasytool',
       version='0.2.0',
@@ -23,7 +23,9 @@ setup(name='hemiplasytool',
       install_requires=REQUIREMENTS,
       entry_points={
         "console_scripts": [
-            "hemiplasytool=hemiplasytool.__main__:main"
+            "hemiplasytool=hemiplasytool.__main__:main",
+            "newick2ms=hemiplasytool.__main__:newick2ms",
+            "subs2coal=hemiplasytool.__main__:subs2coal"
         ]
     },
       keywords='phylogenetics evolution hemiplasy homoplasy'

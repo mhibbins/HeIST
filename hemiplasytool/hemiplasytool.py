@@ -225,16 +225,22 @@ def write_output(
     traits,
     min_mutations_required,
     filename,
-    reps):
+    reps,
+    conversions):
     out1 = open(filename, "w")
 
     # CALCULATE SUMMARY STATS
+    print(conversions)
     derived = []
     tree = speciesTree
+
+
+
     for key, val in traits.items():
-        if val == "1":
-            derived.append(key)
-            tree = tree.replace(key, (key + "*"))
+        if val == 1:
+            derived.append(str(key))
+            tree = re.sub(r"\b%s\b" % str(key)+":", str(key) + "*:", tree)
+            #tree = tree.replace(str(key)+":", (str(key) + "*:"))
     if min_mutations_required != 2:
         mix_range = list(range(2, min_mutations_required))
     else:
@@ -263,7 +269,14 @@ def write_output(
 
     # INPUT SUMMARY
     out1.write("### INPUT SUMMARY ###\n\n")
-    out1.write("The species tree is " + speciesTree + "\n\n")
+
+    out1.write("Integer Code\tTaxon Name\n")
+    for key, val in conversions.items():
+        out1.write(str(val) + ":\t" + key + '\n')
+    out1.write('\n')
+
+
+    out1.write("The species tree (smoothed, in coalescent units) is:\n " + speciesTree + "\n\n")
     t = tree.replace(";", "")
     t = Phylo.read(io.StringIO(t), "newick")
     Phylo.draw_ascii(t, out1, column_width=40)
@@ -530,8 +543,7 @@ def subs2coal(newick_string):
     
         for i in range(len(scfs)):
                 coal_newick_string = coal_newick_string.replace(str(scfs[i]), '')    
-        
-        return(coal_newick_string, Tree(coal_newick_string))
+        return(coal_newick_string, Tree(coal_newick_string, format=1))
 
 
 def readInput(file):

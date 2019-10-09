@@ -12,6 +12,67 @@ Authors: Matt Gibson, Mark Hibbins
 Indiana University
 """
 
+def newick2ms(*args):
+    parser = argparse.ArgumentParser(
+        description="Tool for converting \
+                        a newick string to ms-style splits. \
+                            Note that this only makes sense if the input\
+                                tree is in coalescent units."
+    )
+
+    parser.add_argument(
+        "input",
+        metavar="input",
+        help="Input newick string file"
+    )
+    args = parser.parse_args()
+
+    newick = open(args.input, 'r').read()
+    
+    tree, conversions = hemiplasytool.names2ints(newick)
+
+    splits, taxa = hemiplasytool.newick2ms(tree)
+
+    call = ""
+    for x, split in enumerate(splits):
+        call += " -ej " + str(split) + " " + str(taxa[x][0]) + " " + str(taxa[x][1])
+    print("Split times flags for ms: ")
+    print(call)
+    print()
+
+    print("Time\tTaxa1\tTaxa2")
+    for i, split in enumerate(splits):
+        print(str(split) + '\t' + str(taxa[i][0]) + '\t' + str(taxa[i][1]))
+
+    print('\n')
+
+    print("Original code\tms code")
+    for key, val in conversions.items():
+        print(str(key) + '\t' + str(val))
+
+
+def subs2coal(*args):
+    parser = argparse.ArgumentParser(
+        description="Tool for converting \
+                        a newick string with branch lengths in subs/site\
+                            to a neewick string with branch lengths in\
+                                 coalescent units. Input requires gene \
+                                     or site-concordancee factors as \
+                                         branch labels"
+    )
+
+    parser.add_argument(
+        "input",
+        metavar="input",
+        help="Input newick string file"
+    )
+    args = parser.parse_args()
+
+    newick = open(args.input, 'r').read()
+
+    treeSp,t = hemiplasytool.subs2coal(newick)
+
+    print(treeSp)
 
 def main(*args):
     start = time.time()
@@ -74,7 +135,6 @@ def main(*args):
     
     #splits, taxa, traits, speciesTree, admix = hemiplasytool.readInput(args.input)
     treeSp, derived, admix = hemiplasytool.readInput(args.input)
-    
     # Convert ML tree to a coalescent tree based on GCFs
     treeSp,t = hemiplasytool.subs2coal(treeSp)
 
@@ -227,7 +287,8 @@ def main(*args):
         traits,
         min_mutations_required,
         args.outputdir,
-        (reps*batches)
+        (reps*batches),
+        conversions
     )
     hemiplasytool.write_unique_trees(all_focal_trees, args.outputdir)
 

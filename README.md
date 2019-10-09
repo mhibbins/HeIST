@@ -13,6 +13,7 @@ Mark Hibbins (mhibbins@indiana.edu)
 * biopython
 * numpy
 * matplotlib
+* ete3
 
 
 ## Installation
@@ -288,3 +289,40 @@ This topology occured 1 time(s)
 See `outtest.txt` for full output.
 
 ![Mutation distribution](mutation_dist.png)
+
+
+## Sub-modules
+
+Once installed, two additional programs will be available at the command line: `newick2ms` and `subs2coal`.
+
+### `newick2ms`
+
+```
+usage: newick2ms [-h] input
+
+Tool for converting a newick string to ms-style splits. Note that this only
+makes sense if the input tree is in coalescent units.
+
+positional arguments:
+  input       Input newick string file
+
+optional arguments:
+  -h, --help  show this help message and exit
+```
+
+
+### `subs2coal`
+
+```
+usage: subs2coal [-h] input
+
+Tool for converting a newick string with branch lengths in subs/site to a
+neewick string with branch lengths in coalescent units. Input requires gene or
+site-concordancee factors as branch labels
+
+positional arguments:
+  input       Input newick string file
+
+optional arguments:
+  -h, --help  show this help message and exit
+```
