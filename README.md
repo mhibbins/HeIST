@@ -1,4 +1,5 @@
-# HemiplasyTool
+# HeIST
+**He**miplasy **I**nference **S**imulation **T**ool
 
 
 ![](https://img.shields.io/github/release-pre/mhibbins/hemiplasytool.svg)
@@ -91,70 +92,95 @@ set introgression taxon1="species in tree" taxon2="species in tree" strength=[fl
 
 ## Example:
 ```
-python -m hemiplasytool -v -n 1000000 -p ~/bin/ms -g ~/bin/seq-gen -x 1 ./test/input_test_small.txt -o outtest.txt
+python -m hemiplasytool -v -n 1000000 -p ~/bin/ms -g ~/bin/seq-gen -x 50 ./test/input_test_small.txt -o outtest.txt
 ```
 
 ### Output:
 ```
 ### INPUT SUMMARY ###
 
-The species tree is (1:1.76011,(((3:0.990059,((8:0.33002,9:0.33002)1:0.33002,7:0.660039)1:0.33002)1:0.33002,(((10:0.440026,11:0.440026)1:0.440026,((12:0.33002,13:0.33002)1:0.33002,((15:0.220013,16:0.220013)1:0.220013,14:0.440026)1:0.220013)1:0.220013)1:0.220013,4:1.10007)1:0.220013)1:0.220013,(2:1.02673,(5:0.513364,6:0.513364)1:0.513364)1:0.513364)1:0.220013);
+Integer Code	Taxon Name
+1:	Lygosoma_sp_ACD7392
+2:	Prasinohaema_virens_CCA02661
+3:	Prasinohaema_semoni_CCA00900
+4:	Fojia_bumui_CCA15922
+5:	Prasinohaema_sp_nov_CCA01623
+6:	Lipinia_longiceps_CCA15866
+7:	Lipinia_pulchra_CCA03201
+8:	Lipinia_albodorsale_CCA03500
+9:	Lipinia_noctua_CCA16819
+10:	Papuascincus_stanleyanus_cf_sp2_CCA02483
+11:	Papuascincus_sp_nov_CCA05980
+12:	Prasinohaema_prehensicauda_CCA222
+13:	Lobulia_elegans_CCA485
+14:	Lobulia_brongersmai_CCA03482
+15:	Prasinohaema_flavipes_CCA083
+16:	Prasinohaema_sp_nov_CCA01005
 
-  ________________________________ 1
+The species tree (smoothed, in coalescent units) is:
+ (((((((12:0.440047,(15:0.220024,16:0.220024)1:0.220024)1:0.220024,(13:0.330035,14:0.330035)1:0.330035)1:0.220024,(8:0.440047,9:0.440047)1:0.440047)1:0.220024,3:1.10012)1:0.220024,((7:0.660071,(10:0.330035,11:0.330035)1:0.330035)1:0.330035,4:0.990106)1:0.330035)1:0.220024,((5:0.513388,6:0.513388)1:0.513388,2:1.02678)1:0.513388)1:0.220024,1:1.76019);
+
+                          ______ 12*
+                      ___|
+                     |   |    ___ 15*
+                     |   |___|
+                  ___|       |___ 16*
+                 |   |
+                 |   |     _____ 13
+              ___|   |____|
+             |   |        |_____ 14
+             |   |
+          ___|   |       _______ 8
+         |   |   |______|
+         |   |          |_______ 9
+         |   |
+      ___|   |___________________ 3*
+     |   |
+     |   |           ___________ 7
+     |   |     _____|
+     |   |    |     |      _____ 10
+     |   |____|     |_____|
+  ___|        |           |_____ 11
+ |   |        |
+ |   |        |_________________ 4
+ |   |
+ |   |                  ________ 5*
+_|   |         ________|
+ |   |________|        |________ 6
+ |            |
+ |            |__________________ 2*
  |
- |              _________________ 3
- |             |
- |        _____|            _____ 8
- |       |     |      _____|
- |       |     |_____|     |_____ 9
- |       |           |
- |       |           |___________ 7
-_|       |
- |       |                _______ 10
- |    ___|        _______|
- |   |   |       |       |_______ 11
- |   |   |       |
- |   |   |    ___|          _____ 12
- |   |   |   |   |    _____|
- |   |   |   |   |   |     |_____ 13
- |   |   |   |   |___|
- |   |   |   |       |        ___ 15
- |___|   |___|       |    ___|
-     |       |       |___|   |___ 16
-     |       |           |
-     |       |           |_______ 14
-     |       |
-     |       |___________________ 4
-     |
-     |         __________________ 2
-     |________|
-              |          ________ 5
-              |_________|
-                        |________ 6
+ |______________________________ 1
 
-0 taxa have the derived state: 
+6 taxa have the derived state: 12, 15, 16, 3, 5, 2
 
 The minimum number of mutations required to explain this trait pattern is 4
 
 
-1000000 simulations performed
+100000000 simulations performed
 ### OUTPUT SUMMARY ###
 
-"True" hemiplasy (1 mutation) occurs 0 time(s)
+"True" hemiplasy (1 mutation) occurs 11 time(s)
 
-Combinations of hemiplasy and homoplasy (1 < # mutations < 4) occur 0 time(s)
+Combinations of hemiplasy and homoplasy (1 < # mutations < 4) occur 42 time(s)
 
-"True" homoplasy (>= 3 mutations) occurs 3 time(s)
+"True" homoplasy (>= 3 mutations) occurs 24 time(s)
 
-3 loci have a discordant gene tree
+77 loci have a discordant gene tree
 0 loci are concordant with the species tree
 
 0 loci originate from an introgressed history
-3 loci originate from the species history
+77 loci originate from the species history
 
 In cases with combinations of hemiplasy and homoplasy:
 
-Taxon 2 reverted to the ancestral state 1 time(s).Taxon 4 reverted to the ancestral state 3 time(s).Taxon 5 reverted to the ancestral state 1 time(s).Taxon 14 reverted to the ancestral state 0 time(s).Taxon 15 reverted to the ancestral state 0 time(s).Taxon 16 reverted to the ancestral state 0 time(s).
+Taxon 2 mutated to the derived state 10 time(s), and inherited it from an ancestral population 53 time(s)
+Taxon 3 mutated to the derived state 6 time(s), and inherited it from an ancestral population 57 time(s)
+Taxon 5 mutated to the derived state 13 time(s), and inherited it from an ancestral population 50 time(s)
+Taxon 12 mutated to the derived state 2 time(s), and inherited it from an ancestral population 61 time(s)
+Taxon 15 mutated to the derived state 1 time(s), and inherited it from an ancestral population 62 time(s)
+Taxon 16 mutated to the derived state 0 time(s), and inherited it from an ancestral population 63 time(s)
+Taxon 1 reverted to the ancestral state 0 time(s).Taxon 4 reverted to the ancestral state 0 time(s).Taxon 6 reverted to the ancestral state 1 time(s).Taxon 7 reverted to the ancestral state 0 time(s).Taxon 8 reverted to the ancestral state 0 time(s).Taxon 9 reverted to the ancestral state 0 time(s).Taxon 10 reverted to the ancestral state 0 time(s).Taxon 11 reverted to the ancestral state 0 time(s).Taxon 13 reverted to the ancestral state 0 time(s).Taxon 14 reverted to the ancestral state 0 time(s).
 
 ### DETAILED OUTPUT ###
 
@@ -163,132 +189,146 @@ On concordant trees:
 
 On discordant trees:
 # Mutations	# Trees
-4		1
-5		2
+1		11
+2		21
+3		21
+4		16
+5		5
+6		2
+7		1
 
 Derived mutation inheritance patterns for trees with fewer mutations than derived taxa:
 	Term	Inherited from anc node
-Taxa 2	1	2
-Taxa 4	3	0
-Taxa 5	1	2
-Taxa 14	0	3
-Taxa 15	0	3
-Taxa 16	0	3
+Taxa 2	10	53
+Taxa 3	6	57
+Taxa 5	13	50
+Taxa 12	2	61
+Taxa 15	1	62
+Taxa 16	0	63
+Taxa 1	0	1
+Taxa 4	0	1
+Taxa 6	1	0
+Taxa 7	0	1
+Taxa 8	0	1
+Taxa 9	0	1
+Taxa 10	0	1
+Taxa 11	0	1
+Taxa 13	0	1
+Taxa 14	0	1
 
 Of the replicates that follow species site pattern:
-3 were discordant
+77 were discordant
 0 were concordant
 
-3 replicates matching the species pattern were from the species tree
+77 replicates matching the species pattern were from the species tree
 
 ### OBSERVED GENE TREES ###
 
-  ________________________________ 1
+                  _______________ 3
+             ____|
+            |    |   _____________ 12
+            |    |__|
+            |       |       ______ 15
+  __________|       |______|
+ |          |              |______ 16
+ |          |
+ |          |    _________________ 2
+ |          |___|
+_|              |_________________ 5
  |
- |                 ______________ 10
- |           _____|
- |          |     |        ______ 12
- |          |     |_______|
- |       ___|             |______ 13
- |      |   |
- |      |   |  __________________ 11
-_|      |   |_|
- |      |     |           _______ 14
- | _____|     |__________|
- ||     |                |    ___ 15
- ||     |                |___|
- ||     |                    |___ 16
- ||     |
- ||     |  ______________________ 3
- ||     |_|
- ||       |             _________ 9
-  |       |____________|
-  |                    |_________ 7
-  |                    |
-  |                    |_________ 8
-  |
-  |     __________________________ 4
-  |____|
-       |    _____________________ 6
-       |___|
-           |      _______________ 2
-           |_____|
-                 |_______________ 5
+ |     ___________________________ 1
+ |    |
+ |    |           ________________ 11
+ |____| _________|
+      ||         |  _____________ 4
+      ||         |_|
+      ||           |_____________ 7
+      ||           |
+       |           |_____________ 10
+       |
+       |    ______________________ 6
+       |   |
+       |___|               ______ 8
+           |    __________|
+           |   |          |______ 9
+           |___|
+               |           _______ 13
+               |__________|
+                          |_______ 14
 
 This topology occured 1 time(s)
-  _______________________________ 1
+                        _________ 3
+                    ___|
+                   |   |  _______ 15
+                   |   |_|
+                   |     |    ____ 12
+  _________________|     |___|
+ |                 |         |____ 16
+ |                 |
+ |                 |   __________ 6
+ |                 |__|
+ |                    |  ________ 2
+_|                    |_|
+ |                      |________ 5
  |
- |       ________________________ 11
-_|      |
- |      |         _______________ 7
- |      |________|
- |      |        |         ______ 8
- |______|        |________|
-        |                 |______ 9
-        |
-        |       _________________ 4
-        |     _|
-        |    | | ________________ 10
-        |    | ||
-        |    |  |     ___________ 12
-        | ___|  |____|
-        ||   |       |___________ 13
-        ||   |
-        ||   |____________________ 3
-        ||   |
-        ||   |         __________ 14
-        ||   |________|
-         |            |     _____ 15
-         |            |____|
-         |                 |_____ 16
-         |
-         |    ___________________ 5
-         |___|
-             |     ______________ 2
-             |____|
-                  |______________ 6
+ |                _______________ 1
+ |               |
+ |               |       ________ 4
+ |_______________|   ___|
+                 |  |   |________ 7
+                 |  |
+                 |__|       _____ 10
+                    |______|
+                    |      |_____ 11
+                    |
+                    |     _______ 13
+                    |____|
+                         |_______ 14
+                         |
+                         |    ___ 8
+                         |___|
+                             |___ 9
 
 This topology occured 1 time(s)
-         _________________________ 6
-  ______|
- |      |        _________________ 2
- |      |_______|
- |              |_________________ 5
-_|
- | _______________________________ 1
- ||
- ||                   ___________ 7
- ||     _____________|
-  |    |             |___________ 9
-  |    |
-  |____|     _____________________ 3
-       | ___|
-       ||   |_____________________ 8
-       ||
-       ||    _____________________ 4
-        |   |
-        |   |         ____________ 12
-        |___|  ______|
-            | |      |____________ 13
-            | |
-            |_|         __________ 16
-              |   _____|
-              |  |     |  ________ 14
-              |  |     |_|
-              |__|       |________ 15
-                 |
-                 |  ______________ 10
-                 |_|
-                   |______________ 11
+                         ________ 2
+                    ____|
+                   |    |________ 5
+  _________________|
+ |                 |    __________ 3
+ |                 |___|
+ |                     |    _____ 12
+ |                     |___|
+_|                         |   __ 15
+ |                         |__|
+ |                            |__ 16
+ |
+ |               ________________ 6
+ |              |
+ |______________|  ______________ 1
+                | |
+                |_|   ___________ 7
+                  |  |
+                  |__|      _____ 10
+                     | ____|
+                     ||    |_____ 11
+                     ||
+                      |__________ 4
+                      |
+                      |        __ 13
+                      |   ____|
+                      |  |    |__ 14
+                      |__|
+                         |    ___ 8
+                         |___|
+                             |___ 9
 
-This topology occured 1 time(s)
 
 ...
 ```
 
-See `outtest.txt` for full output.
+See `lizard_tree_output.txt` for full output.
 
-![Mutation distribution](mutation_dist.png)
+![Mutation distribution](mutation_dist_lizard.png)
 
 
 ## Sub-modules
