@@ -39,7 +39,6 @@ def names2ints(newick):
     s = [(k, rankings[k]) for k in sorted(rankings, key=rankings.get, reverse=False)]
 
     int_names = [i for i in range(1, len(s)+1)]
-    #print(s)
     rankings = {}
 
     for i, item in enumerate(s):
@@ -84,7 +83,7 @@ def newick2ms(newick):
         taxa_to_collapse = taxa[minDistance_idx].split(' ')
         taxa_to_collapse = [int(x) for x in taxa_to_collapse]
 
-        ms_splits.append(minDistance/2)
+        ms_splits.append((minDistance/2)/2)
         ms_taxa.append([max(taxa_to_collapse), min(taxa_to_collapse)])
 
         for node1 in t.iter_leaves():
@@ -125,10 +124,9 @@ def splits_to_ms(splitTimes, taxa, reps, path_to_ms, admix=None, r=None):
         )
 
     if admix is not None:
-        call += " | tail +4 | grep -v // > trees" + str(r) + ".tmp"
+        call += " | tail -n +4 | grep -v // > trees" + str(r) + ".tmp"
     else:
-        call += " | tail +4 | grep -v // > trees.tmp"
-    print(call)
+        call += " | tail -n +4 | grep -v // > trees.tmp"
     return call
 
 
@@ -230,7 +228,7 @@ def write_output(
     out1 = open(filename, "w")
 
     # CALCULATE SUMMARY STATS
-    print(conversions)
+    #print(conversions)
     derived = []
     tree = speciesTree
 

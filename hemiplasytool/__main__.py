@@ -132,17 +132,18 @@ def main(*args):
 
     # Read input file
     log.debug("Reading input file...")
-    
+
     #splits, taxa, traits, speciesTree, admix = hemiplasytool.readInput(args.input)
     treeSp, derived, admix = hemiplasytool.readInput(args.input)
     # Convert ML tree to a coalescent tree based on GCFs
     treeSp,t = hemiplasytool.subs2coal(treeSp)
 
-    
+    ###HERE IS WHERE THE TREE NEEDS TO BE PRUNED###
+
     taxalist = [i.name for i in t.iter_leaves()]
     # Convert coalescent tree to ms splits
     treeSp, conversions = hemiplasytool.names2ints(treeSp)
-    
+
     splits, taxa = hemiplasytool.newick2ms(treeSp)
     traits = {}
     for i in taxalist:
@@ -193,7 +194,6 @@ def main(*args):
     taxalist = []
     for s in traits.keys():
         taxalist.append(int(s))
-    print(traits)
 
     inherited = []
 
@@ -212,7 +212,6 @@ def main(*args):
         match_species_pattern, counts = seqtools.readSeqs(
             "seqs.tmp", len(taxalist), traits, len(splits), i, breaks
         )
-        print(match_species_pattern)
         counts_by_tree.append(counts)
         # Gets the trees at these indices
         focal_trees, _ = seqtools.getTrees("trees.tmp", match_species_pattern)

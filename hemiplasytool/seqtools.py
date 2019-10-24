@@ -60,7 +60,6 @@ def readSeqs(seqs, ntaxa, speciesPattern, nodes, batch, breaks=[]):
     """
     indices = []
     c = cluster(speciesPattern)
-    print(c)
     shouldMatch1 = c[0]
     shouldMatch2 = c[1]
     if len(breaks) != 0:
