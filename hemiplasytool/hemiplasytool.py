@@ -288,8 +288,9 @@ def write_output(
     )
 
     out1.write(
-        "The minimum number of mutations required to explain this trait pattern is "
+        "With homoplasy only, "
         + str(min_mutations_required)
+        + " mutations are required to explain this trait pattern (Fitch parsimony)"
         + "\n\n"
     )
 
@@ -307,10 +308,11 @@ def write_output(
         )
     out1.write("\n")
 
-    out1.write(str(reps) + " simulations performed")
+    out1.write(str("{:.2e}".format(reps)) + " simulations performed")
 
     # OUTPUT SUMMARY
-    out1.write("\n### OUTPUT SUMMARY ###\n\n")
+    out1.write("\n\n### RESULTS ###\n\n")
+    out1.write(str(sum([true_hemi, mix, true_homo])) + ' loci matched the species character states\n\n')
     out1.write(
         '"True" hemiplasy (1 mutation) occurs ' + str(true_hemi) + " time(s)\n\n"
     )
@@ -323,7 +325,7 @@ def write_output(
             + " time(s)\n\n"
         )
     out1.write(
-        '"True" homoplasy (>= 3 mutations) occurs ' + str(true_homo) + " time(s)\n\n"
+        '"True" homoplasy (>= ' + str(min_mutations_required) + ' mutations) occurs ' + str(true_homo) + " time(s)\n\n"
     )
     out1.write(str(summary[0]) + " loci have a discordant gene tree\n")
     out1.write(
@@ -333,31 +335,11 @@ def write_output(
         str(sum_from_introgression) + " loci originate from an introgressed history\n"
     )
     out1.write(str(sum_from_species) + " loci originate from the species history\n\n")
-    if reduced is not None:
-        out1.write("In cases with combinations of hemiplasy and homoplasy:\n\n")
-        for key, val in reduced.items():
-            val = [str(v) for v in val]
-            if key in derived:
-                out1.write(
-                    "Taxon "
-                    + key
-                    + " mutated to the derived state "
-                    + val[0]
-                    + " time(s), and inherited it from an ancestral population "
-                    + val[1]
-                    + " time(s)\n"
-                )
-            else:
-                out1.write(
-                    "Taxon "
-                    + key
-                    + " reverted to the ancestral state "
-                    + val[0]
-                    + " time(s)."
-                )
 
     # DETAILED OUTPUT
-    out1.write("\n\n### DETAILED OUTPUT ###\n\n")
+    out1.write('Distribution of mutation counts:\n\n')
+    out1.write("# Mutations\t# Trees\n")
+    
     out1.write("On concordant trees:\n")
     out1.write("# Mutations\t# Trees\n")
     for item in mutation_counts_c:
@@ -369,35 +351,15 @@ def write_output(
 
     if reduced is not None:
         out1.write(
-            "\nDerived mutation inheritance patterns for trees with fewer mutations than derived taxa:\n"
+            "\nOrigins of mutations leading to observed character states for hemiplasy + homoplasy cases:\n\n"
         )
-        out1.write("\tTerm\tInherited from anc node\n")
+        out1.write("\tTip mutation\tInternal branch mutation\tTip reversal\n")
         for key, val in reduced.items():
             val = [str(v) for v in val]
-            out1.write("Taxa " + key + "\t" + "\t".join(val) + "\n")
-
-    out1.write("\nOf the replicates that follow species site pattern:\n")
-    out1.write(
-        str(summary[0])
-        + " were discordant\n"
-        + str(summary[1] - summary[0])
-        + " were concordant\n\n"
-    )
-
-    for i, topology_count in enumerate(counts):
-        if i != len(counts) - 1:
-            out1.write(
-                str(topology_count)
-                + " replicates matching the species pattern were from introgression tree "
-                + str(i + 1)
-                + "\n"
-            )
-        else:
-            out1.write(
-                str(topology_count)
-                + " replicates matching the species pattern were from the species tree\n"
-            )
-
+            if key in derived:
+                out1.write("Taxa " + key + "\t" + "\t".join(val) + "\t" + "0" + "\n")
+            else:
+                out1.write("Taxa " + key + "\t" + "\t".join(["0", val[1]]) + "\t" + val[0] + "\n")
     out1.close()
 
 
