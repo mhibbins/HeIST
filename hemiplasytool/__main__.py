@@ -103,10 +103,10 @@ def main(*args):
         "-x", "--batches", metavar="", help="Number of batches", default=3
     )
     parser.add_argument(
-        "-p", "--mspath", metavar="", help="Path to ms", default="./msdir"
+        "-p", "--mspath", metavar="", help="Path to ms (if not in user path)", default="ms"
     )
     parser.add_argument(
-        "-g", "--seqgenpath", metavar="", help="Path to seq-gen", default="./seq-gen"
+        "-g", "--seqgenpath", metavar="", help="Path to seq-gen (if not in user path)", default="seq-gen"
     )
     parser.add_argument(
         "-s",
@@ -137,7 +137,6 @@ def main(*args):
     # Convert ML tree to a coalescent tree based on GCFs
     treeSp,t = hemiplasytool.subs2coal(treeSp)
     original_tree = [treeSp, t]
-
     # Tree pruning
     if outgroup != None:
         log.debug("Pruning tree...")
@@ -150,10 +149,9 @@ def main(*args):
 
     # Convert coalescent tree to ms splits
     treeSp, conversions = hemiplasytool.names2ints(treeSp)
-    
+    original_tree[0], _ = hemiplasytool.names2ints(original_tree[0])
     # Convert newick tree to ms splits
     splits, taxa = hemiplasytool.newick2ms(treeSp)
-    
     traits = {}
     for i in taxalist:
         if i in derived:
@@ -168,6 +166,11 @@ def main(*args):
 
     breaks = []
 
+    # Convert introgression taxa to ints
+    events = []
+    for e in admix:
+        events.append([e[0], str(conversions[e[1]]), str(conversions[e[2]]), e[3]])
+    admix = events
     if len(admix) != 0:
         breaks = [0] * len(admix)
         log.debug("Introgression events specified")
@@ -231,10 +234,6 @@ def main(*args):
 
         assert len(match_species_pattern) == len(focal_trees)
 
-        """
-        Out of those trees which follow the species site pattern,
-        get the number of trees which are discordant.
-        """
 
         log.debug("Calculating discordance...")
         results[i], disc, conc = seqtools.propDiscordant(focal_trees, treeSp)
@@ -285,7 +284,7 @@ def main(*args):
 
     log.debug("Plotting...")
     try:
-        hemiplasytool.plot_mutations(mutation_counts_c, mutation_counts_d)
+        hemiplasytool.plot_mutations(mutation_counts_c, mutation_counts_d, args.outputdir)
     except:
         log.debug("Can't plot!")
 

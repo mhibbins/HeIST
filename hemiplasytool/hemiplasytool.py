@@ -231,9 +231,6 @@ def write_output(
     #print(conversions)
     derived = []
     tree = speciesTree
-
-
-
     for key, val in traits.items():
         if val == 1:
             derived.append(str(key))
@@ -300,10 +297,12 @@ def write_output(
         out1.write(str(val) + ":\t" + key + '\n')
     out1.write('\n')
 
-    out1.write("The original species tree (smoothed, in coalescent units) is:\n " + oldTree + "\n\n")
+    if oldTree == speciesTree:
+        out1.write("The species tree (smoothed, in coalescent units) is:\n " + speciesTree + "\n\n")
+    else:
+        out1.write("The original species tree (smoothed, in coalescent units) is:\n " + oldTree + "\n\n")
+        out1.write("The pruned species tree (smoothed, in coalescent units) is:\n " + speciesTree + "\n\n")
 
-
-    out1.write("The pruned species tree (smoothed, in coalescent units) is:\n " + speciesTree + "\n\n")
     t = tree.replace(";", "")
     t = Phylo.read(io.StringIO(t), "newick")
     Phylo.draw_ascii(t, out1, column_width=40)
@@ -396,47 +395,63 @@ def write_output(
     out1.close()
 
 
-def plot_mutations(results_c, results_d):
+def plot_mutations(mutation_counts_c, mutation_counts_d, filename):
     """
     Plot mutation distribution with matplotlib
     """
-    objs_c = [i[0] for i in results_c]
-    objs_d = [i[0] for i in results_d]
+
+    mutation_counts_comb = {}
+    mutation_counts_keys = set()
+    mutation_counts_cc = {}
+    mutation_counts_dd = {}
+
+    for x in mutation_counts_c:
+        key = x[0]
+        val = x[1]
+        mutation_counts_cc[key] = val
+        mutation_counts_keys.add(key)
+    for x in mutation_counts_d:
+        key = x[0]
+        val = x[1]
+        mutation_counts_dd[key] = val
+        mutation_counts_keys.add(key)
+
+    for k in mutation_counts_keys:
+        if k in mutation_counts_cc.keys() and k in mutation_counts_dd.keys():
+            mutation_counts_comb[k] = mutation_counts_cc[k] + mutation_counts_dd[k]
+        elif k in mutation_counts_cc.keys() and k not in mutation_counts_dd.keys():
+            mutation_counts_comb[k] = mutation_counts_cc[k]
+        elif k not in mutation_counts_cc.keys() and k  in mutation_counts_dd.keys():
+            mutation_counts_comb[k] = mutation_counts_dd[k]
+
+
+
+    objs_comb = mutation_counts_comb.keys()
     conc_dic = {}
     disc_dic = {}
-    objs = objs_c + objs_d
-    objs = set(objs)
+
+    objs = set(objs_comb)
     x = np.array(list(range(1, max(objs) + 1)))
     y1 = []
-    y2 = []
     width = 0.2
-    for v in results_c:
-        conc_dic[v[0]] = v[1]
-    for v in results_d:
-        disc_dic[v[0]] = v[1]
+
 
     for i in x:
-        if i in conc_dic.keys():
-            y1.append(conc_dic[i])
+        if i in mutation_counts_comb.keys():
+            y1.append(mutation_counts_comb[i])
         else:
             y1.append(0)
-        if i in disc_dic.keys():
-            y2.append(disc_dic[i])
-        else:
-            y2.append(0)
 
     labels = []
     for o in x:
         labels.append(str(o))
     _, ax = plt.subplots()
     p1 = ax.bar(x, y1, width, color="#484041")
-    p2 = ax.bar(x + width, y2, width, color="#70ee9c")
-    ax.set_xticks(x + width / 2)
+    ax.set_xticks(x)
     ax.set_xticklabels(labels)
     plt.ylabel("Count")
     plt.xlabel("# Mutations")
-    ax.legend((p1[0], p2[0]), ("Concordant trees", "Discordant trees"))
-    plt.savefig("mutation_dist.png", dpi=250)
+    plt.savefig(filename + ".dist.png", dpi=250)
 
 
 def subs2coal(newick_string):
@@ -639,11 +654,9 @@ def write_unique_trees(focal_trees, filename, traits):
 
         for key, val in traits.items():
             if val == 1:
-                tree = re.sub(r"\b%s\b" % str(key)+":", str(key) + "*:", tree)
-                #tree = tree.replace(str(key)+":", (str(key) + "*:"))
-
-        t = tree.replace(";", "")
-        t = Phylo.read(io.StringIO(tree), "newick")
+                t = re.sub(r"\b%s\b" % str(key)+":", str(key) + "*:", tree)
+        t = t.replace(";", "")
+        t = Phylo.read(io.StringIO(t), "newick")
         Phylo.draw_ascii(t, out1, column_width=40)
         for key, val in counts.items():
 
