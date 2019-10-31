@@ -225,7 +225,7 @@ def write_output(
     filename,
     reps,
     conversions, oldTree):
-    out1 = open(filename, "w")
+    out1 = open(filename+'.txt', "w")
 
     # CALCULATE SUMMARY STATS
     #print(conversions)
@@ -577,9 +577,13 @@ def update_count(tree, dic):
 def write_unique_trees(focal_trees, filename, traits):
     unique = []
     counts = {}
-    out1 = open(filename, "a")
+    out1 = open(filename+'.txt', "a")
+    outTrees = open(filename+'.trees', 'w')
+
+    outTrees.write("###All Observed gene trees###\n")
 
     for i, tree in enumerate(focal_trees):
+        outTrees.write(tree)
         if i == 0:
             unique.append(tree)
             counts[tree] = 1
@@ -609,6 +613,7 @@ def write_unique_trees(focal_trees, filename, traits):
                 out1.write("This topology occured " + str(val) + " time(s)\n")
 
     out1.close()
+    outTrees.close()
 
 
 def prune_tree(tree, derived, outgroup):

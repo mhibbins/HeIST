@@ -28,13 +28,12 @@ python setup.py install
 
 ## Usage
 ```
-usage: hemiplasytool [-h] [-v] [-n] [-x] [-p] [-g] [-s] [-o] splits
+usage: __main__.py [-h] [-v] [-n] [-x] [-p] [-g] [-s] [-o] input
 
 Tool for characterising hemiplasy given traits mapped onto a species tree
 
 positional arguments:
-  input                Input NEXUS file
-
+  input                 Input NEXUS file
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -44,7 +43,7 @@ optional arguments:
   -p , --mspath         Path to ms
   -g , --seqgenpath     Path to seq-gen
   -s , --mutationrate   Seq-gen mutation rate (default 0.05)
-  -o , --outputdir      Output directory
+  -o , --outputdir      Output directory/prefix
 ```
 
 ## Input file
@@ -96,6 +95,9 @@ python -m hemiplasytool -v -n 1000000 -p ~/bin/ms -g ~/bin/seq-gen -x 50 ./test/
 ```
 
 ### Output:
+Two output files will be produced. The main output `[prefix].txt` and a gene trees file `[prefix].trees`, which contains all observed topologies.
+
+
 ```
 ### INPUT SUMMARY ###
 

@@ -114,7 +114,7 @@ def main(*args):
         help="Seq-gen mutation rate (default 0.05)",
         default=0.05,
     )
-    parser.add_argument("-o", "--outputdir", metavar="", help="Output directory")
+    parser.add_argument("-o", "--outputdir", metavar="", help="Output directory/prefix")
 
     args = parser.parse_args()
 
