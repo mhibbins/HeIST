@@ -1,4 +1,5 @@
-# HemiplasyTool
+# HeIST
+**He**miplasy **I**nference **S**imulation **T**ool
 
 
 ![](https://img.shields.io/github/release-pre/mhibbins/hemiplasytool.svg)
@@ -13,6 +14,7 @@ Mark Hibbins (mhibbins@indiana.edu)
 * biopython
 * numpy
 * matplotlib
+* ete3
 
 
 ## Installation
@@ -26,13 +28,12 @@ python setup.py install
 
 ## Usage
 ```
-usage: hemiplasytool [-h] [-v] [-n] [-x] [-p] [-g] [-s] [-o] splits
+usage: __main__.py [-h] [-v] [-n] [-x] [-p] [-g] [-s] [-o] input
 
 Tool for characterising hemiplasy given traits mapped onto a species tree
 
 positional arguments:
-  splits                Input file describing split times, trait pattern, and
-                        topology
+  input                 Input NEXUS file
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -42,140 +43,213 @@ optional arguments:
   -p , --mspath         Path to ms
   -g , --seqgenpath     Path to seq-gen
   -s , --mutationrate   Seq-gen mutation rate (default 0.05)
-  -o , --outputdir      Output directory
+  -o , --outputdir      Output directory/prefix
 ```
 
 ## Input file
 
-The input file has three sections:  split times, traits, and species tree. They must be specified in this order and delimited by a '#'. See below for descriptions of each section
+The input file is modified NEXUS format. A minimal example includes a tree (in newick format) and at least two dervived taxa set with the `set derived` command. If an outgroup is specified with `set outgroup`, the tree will be pruned to contain only taxa relevant to the simulation (i.e., the subclade containing derived taxa) + the outgroup. 
 
 ```
-#splits
-6   2   1
-3   3   2
-1.5 5   3
-1.25    6   5
-1   4   3
+#NEXUS
+begin trees;
+	tree tree_1 = (spA:0.002,(spB:0.001,((spC:0.0004,spD:0.0008)10.0:0.0005,(spE:0.0006,spF:0.0004)8.0:0.0004)15:0.0009)90.0:0.005);
+end;
 
-#traits
-1   0 
-2   1
-3   0
-4   1
-5   0
-6   1
-
-#tree
-(1,(2,((6,5),(4,3))));
-
-#introgression (time, source, dest, probability; optional)
-0.25    3   2   0.1
-0.5 5   6   0.1
-
+begin hemiplasytool;
+set derived taxon=spB
+set derived taxon=spD
+set derived taxon=spF
+end;
 ```
-
-### Split times
-
-The split times describe the order of subpopulation splits to `ms`. Each line specifies the timing (in 4N generations), source population, and destination population (backwards in time). Splits should be ordered oldest to newest. Entries should be delimited by spaces or tabs
-
-
-### Traits
-
-The traits section describes the observed species trait pattern. Each line specifies the taxa ID (must correspond to those coded in the split times file), the binary trait value, and the timing of sampling (in 4N generations relative to the longest branch). These can be specified in any order
-
 
 ### Species tree
 
-The species tree in Newick format. Again, taxa IDs must correspond to those in the split times and traits sections.
+Species tree in newick format. Branch lengths must be in average substitutions per site and **branches must be labeled with concordance factors**. [IQTree](www.iqtree.org/doc/Concordance-Factor) can be used to do this. 
+
+### Traits
+
+Set which taxa have the derived character by using 
+
+```
+set derived taxon="species in tree"
+```
+
 
 ### Introgression
 
-Introgression events. Each line should specify the timing (in 4N generations), source taxon, destination taxon, and probability of introgression. Events can be specified in any order.
+Introgression events can be defined by using
+
+```
+set introgression source="species in tree" dest="species in tree" prob=[float_value] timing=[float_value]
+```
+Note that timing must be specified in coalescent units. For this reason, we recommend first running your input tree through [`subs2coal`](#subs2coal)
 
 ## Example:
 ```
-python -m hemiplasytool -v -n 1000000 -p ~/bin/ms -g ~/bin/seq-gen -x 1 ./test/input_test_small.txt -o outtest.txt
+python -m hemiplasytool -n 100000 -x 5 -p ~/msdir/ms -g ~/Seq-Gen-1.3.4/seq-gen -o test_w_introgression -v test/input_test_small_intro_v2.txt
 ```
 
 ### Output:
+Three output files will be produced. The main output `test_w_introgression.txt`, a gene trees file `test_w_introgression.trees` which contains all observed topologies, and a mutation distribution plot `test_w_introgression.dist.png`.
+
+
 ```
 ### INPUT SUMMARY ###
 
-The species tree is (1,(2,((6,5),(4,3))));
+Integer Code	Taxon Name
+1:	sp1
+2:	sp2
+3:	sp3
+4:	sp4
+5:	sp5
+6:	sp6
 
-  _______ 1
+The species tree (smoothed, in coalescent units) is:
+ (1:2.78984,(2:2.09238,((3:0.69746,4:0.69746)1:0.69746,(5:0.69746,6:0.69746)1:0.69746)1:0.69746)1:0.69746);
+
+  _________________________________ 1
  |
-_|        ________ 2*
+_|        _________________________ 2*
  |       |
- |_______|                 ________ 6*
+ |_______|                 ________ 3
          |         _______|
-         |        |       |________ 5
+         |        |       |________ 4*
          |________|
-                  |        ________ 4*
+                  |        ________ 5
                   |_______|
-                          |________ 3
+                          |________ 6*
 
 3 taxa have the derived state: 2, 4, 6
 
-The minimum number of mutations required to explain this trait pattern is 3
+With homoplasy only, 3 mutations are required to explain this trait pattern (Fitch parsimony)
 
-Introgression from taxon 3 into taxon 2 occurs at time 0.25 with probability 0.1
-Introgression from taxon 5 into taxon 6 occurs at time 0.5 with probability 0.1
+Introgression from taxon 4 into taxon 6 occurs at time 0.3 with probability 0.05
 
+5.00e+05 simulations performed
 
-### OUTPUT SUMMARY ###
+### RESULTS ###
 
-"True" hemiplasy (1 mutation) occurs 4 time(s)
+70 loci matched the species character states
 
-Combinations of hemiplasy and homoplasy (1 < # mutations < 3) occur 19 time(s)
+"True" hemiplasy (1 mutation) occurs 14 time(s)
 
-"True" homoplasy (>= 3 mutations) occurs 109 time(s)
+Combinations of hemiplasy and homoplasy (1 < # mutations < 3) occur 30 time(s)
 
-99 loci have a discordant gene tree
-33 loci are concordant with the species tree
+"True" homoplasy (>= 3 mutations) occurs 26 time(s)
 
-20 loci originate from an introgressed history
-112 loci originate from the species history
+70 loci have a discordant gene tree
+0 loci are concordant with the species tree
 
-In cases with combinations of hemiplasy and homoplasy:
+4 loci originate from an introgressed history
+66 loci originate from the species history
 
-Taxon 2 mutated to the derived state 8 time(s), and inherited it from an ancestral population 11 time(s)
-Taxon 4 mutated to the derived state 1 time(s), and inherited it from an ancestral population 18 time(s)
-Taxon 6 mutated to the derived state 2 time(s), and inherited it from an ancestral population 17 time(s)
+Distribution of mutation counts:
 
-### DETAILED OUTPUT ###
+# Mutations	# Trees
+On all trees:
+1		14
+2		30
+3		25
+4		1
 
 On concordant trees:
 # Mutations	# Trees
-3		26
-4		7
 
 On discordant trees:
 # Mutations	# Trees
-1		4
-2		19
-3		66
-4		5
-5		5
+1		14
+2		30
+3		25
+4		1
 
-Derived mutation inheritance patterns for trees with fewer mutations than derived taxa:
-	Term	Inherited from anc node
-Taxa 2	8	11
-Taxa 4	1	18
-Taxa 6	2	17
+Origins of mutations leading to observed character states for hemiplasy + homoplasy cases:
 
-Of the replicates that follow species site pattern:
-99 were discordant
-33 were concordant
-
-9 replicates matching the species pattern were from introgression tree 1
-11 replicates matching the species pattern were from introgression tree 2
-112 replicates matching the species pattern were from the species tree
+	Tip mutation	Internal branch mutation	Tip reversal
+Taxa 2	3	27	0
+Taxa 4	3	27	0
+Taxa 6	0	30	0
 
 ### OBSERVED GENE TREES ###
+
+                 _________________ 4
+  ______________|
+ |              | ________________ 3
+ |              ||
+ |               |         _______ 5
+_|               |________|
+ |                        |_______ 6*
+ |
+ |    _____________________________ 1
+ |___|
+     |_____________________________ 2
+
+This topology occured 1 time(s)
+                       ____________ 3
+  ____________________|
+ |                    |____________ 5
+_|
+ |         ________________________ 1
+ |________|
+          |     __________________ 2
+          |____|
+               |        __________ 4
+               |_______|
+                       |__________ 6*
+
+This topology occured 4 time(s)
+         _________________________ 2
+  ______|
+ |      |       __________________ 5
+ |      |______|
+ |             |   _______________ 4
+_|             |__|
+ |                |_______________ 6*
+ |
+ |  _______________________________ 1
+ |_|
+   |_______________________________ 3
+
 ...
 ```
 
-See `outtest.txt` for full output.
+See `test_w_introgression.txt.txt` for full output.
 
-![Mutation distribution](mutation_dist.png)
+![Mutation distribution](test_w_introgression.dist.png)
+
+
+## Sub-modules
+
+Once installed, two additional programs will be available at the command line: `newick2ms` and `subs2coal`.
+
+### newick2ms
+
+```
+usage: newick2ms [-h] input
+
+Tool for converting a newick string to ms-style splits. Note that this only
+makes sense if the input tree is in coalescent units.
+
+positional arguments:
+  input       Input newick string file
+
+optional arguments:
+  -h, --help  show this help message and exit
+```
+
+
+### subs2coal
+
+```
+usage: subs2coal [-h] input
+
+Tool for converting a newick string with branch lengths in subs/site to a
+neewick string with branch lengths in coalescent units. Input requires gene or
+site-concordancee factors as branch labels
+
+positional arguments:
+  input       Input newick string file
+
+optional arguments:
+  -h, --help  show this help message and exit
+```

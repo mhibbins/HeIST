@@ -1,10 +1,4 @@
 # /usr/bin/python3
-import argparse
-import time
-import sys
-import logging as log
-from hemiplasytool import hemiplasytool
-from hemiplasytool import seqtools
 
 """
 HemiplasyTool
@@ -12,6 +6,74 @@ Authors: Matt Gibson, Mark Hibbins
 Indiana University
 """
 
+import argparse
+import time
+import sys
+import logging as log
+from hemiplasytool import hemiplasytool
+from hemiplasytool import seqtools
+
+def newick2ms(*args):
+    parser = argparse.ArgumentParser(
+        description="Tool for converting \
+                        a newick string to ms-style splits. \
+                            Note that this only makes sense if the input\
+                                tree is in coalescent units."
+    )
+
+    parser.add_argument(
+        "input",
+        metavar="input",
+        help="Input newick string file"
+    )
+    args = parser.parse_args()
+
+    newick = open(args.input, 'r').read()
+    
+    tree, conversions = hemiplasytool.names2ints(newick)
+
+    splits, taxa = hemiplasytool.newick2ms(tree)
+
+    call = ""
+    for x, split in enumerate(splits):
+        call += " -ej " + str(split) + " " + str(taxa[x][0]) + " " + str(taxa[x][1])
+    print("Split times flags for ms: ")
+    print(call)
+    print()
+
+    print("Time\tTaxa1\tTaxa2")
+    for i, split in enumerate(splits):
+        print(str(split) + '\t' + str(taxa[i][0]) + '\t' + str(taxa[i][1]))
+
+    print('\n')
+
+    print("Original code\tms code")
+    for key, val in conversions.items():
+        print(str(key) + '\t' + str(val))
+
+
+def subs2coal(*args):
+    parser = argparse.ArgumentParser(
+        description="Tool for converting \
+                        a newick string with branch lengths in subs/site\
+                            to a neewick string with branch lengths in\
+                                 coalescent units. Input requires gene \
+                                     or site-concordancee factors as \
+                                         branch labels"
+    )
+
+    parser.add_argument(
+        "input",
+        metavar="input",
+        help="Input newick string file"
+    )
+    args = parser.parse_args()
+
+    newick = open(args.input, 'r').read()
+
+    treeSp,t = hemiplasytool.subs2coal(newick)
+
+    print(treeSp)
 
 def main(*args):
     start = time.time()
@@ -27,8 +89,8 @@ def main(*args):
     )
     parser.add_argument(
         "input",
-        metavar="splits",
-        help="Input file describing split times, trait pattern, and topology",
+        metavar="input",
+        help="Input NEXUS file",
     )
     parser.add_argument(
         "-n",
@@ -41,10 +103,10 @@ def main(*args):
         "-x", "--batches", metavar="", help="Number of batches", default=3
     )
     parser.add_argument(
-        "-p", "--mspath", metavar="", help="Path to ms", default="./msdir"
+        "-p", "--mspath", metavar="", help="Path to ms (if not in user path)", default="ms"
     )
     parser.add_argument(
-        "-g", "--seqgenpath", metavar="", help="Path to seq-gen", default="./seq-gen"
+        "-g", "--seqgenpath", metavar="", help="Path to seq-gen (if not in user path)", default="seq-gen"
     )
     parser.add_argument(
         "-s",
@@ -53,32 +115,62 @@ def main(*args):
         help="Seq-gen mutation rate (default 0.05)",
         default=0.05,
     )
-    parser.add_argument("-o", "--outputdir", metavar="", help="Output directory")
+    parser.add_argument("-o", "--outputdir", metavar="", help="Output directory/prefix")
 
     args = parser.parse_args()
 
-    # Setup logging
+    # Setup ###################
     log.basicConfig(level=log.DEBUG)
     logger = log.getLogger()
     if args.verbose:
         logger.disabled = False
     else:
         logger.disabled = True
-
-    # Silence matplotlib debug logging
     mpl_logger = log.getLogger("matplotlib")
     mpl_logger.setLevel(log.WARNING)
+    ##########################
 
     # Read input file
     log.debug("Reading input file...")
-    splits, taxa, traits, speciesTree, admix = hemiplasytool.readInput(args.input)
+    treeSp, derived, admix, outgroup = hemiplasytool.readInput(args.input)
+    
+    # Convert ML tree to a coalescent tree based on GCFs
+    treeSp,t = hemiplasytool.subs2coal(treeSp)
+    original_tree = [treeSp, t]
+    # Tree pruning
+    if outgroup != None:
+        log.debug("Pruning tree...")
+        # Prune tree
+        treeSp,t = hemiplasytool.prune_tree(treeSp, derived, outgroup)
 
+
+    taxalist = [i.name for i in t.iter_leaves()]
+
+
+    # Convert coalescent tree to ms splits
+    treeSp, conversions = hemiplasytool.names2ints(treeSp)
+    original_tree[0], _ = hemiplasytool.names2ints(original_tree[0])
+    # Convert newick tree to ms splits
+    splits, taxa = hemiplasytool.newick2ms(treeSp)
+    traits = {}
+    for i in taxalist:
+        if i in derived:
+            traits[conversions[i]] = 1
+        else:
+            traits[conversions[i]] = 0
+    
+    
+    # Make program calls
     batches = int(args.batches)
     reps = int(args.replicates)
 
     breaks = []
 
-    # Make program calls
+    # Convert introgression taxa to ints
+    events = []
+    for e in admix:
+        events.append([e[0], str(conversions[e[1]]), str(conversions[e[2]]), e[3]])
+    admix = events
     if len(admix) != 0:
         breaks = [0] * len(admix)
         log.debug("Introgression events specified")
@@ -110,7 +202,10 @@ def main(*args):
     seqgencall = hemiplasytool.seq_gen_call(
         "trees.tmp", args.seqgenpath, args.mutationrate
     )
+    #################################################################
 
+
+    # Begin batches
     taxalist = []
     for s in traits.keys():
         taxalist.append(int(s))
@@ -139,13 +234,9 @@ def main(*args):
 
         assert len(match_species_pattern) == len(focal_trees)
 
-        """
-        Out of those trees which follow the species site pattern,
-        get the number of trees which are discordant.
-        """
 
         log.debug("Calculating discordance...")
-        results[i], disc, conc = seqtools.propDiscordant(focal_trees, speciesTree)
+        results[i], disc, conc = seqtools.propDiscordant(focal_trees, treeSp)
 
         focaltrees_d = seqtools.parse_seqgen("focaltrees.tmp", len(taxalist), disc)
         focaltrees_c = seqtools.parse_seqgen("focaltrees.tmp", len(taxalist), conc)
@@ -157,9 +248,9 @@ def main(*args):
 
         nderived = 0
         for trait in traits.values():
-            if trait == "1":
+            if trait == 1:
                 nderived += 1
-
+    
         interesting = seqtools.get_interesting(
             focaltrees_d, nderived, len(traits.keys())
         )
@@ -170,6 +261,10 @@ def main(*args):
         # Clean up temporary files from this batch
         hemiplasytool.cleanup()
 
+    ###################################################################
+
+
+    # Begin summary of all batches
     mutation_counts_d = [[x, n_mutations_d.count(x)] for x in set(n_mutations_d)]
     mutation_counts_c = [[x, n_mutations_c.count(x)] for x in set(n_mutations_c)]
 
@@ -185,10 +280,14 @@ def main(*args):
             "Not enough 'interesting' cases to provide mutation inheritance patterns"
         )
 
-    min_mutations_required = hemiplasytool.fitchs_alg(speciesTree, traits)
+    min_mutations_required = hemiplasytool.fitchs_alg(str(treeSp), traits)
 
     log.debug("Plotting...")
-    hemiplasytool.plot_mutations(mutation_counts_c, mutation_counts_d)
+    try:
+        hemiplasytool.plot_mutations(mutation_counts_c, mutation_counts_d, args.outputdir)
+    except:
+        log.debug("Can't plot!")
+
 
     log.debug("Writing output file...")
     hemiplasytool.write_output(
@@ -197,17 +296,20 @@ def main(*args):
         mutation_counts_d,
         mutation_pat,
         counts_by_tree,
-        speciesTree,
+        str(treeSp),
         admix,
         traits,
         min_mutations_required,
         args.outputdir,
+        (reps*batches),
+        conversions,
+        original_tree[0]
     )
-    hemiplasytool.write_unique_trees(all_focal_trees, args.outputdir)
+    hemiplasytool.write_unique_trees(all_focal_trees, args.outputdir, traits)
 
     end = time.time()
     print("\nTime elapsed: " + str(end - start) + " seconds")
-
+    ################################################################
 
 if __name__ == "__main__":
     main(*sys.argv)

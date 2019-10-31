@@ -1,0 +1,14 @@
+#NEXUS
+begin trees;
+    tree tree_1 = (((((((Prasinohaema_prehensicauda_CCA17222:0.00424,(Prasinohaema_flavipes_CCA17083:0.002248,Prasinohaema_sp_nov_CCA01005:0.002621)37:0.001178)33.3:0.001673,(Lobulia_elegans_CCA17485:0.002092,Lobulia_brongersmai_CCA03482:0.003622)31.5:0.00184)18.2:0.001098,(Lipinia_albodorsale_CCA03500:0.00397,Lipinia_noctua_CCA16819:0.004396)20.2:0.001227)4.37:1.87E-4,Prasinohaema_semoni_CCA00900:0.006365)6.49:3.8E-4,((Lipinia_pulchra_CCA03201:0.004034,(Papuascincus_stanleyanus_cf_sp2_CCA02483:0.002923,Papuascincus_sp_nov_CCA05980:0.003595)37.8:0.001516)41.9:0.002377,Fojia_bumui_CCA15922:0.005268)29.1:0.00197)11.6:8.96E-4,((Prasinohaema_sp_nov_CCA01623:0.009303,Lipinia_longiceps_CCA15866:0.007098)22.7:0.001468,Prasinohaema_virens_CCA02661:0.008773)17:0.001195)11.5:0.028558,Lygosoma_sp_ACD7392:0.02307);
+
+end;
+
+begin hemiplasytool;
+set derived taxon=Prasinohaema_sp_nov_CCA01005
+set derived taxon=Prasinohaema_flavipes_CCA083
+set derived taxon=Prasinohaema_prehensicauda_CCA222
+set derived taxon=Prasinohaema_semoni_CCA00900
+set derived taxon=Prasinohaema_virens_CCA02661
+set derived taxon=Prasinohaema_sp_nov_CCA01623
+end;
