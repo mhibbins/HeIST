@@ -151,6 +151,7 @@ def main(*args):
     # Convert coalescent tree to ms splits
     treeSp, conversions = hemiplasytool.names2ints(treeSp)
 
+
     splits, taxa = hemiplasytool.newick2ms(treeSp)
     traits = {}
     for i in taxalist:
@@ -297,7 +298,7 @@ def main(*args):
         conversions,
         original_tree[0]
     )
-    hemiplasytool.write_unique_trees(all_focal_trees, args.outputdir)
+    hemiplasytool.write_unique_trees(all_focal_trees, args.outputdir, traits)
 
     end = time.time()
     print("\nTime elapsed: " + str(end - start) + " seconds")

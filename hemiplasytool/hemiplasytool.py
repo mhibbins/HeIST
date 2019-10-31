@@ -574,7 +574,7 @@ def update_count(tree, dic):
     return dic
 
 
-def write_unique_trees(focal_trees, filename):
+def write_unique_trees(focal_trees, filename, traits):
     unique = []
     counts = {}
     out1 = open(filename, "a")
@@ -594,6 +594,12 @@ def write_unique_trees(focal_trees, filename):
                 counts[tree] = 1
     out1.write("\n### OBSERVED GENE TREES ###\n\n")
     for tree in unique:
+
+        for key, val in traits.items():
+            if val == 1:
+                tree = re.sub(r"\b%s\b" % str(key)+":", str(key) + "*:", tree)
+                #tree = tree.replace(str(key)+":", (str(key) + "*:"))
+
         t = tree.replace(";", "")
         t = Phylo.read(io.StringIO(tree), "newick")
         Phylo.draw_ascii(t, out1, column_width=40)
