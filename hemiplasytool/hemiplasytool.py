@@ -224,7 +224,7 @@ def write_output(
     min_mutations_required,
     filename,
     reps,
-    conversions):
+    conversions, oldTree):
     out1 = open(filename, "w")
 
     # CALCULATE SUMMARY STATS
@@ -273,8 +273,10 @@ def write_output(
         out1.write(str(val) + ":\t" + key + '\n')
     out1.write('\n')
 
+    out1.write("The original species tree (smoothed, in coalescent units) is:\n " + oldTree + "\n\n")
 
-    out1.write("The species tree (smoothed, in coalescent units) is:\n " + speciesTree + "\n\n")
+
+    out1.write("The pruned species tree (smoothed, in coalescent units) is:\n " + speciesTree + "\n\n")
     t = tree.replace(";", "")
     t = Phylo.read(io.StringIO(t), "newick")
     Phylo.draw_ascii(t, out1, column_width=40)
@@ -509,12 +511,11 @@ def subs2coal(newick_string):
 def readInput(file):
     f = open(file, "r")
     tree = ""
-
     derived = []
-
     admix = []
-
+    outgroup=None
     cnt = 0
+
     for i, line in enumerate(f):
         if line.startswith("begin trees"):
             cnt = 1
@@ -534,8 +535,10 @@ def readInput(file):
             l = line.replace("\n", "").split('=')
             if l[0] == "set derived taxon":
                 derived.append(l[1])
+            elif l[0] == 'set outgroup taxon':
+                outgroup = l[1]
             
-    return(tree, derived, admix)
+    return(tree, derived, admix, outgroup)
 
 
 
@@ -600,3 +603,22 @@ def write_unique_trees(focal_trees, filename):
                 out1.write("This topology occured " + str(val) + " time(s)\n")
 
     out1.close()
+
+
+def prune_tree(tree, derived, outgroup):
+    t = Tree(tree, format=1)
+    for leaf in t:
+        if leaf.name in derived:
+            leaf.add_features(derived='1')
+        else:
+            leaf.add_features(derived='0')
+    ns = []
+    for node in t.get_monophyletic(values=["1"], target_attr="derived"):
+       ns.append(node)
+
+    sub = t.get_common_ancestor(ns[0], ns[1], ns[2], ns[3])
+    tokeep = list(sub.get_leaf_names())
+    tokeep.append(outgroup)
+    t.prune(tokeep)
+    return(t.write(), t)
+    

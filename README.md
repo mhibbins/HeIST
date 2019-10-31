@@ -49,12 +49,12 @@ optional arguments:
 
 ## Input file
 
-The input file is modified NEXUS format. A minimal example includes a tree (in newick format) and at least two dervived taxa set with the `set derived` command.
+The input file is modified NEXUS format. A minimal example includes a tree (in newick format) and at least two dervived taxa set with the `set derived` command. If an outgroup is specified with `set outgroup`, the tree will be pruned to contain only taxa relevant to the simulation (i.e., the subclade containing derived taxa) + the outgroup. 
 
 ```
 #NEXUS
 begin trees;
-    tree tree_1 = (Lygosoma_sp_ACD7392:0.022135,(((Fojia_bumui_CCA15922:0.004971,((Papuascincus_stanleyanus_cf_sp2_CCA02483:0.002792,Papuascincus_sp_nov_CCA05980:0.003494)37.8:0.001417,Lipinia_pulchra_CCA03201:0.003904)41.9:0.002306)29.1:0.001868,(((Lipinia_albodorsale_CCA03500:0.003722,Lipinia_noctua_CCA16819:0.004171)20.2:0.001171,((Lobulia_elegans_CCA17485:0.001982,Lobulia_brongersmai_CCA03482:0.003384)31.5:0.001793,((Prasinohaema_sp_nov_CCA01005:0.002495,Prasinohaema_flavipes_CCA17083:0.002098)37:0.001049,Prasinohaema_prehensicauda_CCA17222:0.004007)33.3:0.001615)18.2:0.001013)4.37:1.87E-4,Prasinohaema_semoni_CCA00900:0.006197)6.49:3.78E-4)11.6:8.73E-4,(Prasinohaema_virens_CCA02661:0.008386,(Prasinohaema_sp_nov_CCA01623:0.008567,Lipinia_longiceps_CCA15866:0.006692)22.7:0.001413)17:0.001229)11.5:0.02697);
+tree tree_1 = (((Scincella_victoriana_CAS220628:0.0261231698,((((Lipinia_leptosoma_CAS248067:0.0135217139,((Sphenomorphus_darlingtoni_CCA02541:0.0053927675,((Sphenomorphus_jobiense_CCA17225:0.0034937879,(Sphenomorphus_mulleri_CCA05888:0.0023034743,Sphenomorphus_pratti_CCA03288:0.0022346598)31.6:0.0012815673)27.6:0.0012959372,((Sphenomorphus_solomonis_CCA02659:0.0021644445,Sphenomorphus_nigrolineatus_CCA05422:0.0018700120)45.8:0.0031769400,Sphenomorphus_leptofasciatus_CCA17101:0.0039778849)20.6:0.0009191566)15.1:0.0005512292)40.5:0.0033454018,(Sphenomorphus_sp_nov_CCA02640:0.0026503186,Sphenomorphus_concinnatus_CCA02720:0.0041188508)69.2:0.0062137090)17.3:0.0008194166)15.2:0.0010506679,(((Lipinia_infralineolata_JAM2291:0.0068150462,(Lipinia_inexpectata_ID7190:0.0043560322,Lipinia_quadrivittata_CCA01269:0.0037657802)49.7:0.0044981643)51.5:0.0067480232,(((((((Prasinohaema_prehensicauda_CCA17222:0.0042395072,(Prasinohaema_flavipes_CCA17083:0.0022484439,Prasinohaema_sp_nov_CCA01005:0.0026213796)37:0.0011779280)33.3:0.0016731052,(Lobulia_elegans_CCA17485:0.0020919419,Lobulia_brongersmai_CCA03482:0.0036215863)31.5:0.0018396006)18.2:0.0010984448,(Lipinia_albodorsale_CCA03500:0.0039699319,Lipinia_noctua_CCA16819:0.0043959088)20.2:0.0012273870)4.37:0.0001867431,Prasinohaema_semoni_CCA00900:0.0063649161)6.49:0.0003797236,((Lipinia_pulchra_CCA03201:0.0040341492,(Papuascincus_stanleyanus_cf_sp2_CCA02483:0.0029230037,Papuascincus_sp_nov_CCA05980:0.0035946779)37.8:0.0015157275)41.9:0.0023765815,Fojia_bumui_CCA15922:0.0052680409)29.1:0.0019695856)11.6:0.0008959700,((Prasinohaema_sp_nov_CCA01623:0.0093028031,Lipinia_longiceps_CCA15866:0.0070976477)22.7:0.0014684489,Prasinohaema_virens_CCA02661:0.0087728783)17:0.0011949237)11.5:0.0008826657,(Lipinia_rouxi_CCA00692:0.0090551292,Lipinia_pulchella_JAM735:0.0114126363)8.58:0.0004222465)19.6:0.0018758717)19.7:0.0021606072,(Scincella_reevesi_CAS214133:0.0115039024,(Lipinia_vittigera_CAS229605:0.0160393250,((Scincella_rufocaudata_FMNH263356:0.0002872385,Scincella_rufocaudata_FMNH263355:0.0002768367)78.5:0.0105833069,(Scincella_lateralis_LMZ99209:0.0116007558,Scincella_potanini_CAS242132:0.0047386077)23.9:0.0017497148)20.7:0.0016005032)7.83:0.0006072962)8.8:0.0008366136)19.4:0.0022098351)23.4:0.0023517881,Scincella_punctatolineata_CAS221870:0.0202031784)20.9:0.0015025786,(Tropidophorus_robinsoni_CAS228558:0.0081998454,Tropidophorus_cocincinensis_FMNH258754:0.0126223190)15.7:0.0010217403)41.8:0.0047967637)74.1:0.0127776757,Lygosoma_sp_ACD7392:0.0230698959)97.7:0.0269538886,Eugongylus_rufescens_CCA17074:0.0015257849,Eugongylus_albofasciolatus_CCA02575:0.0016310061);
 end;
 
 begin hemiplasytool;
@@ -64,8 +64,8 @@ set derived taxon=Prasinohaema_prehensicauda_CCA222
 set derived taxon=Prasinohaema_semoni_CCA00900
 set derived taxon=Prasinohaema_virens_CCA02661
 set derived taxon=Prasinohaema_sp_nov_CCA01623
+set outgroup taxon=Lygosoma_sp_ACD7392
 end;
-
 ```
 
 ### Species tree

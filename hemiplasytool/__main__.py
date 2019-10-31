@@ -134,13 +134,20 @@ def main(*args):
     log.debug("Reading input file...")
 
     #splits, taxa, traits, speciesTree, admix = hemiplasytool.readInput(args.input)
-    treeSp, derived, admix = hemiplasytool.readInput(args.input)
+    treeSp, derived, admix, outgroup = hemiplasytool.readInput(args.input)
+    
     # Convert ML tree to a coalescent tree based on GCFs
     treeSp,t = hemiplasytool.subs2coal(treeSp)
+    original_tree = [treeSp, t]
 
-    ###HERE IS WHERE THE TREE NEEDS TO BE PRUNED###
+    if outgroup != None:
+        log.debug("Pruning tree...")
+        # Prune tree
+        treeSp,t = hemiplasytool.prune_tree(treeSp, derived, outgroup)
+
 
     taxalist = [i.name for i in t.iter_leaves()]
+
     # Convert coalescent tree to ms splits
     treeSp, conversions = hemiplasytool.names2ints(treeSp)
 
@@ -287,7 +294,8 @@ def main(*args):
         min_mutations_required,
         args.outputdir,
         (reps*batches),
-        conversions
+        conversions,
+        original_tree[0]
     )
     hemiplasytool.write_unique_trees(all_focal_trees, args.outputdir)
 
