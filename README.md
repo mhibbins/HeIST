@@ -85,9 +85,9 @@ set derived taxon="species in tree"
 Introgression events can be defined by using
 
 ```
-set introgression taxon1="species in tree" taxon2="species in tree" strength=[float_value]
+set introgression source="species in tree" dest="species in tree" prob=[float_value] timing=[float_value]
 ```
-
+Note that timing must be specified in coalescent units. For this reason, we recommend first running your input tree through [`newick_2_ms`](#newick2ms)
 
 ## Example:
 ```
@@ -337,7 +337,7 @@ See `lizard_tree_output.txt` for full output.
 
 Once installed, two additional programs will be available at the command line: `newick2ms` and `subs2coal`.
 
-### `newick2ms`
+### newick2ms
 
 ```
 usage: newick2ms [-h] input
@@ -353,7 +353,7 @@ optional arguments:
 ```
 
 
-### `subs2coal`
+### subs2coal
 
 ```
 usage: subs2coal [-h] input

@@ -265,6 +265,33 @@ def write_output(
         else:
             sum_from_species = topology_count
 
+    mutation_counts_comb = {}
+    mutation_counts_keys = set()
+    mutation_counts_cc = {}
+    mutation_counts_dd = {}
+
+    for x in mutation_counts_c:
+        key = x[0]
+        val = x[1]
+        mutation_counts_cc[key] = val
+        mutation_counts_keys.add(key)
+    for x in mutation_counts_d:
+        key = x[0]
+        val = x[1]
+        mutation_counts_dd[key] = val
+        mutation_counts_keys.add(key)
+
+    for k in mutation_counts_keys:
+        if k in mutation_counts_cc.keys() and k in mutation_counts_dd.keys():
+            mutation_counts_comb[k] = mutation_counts_cc[k] + mutation_counts_dd[k]
+        elif k in mutation_counts_cc.keys() and k not in mutation_counts_dd.keys():
+            mutation_counts_comb[k] = mutation_counts_cc[k]
+        elif k not in mutation_counts_cc.keys() and k  in mutation_counts_dd.keys():
+            mutation_counts_comb[k] = mutation_counts_dd[k]
+
+
+
+
     # INPUT SUMMARY
     out1.write("### INPUT SUMMARY ###\n\n")
 
@@ -342,7 +369,11 @@ def write_output(
     out1.write('Distribution of mutation counts:\n\n')
     out1.write("# Mutations\t# Trees\n")
     
-    out1.write("On concordant trees:\n")
+    out1.write("On all trees:\n")
+    for key, val in mutation_counts_comb.items():
+        out1.write(str(key) + '\t\t' + str(val) + '\n')
+
+    out1.write("\nOn concordant trees:\n")
     out1.write("# Mutations\t# Trees\n")
     for item in mutation_counts_c:
         out1.write(str(item[0]) + "\t\t" + str(item[1]) + "\n")
@@ -537,6 +568,13 @@ def readInput(file):
                 derived.append(l[1])
             elif l[0] == 'set outgroup taxon':
                 outgroup = l[1]
+            elif l[0].startswith('set introgression'):
+                l = line.replace('\n','').split(' ')
+                sp1 = l[2].split('=')[1]
+                sp2 = l[3].split('=')[1]
+                strength = l[4].split('=')[1]
+                time = l[5].split('=')[1]
+                admix.append([time,sp1,sp2,strength])
             
     return(tree, derived, admix, outgroup)
 
@@ -583,7 +621,7 @@ def write_unique_trees(focal_trees, filename, traits):
     outTrees.write("###All Observed gene trees###\n")
 
     for i, tree in enumerate(focal_trees):
-        outTrees.write(tree)
+        outTrees.write(tree + '\n')
         if i == 0:
             unique.append(tree)
             counts[tree] = 1

@@ -1,16 +1,17 @@
 # /usr/bin/python3
-import argparse
-import time
-import sys
-import logging as log
-from hemiplasytool import hemiplasytool
-from hemiplasytool import seqtools
 
 """
 HemiplasyTool
 Authors: Matt Gibson, Mark Hibbins
 Indiana University
 """
+
+import argparse
+import time
+import sys
+import logging as log
+from hemiplasytool import hemiplasytool
+from hemiplasytool import seqtools
 
 def newick2ms(*args):
     parser = argparse.ArgumentParser(
@@ -118,28 +119,26 @@ def main(*args):
 
     args = parser.parse_args()
 
-    # Setup logging
+    # Setup ###################
     log.basicConfig(level=log.DEBUG)
     logger = log.getLogger()
     if args.verbose:
         logger.disabled = False
     else:
         logger.disabled = True
-
-    # Silence matplotlib debug logging
     mpl_logger = log.getLogger("matplotlib")
     mpl_logger.setLevel(log.WARNING)
+    ##########################
 
     # Read input file
     log.debug("Reading input file...")
-
-    #splits, taxa, traits, speciesTree, admix = hemiplasytool.readInput(args.input)
     treeSp, derived, admix, outgroup = hemiplasytool.readInput(args.input)
     
     # Convert ML tree to a coalescent tree based on GCFs
     treeSp,t = hemiplasytool.subs2coal(treeSp)
     original_tree = [treeSp, t]
 
+    # Tree pruning
     if outgroup != None:
         log.debug("Pruning tree...")
         # Prune tree
@@ -148,11 +147,13 @@ def main(*args):
 
     taxalist = [i.name for i in t.iter_leaves()]
 
+
     # Convert coalescent tree to ms splits
     treeSp, conversions = hemiplasytool.names2ints(treeSp)
-
-
+    
+    # Convert newick tree to ms splits
     splits, taxa = hemiplasytool.newick2ms(treeSp)
+    
     traits = {}
     for i in taxalist:
         if i in derived:
@@ -160,13 +161,13 @@ def main(*args):
         else:
             traits[conversions[i]] = 0
     
-
+    
+    # Make program calls
     batches = int(args.batches)
     reps = int(args.replicates)
 
     breaks = []
 
-    # Make program calls
     if len(admix) != 0:
         breaks = [0] * len(admix)
         log.debug("Introgression events specified")
@@ -198,7 +199,10 @@ def main(*args):
     seqgencall = hemiplasytool.seq_gen_call(
         "trees.tmp", args.seqgenpath, args.mutationrate
     )
+    #################################################################
 
+
+    # Begin batches
     taxalist = []
     for s in traits.keys():
         taxalist.append(int(s))
@@ -247,7 +251,7 @@ def main(*args):
         for trait in traits.values():
             if trait == 1:
                 nderived += 1
-        
+    
         interesting = seqtools.get_interesting(
             focaltrees_d, nderived, len(traits.keys())
         )
@@ -258,6 +262,10 @@ def main(*args):
         # Clean up temporary files from this batch
         hemiplasytool.cleanup()
 
+    ###################################################################
+
+
+    # Begin summary of all batches
     mutation_counts_d = [[x, n_mutations_d.count(x)] for x in set(n_mutations_d)]
     mutation_counts_c = [[x, n_mutations_c.count(x)] for x in set(n_mutations_c)]
 
@@ -302,7 +310,7 @@ def main(*args):
 
     end = time.time()
     print("\nTime elapsed: " + str(end - start) + " seconds")
-
+    ################################################################
 
 if __name__ == "__main__":
     main(*sys.argv)
