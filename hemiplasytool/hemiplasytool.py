@@ -469,7 +469,7 @@ def subs2coal(newick_string):
         for i in range(len(scfs)):
 
                 if (float(scfs[i])/100) < 1 and float(scfs[i]) != 1: #catch for missing data / values of 1
-                        coal_internals.append(-1*(np.log(1-(float(scfs[i])/100))))
+                        coal_internals.append(-1*(math.log(3/2) + math.log(1 - float(scfs[i])/100)))
                 else:
                         coal_internals.append(np.NaN)
 
