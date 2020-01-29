@@ -132,11 +132,12 @@ def main(*args):
 
     # Read input file
     log.debug("Reading input file...")
-    treeSp, derived, admix, outgroup = hemiplasytool.readInput(args.input)
+    treeSp, derived, admix, outgroup, type = hemiplasytool.readInput(args.input)
     
-    # Convert ML tree to a coalescent tree based on GCFs
-    treeSp,t = hemiplasytool.subs2coal(treeSp)
-    original_tree = [treeSp, t]
+    if type != 'coal':
+        # Convert ML tree to a coalescent tree based on GCFs
+        treeSp,t = hemiplasytool.subs2coal(treeSp)
+        original_tree = [treeSp, t]
     # Tree pruning
     if outgroup != None:
         log.debug("Pruning tree...")

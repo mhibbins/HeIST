@@ -6,6 +6,7 @@ import logging as log
 import os
 import io
 import re
+import math
 from Bio import Phylo
 from Bio.Alphabet import generic_dna
 from Bio.Seq import Seq
@@ -561,6 +562,7 @@ def readInput(file):
     admix = []
     outgroup=None
     cnt = 0
+    treeType = 'ml'
 
     for i, line in enumerate(f):
         if line.startswith("begin trees"):
@@ -590,8 +592,11 @@ def readInput(file):
                 strength = l[4].split('=')[1]
                 time = l[5].split('=')[1]
                 admix.append([time,sp1,sp2,strength])
+            elif l[0].startswith('set type coal'):
+                treeType = 'coal'
+    
             
-    return(tree, derived, admix, outgroup)
+    return(tree, derived, admix, outgroup, treeType)
 
 
 
