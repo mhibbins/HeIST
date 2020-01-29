@@ -67,6 +67,8 @@ end;
 
 Species tree in newick format. Branch lengths must be in average substitutions per site and **branches must be labeled with concordance factors**. [IQTree](www.iqtree.org/doc/Concordance-Factor) can be used to do this. 
 
+> If your tree is already ultrametric and in coalescent units, you can supply this directly if you add the flag `set type coal` to the input file.
+
 ### Traits
 
 Set which taxa have the derived character by using 
