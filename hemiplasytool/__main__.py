@@ -136,7 +136,7 @@ def main(*args):
     
     if type != 'coal':
         # Convert ML tree to a coalescent tree based on GCFs
-        treeSp,t = hemiplasytool.subs2coal(treeSp)
+        treeSp,t,intercept,coef,newick_internals,coal_internals = hemiplasytool.subs2coal(treeSp)
         original_tree = [treeSp, t]
     # Tree pruning
     if outgroup != None:
@@ -304,7 +304,11 @@ def main(*args):
         args.outputdir,
         (reps*batches),
         conversions,
-        original_tree[0]
+        original_tree[0],
+        intercept,
+        coef,
+        newick_internals,
+        coal_internals
     )
     hemiplasytool.write_unique_trees(all_focal_trees, args.outputdir, traits)
 

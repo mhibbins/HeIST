@@ -225,7 +225,12 @@ def write_output(
     min_mutations_required,
     filename,
     reps,
-    conversions, oldTree):
+    conversions,
+    oldTree,
+    intercept,
+    coef,
+    newick_internals,
+    coal_internals):
     out1 = open(filename+'.txt', "w")
 
     # CALCULATE SUMMARY STATS
@@ -288,6 +293,8 @@ def write_output(
             mutation_counts_comb[k] = mutation_counts_dd[k]
 
 
+    newick_internals = [str(x) for x in newick_internals]
+    coal_internals = [str(x) for x in coal_internals]
 
 
     # INPUT SUMMARY
@@ -303,6 +310,11 @@ def write_output(
     else:
         out1.write("The original species tree (smoothed, in coalescent units) is:\n " + oldTree + "\n\n")
         out1.write("The pruned species tree (smoothed, in coalescent units) is:\n " + speciesTree + "\n\n")
+
+    out1.write("Regression intercept: " + str(intercept) + '\n')
+    out1.write("Regression slope: " + str(coef) + '\n')
+    out1.write("X (newick internals): " + ",".join(newick_internals) + '\n')
+    out1.write("Y (coalescent internals): " + ",".join(coal_internals) + '\n')
 
     t = tree.replace(";", "")
     t = Phylo.read(io.StringIO(t), "newick")
@@ -504,7 +516,8 @@ def subs2coal(newick_string):
                 return intercept, slope
 
         intercept, coef = branch_regression(newick_internals, coal_internals)
-        
+        n = newick_internals
+        c = coal_internals
         tip_sections = []
 
         for i in range(len(sections)): #gets the sections with tip lengths
@@ -552,7 +565,7 @@ def subs2coal(newick_string):
     
         for i in range(len(scfs)):
                 coal_newick_string = coal_newick_string.replace(str(scfs[i]), '')    
-        return(coal_newick_string, Tree(coal_newick_string, format=1))
+        return(coal_newick_string, Tree(coal_newick_string, format=1), intercept, coef, n, c)
 
 
 def readInput(file):
