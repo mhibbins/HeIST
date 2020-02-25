@@ -563,6 +563,15 @@ def subs2coal(newick_string):
         for i in range(len(lengths)):
              coal_newick_string = coal_newick_string.replace(str(lengths[i]), str(coal_lengths[i]))
     
+        scfs = [float(x) for x in scfs]
+        scfs2 = []
+        for val in scfs:
+            if val.is_integer():
+                scfs2.append(str(val) + ".0")
+            else:
+                scfs2.append(str(val))
+
+
         for i in range(len(scfs)):
                 coal_newick_string = coal_newick_string.replace(str(scfs[i]), '')    
         return(coal_newick_string, Tree(coal_newick_string, format=1), intercept, coef, n, c)
@@ -695,7 +704,6 @@ def prune_tree(tree, derived, outgroup):
     ns = []
     for node in t.get_monophyletic(values=["1"], target_attr="derived"):
        ns.append(node)
-
     sub = t.get_common_ancestor(ns[0], ns[1], ns[2], ns[3])
     tokeep = list(sub.get_leaf_names())
     tokeep.append(outgroup)

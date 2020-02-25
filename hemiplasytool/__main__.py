@@ -73,8 +73,6 @@ def subs2coal(*args):
 
     treeSp,t = hemiplasytool.subs2coal(newick)
 
-    print(treeSp)
-
 def main(*args):
     start = time.time()
     parser = argparse.ArgumentParser(
