@@ -482,7 +482,11 @@ def subs2coal(newick_string):
         for i in range(len(scfs)):
 
                 if (float(scfs[i])/100) < 1 and float(scfs[i]) != 1: #catch for missing data / values of 1
-                        coal_internals.append(-1*(math.log(3/2) + math.log(1 - float(scfs[i])/100)))
+                        coal_estimate = -1*(math.log(3/2) + math.log(1 - float(scfs[i]/100))
+                        if coal_estimate > 0:
+                                coal_internals.append(coal_estimate)
+                        else:
+                                coal_internals.append(0.01)
                 else:
                         coal_internals.append(np.NaN)
 
@@ -536,7 +540,11 @@ def subs2coal(newick_string):
 
         coal_tips = [(newick_tips[i]*coef + intercept) for i in range(len(newick_tips))]
 
-      
+        for i in range(len(coal_tips)):
+                if coal_tips[i] <= 0:
+                        coal_tips[i] = 0.01
+                else:
+                        coal_tips[i] = coal_tips[i]
 
         coal_internals = [(newick_internals[i]*coef + intercept) if np.isnan(coal_internals[i]) else coal_internals[i] for i in range(len(newick_internals))]
 
