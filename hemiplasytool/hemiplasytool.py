@@ -482,7 +482,7 @@ def subs2coal(newick_string):
         for i in range(len(scfs)):
 
                 if (float(scfs[i])/100) < 1 and float(scfs[i]) != 1: #catch for missing data / values of 1
-                        coal_estimate = -1*(math.log(3/2) + math.log(1 - float(scfs[i]/100))
+                        coal_estimate = -1*(math.log(3/2) + math.log(1 - float(scfs[i])/100))
                         if coal_estimate > 0:
                                 coal_internals.append(coal_estimate)
                         else:
