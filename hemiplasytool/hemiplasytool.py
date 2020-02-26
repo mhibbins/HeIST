@@ -7,6 +7,7 @@ import os
 import io
 import re
 import math
+import shlex
 from Bio import Phylo
 from Bio.Alphabet import generic_dna
 from Bio.Seq import Seq
@@ -16,6 +17,7 @@ from Bio.Phylo.TreeConstruction import ParsimonyScorer
 from hemiplasytool import seqtools
 from ete3 import Tree
 from collections import OrderedDict
+from subprocess import Popen, PIPE
 
 """
 Hemiplasy Tool
@@ -94,7 +96,7 @@ def newick2ms(newick):
     return(ms_splits, ms_taxa)
 
 
-def splits_to_ms(splitTimes, taxa, reps, path_to_ms, admix=None, r=None):
+def splits_to_ms(splitTimes, taxa, reps, path_to_ms, y, admix=None, r=None):
     """
     Converts inputs into a call to ms
     TODO: Add introgression
@@ -127,15 +129,15 @@ def splits_to_ms(splitTimes, taxa, reps, path_to_ms, admix=None, r=None):
     if admix is not None:
         call += " | tail -n +4 | grep -v // > trees" + str(r) + ".tmp"
     else:
-        call += " | tail -n +4 | grep -v // > trees.tmp"
+        call += " | tail -n +4 | grep -v // > trees" + str(y) + ".tmp"
     return call
 
 
-def seq_gen_call(treefile, path, s):
+def seq_gen_call(treefile, path, s, i):
     """
     Make seq-gen call.
     """
-    return path + " -m HKY -l 1 -s " + str(s) + ' -wa <"' + treefile + '" > seqs.tmp'
+    return path + " -m HKY -l 1 -s " + str(s) + ' -wa <"' + treefile + '" > seqs' + str(i) + '.tmp'
 
 
 def call_programs(ms_call, seqgencall, treefile, ntaxa):
@@ -151,13 +153,26 @@ def call_programs(ms_call, seqgencall, treefile, ntaxa):
         for i, call in enumerate(ms_call):
             concatCall += "trees" + str(i) + ".tmp "
         concatCall += "> trees.tmp"
-        os.system(concatCall)
+        process_ms = Popen(concatCall, stdout = PIPE, stderr=PIPE)
+        #os.system(concatCall)
     else:
         log.debug("Calling ms...")
-        os.system(ms_call)
+        #os.system(ms_call)
+        process_ms = Popen(ms_call, shell = True)
 
-    log.debug("Calling seq-gen...")
-    os.system(seqgencall)
+    return(process_ms)
+
+def call_programs_sg(ms_call, seqgencall, treefile, ntaxa):
+    
+        """
+        Calls ms and seq-gen
+        """
+        log.debug("Calling seq-gen...")
+        #seqgencall = shlex.split(seqgencall)
+        print(seqgencall)
+        process = Popen(seqgencall, shell=True)
+        #os.system(seqgencall)
+        return(process)
 
 
 def cleanup():
