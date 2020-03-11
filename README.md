@@ -20,15 +20,26 @@ Mark Hibbins (mhibbins@indiana.edu)
 ## Installation
 
 ```
-git clone https://github.com/mhibbins/hemiplasytool
-cd hemiplasytool
+git clone https://github.com/mhibbins/heist
+cd heist
 python setup.py install
 ```
 
 
 ## Usage
 ```
-usage: __main__.py [-h] [-v] [-n] [-x] [-p] [-g] [-s] [-o] input
+ _   _      ___ ____ _____
+| | | | ___|_ _/ ___|_   _|
+| |_| |/ _ \| |\___ \ | |
+|  _  |  __/| | ___) || |
+|_| |_|\___|___|____/ |_|
+Hemiplasy Inference Simulation Tool
+Version 0.3.0
+
+Written by Mark Hibbins & Matt Gibson
+Indiana University
+
+usage: heist [-h] [-v] [-n] [-t] [-p] [-g] [-s] [-o] input
 
 Tool for characterising hemiplasy given traits mapped onto a species tree
 
@@ -39,9 +50,9 @@ optional arguments:
   -h, --help            show this help message and exit
   -v, --verbose         Enable debugging messages to be displayed
   -n , --replicates     Number of replicates per batch
-  -x , --batches        Number of batches
-  -p , --mspath         Path to ms
-  -g , --seqgenpath     Path to seq-gen
+  -t , --threads        Number of threads for simulations
+  -p , --mspath         Path to ms (if not in user path)
+  -g , --seqgenpath     Path to seq-gen (if not in user path)
   -s , --mutationrate   Seq-gen mutation rate (default 0.05)
   -o , --outputdir      Output directory/prefix
 ```
