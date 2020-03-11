@@ -69,48 +69,63 @@ def readSeqs(seqs, ntaxa, speciesPattern, nodes, batch, breaks=[]):
     tmpFocal = open("focaltrees.tmp", "w")
 
     index = 0
+    iii = 0
+    p = ntaxa + nodes
+    #print(p)
     with open(seqs, "rU") as f:
-        for lines in grouper(f, ntaxa + nodes + 1, ""):
-            assert len(lines) == ntaxa + nodes + 1
-            pattern = {}
-            for x, line in enumerate(lines):
-                if x != 0:
-                    l = line.replace("\n", "").split()
-                    pattern[str(l[0])] = str(l[1])
-            levels = set()
-            for key, val in pattern.items():
-                if int(key) in range(1, ntaxa + 1):
-                    levels.add(val)
-            if len(levels) == 2:
-                a = []
-                for taxa in shouldMatch1:
-                    a.append(pattern[str(taxa)])
-                if checkEqual(a):
-                    b = []
-                    for taxa in shouldMatch2:
-                        b.append(pattern[str(taxa)])
-                    if checkEqual(b):
-                        if b[0] != pattern[str(ntaxa + 1)]:
-                            indices.append(index)
-                            for y in lines:
-                                tmpFocal.write(y)
-                            if len(breaks) != 0:
-                                tree_class = 0
-                                for i, breakpoint in enumerate(breaks):
-                                    if i != 0:
-                                        if (index <= breakpoint) and (
-                                            index > breaks[i - 1]
-                                        ):
-                                            tree_class = i
-                                    else:
-                                        if index <= breakpoint:
-                                            tree_class = i
-                                counts[tree_class] += 1
-                            else:
-                                counts[0] += 1
-            index += 1
+        block = []
+        tax = []
+        for lines in f:
+            #print(block)
+            if iii < p:
+                l = lines.replace("\n", "").split()
+                if l[1] in ['A', 'T', 'C', 'G']:
+                    tax.append(l[0])
+                    block.append(l[1])
+                    iii += 1
+            elif iii == p:
+                iii = 0
+                assert len(block) == ntaxa + nodes
+                pattern = {}
+                for x, line in enumerate(block):
+                    pattern[str(tax[x])] = str(line)
+                block = []
+                tax = []
+                #print(pattern)
+                levels = set()
+                for key, val in pattern.items():
+                    if int(key) in range(1, ntaxa + 1):
+                        levels.add(val)
+                if len(levels) == 2:
+                    a = []
+                    for taxa in shouldMatch1:
+                        a.append(pattern[str(taxa)])
+                    if checkEqual(a):
+                        b = []
+                        for taxa in shouldMatch2:
+                            b.append(pattern[str(taxa)])
+                        if checkEqual(b):
+                            if b[0] != pattern[str(ntaxa + 1)]:
+                                indices.append(index)
+                                tmpFocal.write(' 10 1\n')
+                                for k, v in pattern.items():
+                                    tmpFocal.write(k + "\t" + v + "\n")
+                                if len(breaks) != 0:
+                                    tree_class = 0
+                                    for i, breakpoint in enumerate(breaks):
+                                        if i != 0:
+                                            if (index <= breakpoint) and (
+                                                index > breaks[i - 1]
+                                            ):
+                                                tree_class = i
+                                        else:
+                                            if index <= breakpoint:
+                                                tree_class = i
+                                    counts[tree_class] += 1
+                                else:
+                                    counts[0] += 1
+                index += 1
     tmpFocal.close()
-
     return (indices, counts)
 
 
@@ -233,6 +248,7 @@ def parse_seqgen(seqfile, ntaxa, mask):
     trees = [
         lines[i : i + (ntaxa * 2) - 1] for i in range(0, len(lines), (ntaxa * 2) - 1)
     ]
+    #print(mask)
     return [trees[i] for i in mask]
 
 

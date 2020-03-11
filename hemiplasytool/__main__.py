@@ -255,7 +255,7 @@ def main(*args):
 
     for y in range(0, threads):
         seqgencall = hemiplasytool.seq_gen_call("trees" + str(y) + ".tmp", args.seqgenpath, args.mutationrate, str(y))
-        print(seqgencall)
+        #print(seqgencall)
         s = hemiplasytool.call_programs_sg(ms_call, seqgencall, "trees.tmp", taxalist)
         processes_sq.append(s)
 
@@ -272,7 +272,7 @@ def main(*args):
         done = j
 
     string_cat = "cat "
-    for y in range(0, 4):
+    for y in range(0, threads):
         string_cat += "seqs" + str(y) + ".tmp "
     string_cat += "> seqs.tmp"
     os.system(string_cat)
