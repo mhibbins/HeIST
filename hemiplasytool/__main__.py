@@ -233,6 +233,7 @@ def main(*args):
         m = hemiplasytool.call_programs(ms_call, "", "trees.tmp", taxalist)
         processes_ms.append(m)
 
+    print("RUNNING MS!")
     done = False
     while done == False:
         ms_processes = []
@@ -246,13 +247,14 @@ def main(*args):
         j = all(process == True for process in ms_processes)
         done = j
 
+    print("CONCAT MS!")
     string_cat_ms = "cat "
     for y in range(0, threads):
         string_cat_ms += "trees" + str(y) + ".tmp "
     string_cat_ms += "> trees.tmp"
     os.system(string_cat_ms)
 
-
+    print("RUNNING SEQ GEN!")
     for y in range(0, threads):
         seqgencall = hemiplasytool.seq_gen_call("trees" + str(y) + ".tmp", args.seqgenpath, args.mutationrate, str(y))
         #print(seqgencall)
@@ -271,48 +273,62 @@ def main(*args):
         j = all(process == True for process in sg_processes)
         done = j
 
+    print("CONCAT SEQ GEN!")
     string_cat = "cat "
     for y in range(0, threads):
         string_cat += "seqs" + str(y) + ".tmp "
     string_cat += "> seqs.tmp"
     os.system(string_cat)
+    print(str(time.time() - start))
 
-
+    print("READSEQS!")
     # Gets indices of trees with site patterns that match speecies pattern
     log.debug("Extracting trees that match species trait pattern...")
     match_species_pattern, counts = seqtools.readSeqs(
         "seqs.tmp", len(taxalist), traits, len(splits), i, breaks
     )
     counts_by_tree.append(counts)
+    print(str(time.time() - start))
+    print("GET TREES!")
     # Gets the trees at these indices
     focal_trees, _ = seqtools.getTrees("trees.tmp", match_species_pattern)
     all_focal_trees = all_focal_trees + focal_trees
+    print(str(time.time() - start))
 
     assert len(match_species_pattern) == len(focal_trees)
 
-
     log.debug("Calculating discordance...")
+    print("PROP DISCORDANT!")
     results[i], disc, conc = seqtools.propDiscordant(focal_trees, treeSp)
+    print(str(time.time() - start))
 
+    print("PARSE SEQGEN!")
     focaltrees_d = seqtools.parse_seqgen("focaltrees.tmp", len(taxalist), disc)
     focaltrees_c = seqtools.parse_seqgen("focaltrees.tmp", len(taxalist), conc)
+    print(str(time.time() - start))
 
+    print("COUNT MUTATIONS!")
     for index, tree in enumerate(focaltrees_d):
         n_mutations_d.append(seqtools.count_mutations(tree, len(taxalist)))
     for index, tree in enumerate(focaltrees_c):
         n_mutations_c.append(seqtools.count_mutations(tree, len(taxalist)))
+    print(str(time.time() - start))
 
     nderived = 0
     for trait in traits.values():
         if trait == 1:
             nderived += 1
-
+    print("GET INTERESTING!")
     interesting = seqtools.get_interesting(
         focaltrees_d, nderived, len(traits.keys())
     )
+    print(str(time.time() - start))
+
+    print("SUMMARIZE INTERESTING!!")
     for item in interesting:
         test_summarize = seqtools.summarize_interesting(item, len(traits.keys()))
         inherited = inherited + test_summarize
+    print(str(time.time() - start))
 
     # Clean up temporary files
     os.system("rm *.tmp")

@@ -134,20 +134,22 @@ def getTrees(treefile, matchlist):
     Returns list of trees at indices obtained from readSeqs
     """
     focal_trees = []
-    all_trees = []
-    trees_dont_follow = []
     trees = open(treefile, "r")
-    for i, line in enumerate(trees):
+    i = 0
+    for line in trees:
         l = line.replace("\n", "")
         if len(l) > 3:
-            all_trees.append(l)
+            i += 1
+            if i in matchlist:
+                focal_trees.append(line)
     trees.close()
-    for i, tree in enumerate(all_trees):
-        if i in matchlist:
-            focal_trees.append(tree)
-        else:
-            trees_dont_follow.append(tree)
-    return (focal_trees, trees_dont_follow)
+    #for i, tree in enumerate(all_trees):
+    #    if i in matchlist:
+    #        focal_trees.append(tree)
+    #    else:
+    #        trees_dont_follow.append(tree)
+
+    return (focal_trees, 0)
 
 
 def _bitstrs(tree):
