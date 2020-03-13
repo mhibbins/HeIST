@@ -283,12 +283,10 @@ def main(*args):
         "seqs.tmp", len(taxalist), traits, len(splits), i, breaks
     )
     counts_by_tree.append(counts)
-
     log.debug("Getting focal trees...")
     # Gets the trees at these indices
     focal_trees, _ = seqtools.getTrees("trees.tmp", match_species_pattern)
     all_focal_trees = all_focal_trees + focal_trees
-
     assert len(match_species_pattern) == len(focal_trees)
 
     log.debug("Calculating discordance...")
@@ -296,12 +294,10 @@ def main(*args):
 
     focaltrees_d = seqtools.parse_seqgen("focaltrees.tmp", len(taxalist), disc)
     focaltrees_c = seqtools.parse_seqgen("focaltrees.tmp", len(taxalist), conc)
-
     for index, tree in enumerate(focaltrees_d):
         n_mutations_d.append(seqtools.count_mutations(tree, len(taxalist)))
     for index, tree in enumerate(focaltrees_c):
         n_mutations_c.append(seqtools.count_mutations(tree, len(taxalist)))
-
     nderived = 0
     for trait in traits.values():
         if trait == 1:
@@ -309,24 +305,18 @@ def main(*args):
     interesting = seqtools.get_interesting(
         focaltrees_d, nderived, len(traits.keys())
     )
-
     for item in interesting:
         test_summarize = seqtools.summarize_interesting(item, len(traits.keys()))
         inherited = inherited + test_summarize
-
     # Clean up temporary files
     os.system("rm *.tmp")
     ###################################################################
 
-
     # Begin summary of all batches
     mutation_counts_d = [[x, n_mutations_d.count(x)] for x in set(n_mutations_d)]
     mutation_counts_c = [[x, n_mutations_c.count(x)] for x in set(n_mutations_c)]
-
     summary = hemiplasytool.summarize(results)
-
     counts_by_tree = seqtools.sum_counts_by_tree(counts_by_tree)
-
     if len(inherited) > 0:
         mutation_pat = hemiplasytool.summarize_inherited(inherited)
     else:
@@ -334,14 +324,13 @@ def main(*args):
         log.debug(
             "Not enough 'interesting' cases to provide mutation inheritance patterns"
         )
-
     min_mutations_required = hemiplasytool.fitchs_alg(str(treeSp), traits)
 
-    log.debug("Plotting...")
-    try:
-        hemiplasytool.plot_mutations(mutation_counts_c, mutation_counts_d, args.outputdir)
-    except:
-        log.debug("Can't plot!")
+    #log.debug("Plotting...")
+    #try:
+    #    hemiplasytool.plot_mutations(mutation_counts_c, mutation_counts_d, args.outputdir)
+    #except:
+    #    log.debug("Can't plot!")
 
 
     log.debug("Writing output file...")
@@ -365,7 +354,7 @@ def main(*args):
         coal_internals
     )
     hemiplasytool.write_unique_trees(all_focal_trees, args.outputdir, traits)
-
+    exit(0)
     end = time.time()
     print("\nTime elapsed: " + str(end - start) + " seconds")
     ################################################################

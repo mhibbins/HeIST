@@ -694,6 +694,7 @@ def write_unique_trees(focal_trees, filename, traits):
     out1 = open(filename+'.txt', "a")
     outTrees = open(filename+'.trees', 'w')
 
+    print(focal_trees)
     outTrees.write("###All Observed gene trees###\n")
 
     for i, tree in enumerate(focal_trees):
