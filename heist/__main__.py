@@ -278,11 +278,13 @@ def main(*args):
     os.system(string_cat)
 
     # Gets indices of trees with site patterns that match speecies pattern
-    log.debug("Extracting trees that match species trait pattern...")
+    log.debug("Finding trees that match species trait pattern...")
     match_species_pattern, counts = seqtools.readSeqs(
         "seqs.tmp", len(taxalist), traits, len(splits), i, breaks
     )
     counts_by_tree.append(counts)
+
+    log.debug("Getting focal trees...")
     # Gets the trees at these indices
     focal_trees, _ = seqtools.getTrees("trees.tmp", match_species_pattern)
     all_focal_trees = all_focal_trees + focal_trees
