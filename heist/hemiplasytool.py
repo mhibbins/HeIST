@@ -258,6 +258,7 @@ def write_output(
     newick_internals,
     coal_internals):
     out1 = open(filename+'.txt', "w")
+    out2 = open(filename+'_raw.txt', "w")
 
     # CALCULATE SUMMARY STATS
     #print(conversions)
@@ -380,10 +381,14 @@ def write_output(
     # OUTPUT SUMMARY
     out1.write("\n\n### RESULTS ###\n\n")
     out1.write(str(sum([true_hemi, mix, true_homo])) + ' loci matched the species character states\n\n')
+    out2.write(str(sum([true_hemi, mix, true_homo])) + '\n') #1#
+
     out1.write(
         '"True" hemiplasy (1 mutation) occurs ' + str(true_hemi) + " time(s)\n\n"
     )
-    if mix_range != [0]:
+    out2.write(str(true_hemi) + '\n') #2# 
+
+    try:
         out1.write(
             "Combinations of hemiplasy and homoplasy (1 < # mutations < "
             + str(min_mutations_required)
@@ -391,17 +396,39 @@ def write_output(
             + str(mix)
             + " time(s)\n\n"
         )
+        out2.write(str(mix) + '\n') #3#
+    except:
+        out1.write(
+            "Combinations of hemiplasy and homoplasy (1 < # mutations < "
+            + str(min_mutations_required)
+            + ") occur "
+            + str(0)
+            + " time(s)\n\n"
+        )
+        out2.write(str(0) + '\n') #3#
+
+
     out1.write(
         '"True" homoplasy (>= ' + str(min_mutations_required) + ' mutations) occurs ' + str(true_homo) + " time(s)\n\n"
     )
+    out2.write(str(true_homo) + '\n') #4#
+
     out1.write(str(summary[0]) + " loci have a discordant gene tree\n")
+    out2.write(str(summary[0]) + '\n') #5#
+
     out1.write(
         str(summary[1] - summary[0]) + " loci are concordant with the species tree\n\n"
     )
+    out2.write(str(summary[1] - summary[0]) + '\n') #6#
+
     out1.write(
         str(sum_from_introgression) + " loci originate from an introgressed history\n"
     )
+    out2.write(str(sum_from_introgression) + '\n') #7#
+
+
     out1.write(str(sum_from_species) + " loci originate from the species history\n\n")
+    out2.write(str(sum_from_species) + '\n') #8#
 
     # DETAILED OUTPUT
     out1.write('Distribution of mutation counts:\n\n')
@@ -410,15 +437,18 @@ def write_output(
     out1.write("On all trees:\n")
     for key, val in mutation_counts_comb.items():
         out1.write(str(key) + '\t\t' + str(val) + '\n')
-
+        out2.write('All' + "," + str(key) + "," + str(val) + '\n')
     out1.write("\nOn concordant trees:\n")
     out1.write("# Mutations\t# Trees\n")
     for item in mutation_counts_c:
         out1.write(str(item[0]) + "\t\t" + str(item[1]) + "\n")
+        out2.write('Conc' + "," + str(item[0]) + "," + str(item[1]) + '\n')
     out1.write("\nOn discordant trees:\n")
     out1.write("# Mutations\t# Trees\n")
     for item in mutation_counts_d:
         out1.write(str(item[0]) + "\t\t" + str(item[1]) + "\n")
+        out2.write('Disc' + "," + str(item[0]) + "," + str(item[1]) + '\n')
+
 
     if reduced is not None:
         out1.write(
@@ -429,8 +459,11 @@ def write_output(
             val = [str(v) for v in val]
             if key in derived:
                 out1.write("Taxa " + key + "\t" + "\t".join(val) + "\t" + "0" + "\n")
+                out2.write("Taxa " + key + "," + ",".join(val) + "," + "0" + "\n")
             else:
                 out1.write("Taxa " + key + "\t" + "\t".join(["0", val[1]]) + "\t" + val[0] + "\n")
+                out2.write("Taxa " + key + "," + ",".join(["0", val[1]]) + "," + val[0] + "\n")
+
     out1.close()
 
 
@@ -490,7 +523,7 @@ def plot_mutations(mutation_counts_c, mutation_counts_d, filename):
     ax.set_xticklabels(labels)
     plt.ylabel("Count")
     plt.xlabel("# Mutations")
-    plt.savefig(filename + ".dist.png", dpi=250)
+    plt.savefig(filename + ".dist.png", dpi=50)
 
 
 def subs2coal(newick_string):
@@ -693,10 +726,6 @@ def write_unique_trees(focal_trees, filename, traits):
     counts = {}
     out1 = open(filename+'.txt', "a")
     outTrees = open(filename+'.trees', 'w')
-
-    print(focal_trees)
-    outTrees.write("###All Observed gene trees###\n")
-
     for i, tree in enumerate(focal_trees):
         outTrees.write(tree + '\n')
         if i == 0:

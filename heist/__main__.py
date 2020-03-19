@@ -73,6 +73,126 @@ def subs2coal(*args):
 
     treeSp,t = hemiplasytool.subs2coal(newick)
 
+def heistMerge(*args):
+    parser = argparse.ArgumentParser(
+        description="Merge output files from multiple HeiST runs. \
+            Useful for simulating large trees by running multiple batch jobs.")
+
+    parser.add_argument("inputs", nargs="*", help = "Prefixes of output files to merge.")
+    args = parser.parse_args()
+    files = args.inputs
+    
+    #Get info that is same across all runs
+
+    head = ""
+    file1 = open(files[0] + ".txt")
+    for line in file1:
+        if not line.startswith('### RESULTS ###'):
+            head += line
+        if line.startswith('### RESULTS ###'):
+            break
+    
+    data = {"#1": 0, "#2": 0, "#3": 0, "#4": 0, "#5": 0,
+            "#6": 0, "#7": 0, "#8": 0}
+    allT = {}
+    discT = {}
+    concT = {}
+    taxaT_1 = {}
+    taxaT_2 = {}
+    taxaT_3 = {}
+
+    for file in files:
+        f = open(file + "_raw.txt")
+        for i, line in enumerate(f):
+            if i == 0:
+                data["#1"] += int(line)
+            elif i == 1:
+                data["#2"] += int(line)
+            elif i == 2:
+                data["#3"] += int(line)
+            elif i == 3:
+                data["#4"] += int(line)
+            elif i == 4:
+                data["#5"] += int(line)
+            elif i == 5:
+                data["#6"] += int(line)
+            elif i == 6:
+                data["#7"] += int(line)
+            elif i == 7:
+                data["#8"] += int(line)
+            else:
+                l = line.replace('\n', '').split(',')
+                if l[0] == 'All':
+                    if l[1] in allT.keys():
+                        allT[l[1]] += int(l[2])
+                    else:
+                        allT[l[1]] = int(l[2])
+                elif l[0] == 'Disc':
+                    if l[1] in discT.keys():
+                        discT[l[1]] += int(l[2])
+                    else:
+                        discT[l[1]] = int(l[2])
+                elif l[0] == 'Conc':
+                    if l[1] in concT.keys():
+                        concT[l[1]] += int(l[2])
+                    else:
+                        concT[l[1]] = int(l[2])
+                elif l[0].startswith("Taxa"):
+                    if l[0] in taxaT_1.keys():
+                        taxaT_1[l[0]] += int(l[1])
+                        taxaT_2[l[0]] += int(l[2])
+                        taxaT_3[l[0]] += int(l[3])
+                    else:
+                        taxaT_1[l[0]] = int(l[1])
+                        taxaT_2[l[0]] = int(l[2])
+                        taxaT_3[l[0]] = int(l[3])
+    print(head)
+
+    print("### RESULTS ###")
+    print(str(data["#1"]) + ' loci matched the species character states\n')
+    print('"True" hemiplasy (1 mutation) occurs ' + str(data["#2"]) + " time(s)\n")
+    print("Combinations of hemiplasy and homoplasy (1 < # mutations < "
+            + "____"
+            + ") occur "
+            + str(data["#3"])
+            + " time(s)\n"
+        )
+    print(
+        '"True" homoplasy (>= ' + "______" + ' mutations) occurs ' + str(data["#4"]) + " time(s)\n"
+    )
+    
+    print(str(data["#5"]) + " loci have a discordant gene tree\n")
+    print(str(data["#6"]) + " loci are concordant with the species tree\n")
+    print(str(data["#7"]) + " loci originate from an introgressed history\n")
+    print(str(data["#8"]) + " loci originate from the species history\n")
+
+
+    print('Distribution of mutation counts:\n')
+    print("# Mutations\t# Trees")
+
+    print("On all trees:")
+    for key, val in allT.items():
+        print(str(key) + '\t\t' + str(val))
+    print("\nOn concordant trees:")
+    for key, val in concT.items():
+        print(str(key) + '\t\t' + str(val))
+    print("\nOn discordant trees:")
+    for key, val in discT.items():
+        print(str(key) + '\t\t' + str(val))
+    print()
+
+    print("\nOrigins of mutations leading to observed character states for hemiplasy + homoplasy cases:\n")
+    print("\tTip mutation\tInternal branch mutation\tTip reversal")
+    for key, val in taxaT_1.items():
+        print(key + "\t" + str(val) + "\t" + str(taxaT_2[key]) + "\t" + str(taxaT_3[key]))
+
+    tree_files = [x + ".trees" for x in files]
+    catcall = "cat "
+    for t in tree_files:
+        catcall += t + " "
+    catcall += "> merged_trees.trees"
+    os.system(catcall)
+
 def main(*args):
     start = time.time()
     hemiplasytool.print_banner()
@@ -258,6 +378,7 @@ def main(*args):
         seqgencall = hemiplasytool.seq_gen_call("trees" + str(y) + ".tmp", args.seqgenpath, args.mutationrate, str(y))
         s = hemiplasytool.call_programs_sg(ms_call, seqgencall, "trees.tmp", taxalist)
         processes_sq.append(s)
+        print(seqgencall)
 
     done = False
     while done == False:

@@ -266,3 +266,20 @@ positional arguments:
 optional arguments:
   -h, --help  show this help message and exit
 ```
+
+### heistMerge
+
+```
+usage: heistMerge [-h] [inputs [inputs ...]]
+
+Merge output files from multiple HeiST runs. Useful for simulating large trees
+by running multiple batch jobs.
+
+positional arguments:
+  inputs
+
+optional arguments:
+  -h, --help  show this help message and exit
+```
+
+`heistMerge` will write the merged output summary to standard out and create a new files `merged_trees.trees` which contains all observed focal gene trees.

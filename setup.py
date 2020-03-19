@@ -25,6 +25,7 @@ setup(name='heist',
         "console_scripts": [
             "heist=heist.__main__:main",
             "newick2ms=heist.__main__:newick2ms",
+            "heistMerge=heist.__main__:heistMerge",
             "subs2coal=heist.__main__:subs2coal"
         ]
     },
