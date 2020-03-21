@@ -349,10 +349,12 @@ def main(*args):
         threads += 1
         per_thread.append(reps%(threads-1))
 
+    prefix = args.outputdir
+
     processes_ms = []
     processes_sq = []
     for y in range(0, threads):
-        ms_call = hemiplasytool.splits_to_ms(splits, taxa, per_thread[y], args.mspath, y)
+        ms_call = hemiplasytool.splits_to_ms(splits, taxa, per_thread[y], args.mspath, y, prefix)
         m = hemiplasytool.call_programs(ms_call, "", "trees.tmp", taxalist)
         processes_ms.append(m)
     done = False
@@ -370,15 +372,14 @@ def main(*args):
 
     string_cat_ms = "cat "
     for y in range(0, threads):
-        string_cat_ms += "trees" + str(y) + ".tmp "
-    string_cat_ms += "> trees.tmp"
+        string_cat_ms += prefix + ".trees" + str(y) + ".tmp "
+    string_cat_ms += "> " + prefix + ".trees.tmp"
     os.system(string_cat_ms)
 
     for y in range(0, threads):
-        seqgencall = hemiplasytool.seq_gen_call("trees" + str(y) + ".tmp", args.seqgenpath, args.mutationrate, str(y))
+        seqgencall = hemiplasytool.seq_gen_call(prefix + ".trees" + str(y) + ".tmp", args.seqgenpath, args.mutationrate, str(y), prefix)
         s = hemiplasytool.call_programs_sg(ms_call, seqgencall, "trees.tmp", taxalist)
         processes_sq.append(s)
-        print(seqgencall)
 
     done = False
     while done == False:
@@ -394,27 +395,27 @@ def main(*args):
 
     string_cat = "cat "
     for y in range(0, threads):
-        string_cat += "seqs" + str(y) + ".tmp "
-    string_cat += "> seqs.tmp"
+        string_cat += prefix + ".seqs" + str(y) + ".tmp "
+    string_cat += "> " + prefix + ".seqs.tmp"
     os.system(string_cat)
 
     # Gets indices of trees with site patterns that match speecies pattern
     log.debug("Finding trees that match species trait pattern...")
     match_species_pattern, counts = seqtools.readSeqs(
-        "seqs.tmp", len(taxalist), traits, len(splits), i, breaks
+        prefix + ".seqs.tmp", len(taxalist), traits, len(splits), i, prefix, breaks
     )
     counts_by_tree.append(counts)
     log.debug("Getting focal trees...")
-    # Gets the trees at these indices
-    focal_trees, _ = seqtools.getTrees("trees.tmp", match_species_pattern)
+    # Gets the trees at these indices 
+    focal_trees, _ = seqtools.getTrees(prefix + ".trees.tmp", match_species_pattern)
     all_focal_trees = all_focal_trees + focal_trees
     assert len(match_species_pattern) == len(focal_trees)
 
     log.debug("Calculating discordance...")
     results[i], disc, conc = seqtools.propDiscordant(focal_trees, treeSp)
 
-    focaltrees_d = seqtools.parse_seqgen("focaltrees.tmp", len(taxalist), disc)
-    focaltrees_c = seqtools.parse_seqgen("focaltrees.tmp", len(taxalist), conc)
+    focaltrees_d = seqtools.parse_seqgen(prefix + ".focaltrees.tmp", len(taxalist), disc)
+    focaltrees_c = seqtools.parse_seqgen(prefix + ".focaltrees.tmp", len(taxalist), conc)
     for index, tree in enumerate(focaltrees_d):
         n_mutations_d.append(seqtools.count_mutations(tree, len(taxalist)))
     for index, tree in enumerate(focaltrees_c):
@@ -429,6 +430,7 @@ def main(*args):
     for item in interesting:
         test_summarize = seqtools.summarize_interesting(item, len(traits.keys()))
         inherited = inherited + test_summarize
+
     # Clean up temporary files
     os.system("rm *.tmp")
     ###################################################################

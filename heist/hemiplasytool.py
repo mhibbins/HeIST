@@ -96,7 +96,7 @@ def newick2ms(newick):
     return(ms_splits, ms_taxa)
 
 
-def splits_to_ms(splitTimes, taxa, reps, path_to_ms, y, admix=None, r=None):
+def splits_to_ms(splitTimes, taxa, reps, path_to_ms, y, prefix, admix=None, r=None):
     """
     Converts inputs into a call to ms
     TODO: Add introgression
@@ -127,17 +127,17 @@ def splits_to_ms(splitTimes, taxa, reps, path_to_ms, y, admix=None, r=None):
         )
 
     if admix is not None:
-        call += " | tail -n +4 | grep -v // > trees" + str(r) + ".tmp"
+        call += " | tail -n +4 | grep -v // > " + prefix + ".trees" + str(r) + ".tmp"
     else:
-        call += " | tail -n +4 | grep -v // > trees" + str(y) + ".tmp"
+        call += " | tail -n +4 | grep -v // > " + prefix + ".trees" + str(y) + ".tmp"
     return call
 
 
-def seq_gen_call(treefile, path, s, i):
+def seq_gen_call(treefile, path, s, i, prefix):
     """
     Make seq-gen call.
     """
-    return path + " -m HKY -l 1 -s " + str(s) + ' -wa <"' + treefile + '" > seqs' + str(i) + '.tmp'
+    return path + " -m HKY -l 1 -s " + str(s) + ' -wa <"' + treefile + '" > ' + prefix + '.seqs' + str(i) + '.tmp'
 
 def print_banner():
     print(" _   _      ___ ____ _____ ")

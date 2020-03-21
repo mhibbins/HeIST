@@ -53,7 +53,7 @@ def checkEqual(lst):
     return lst[1:] == lst[:-1]
 
 
-def readSeqs(seqs, ntaxa, speciesPattern, nodes, batch, breaks=[]):
+def readSeqs(seqs, ntaxa, speciesPattern, nodes, batch, prefix, breaks=[]):
     """
     Reads in sequences, determines if gene tree site pattern matches species tree
     site pattern. Returns indices of those which do.
@@ -66,7 +66,7 @@ def readSeqs(seqs, ntaxa, speciesPattern, nodes, batch, breaks=[]):
         counts = [0] * len(breaks)
     else:
         counts = [0]
-    tmpFocal = open("focaltrees.tmp", "w")
+    tmpFocal = open(prefix + ".focaltrees.tmp", "w")
 
     index = 0
     iii = 0
