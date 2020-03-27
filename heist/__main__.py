@@ -85,7 +85,7 @@ def heistMerge(*args):
     #Get info that is same across all runs
 
     head = ""
-    file1 = open(files[0])
+    file1 = open(files[0] + ".txt")
     for line in file1:
         if not line.startswith('### RESULTS ###'):
             head += line
@@ -102,7 +102,7 @@ def heistMerge(*args):
     taxaT_3 = {}
 
     for file in files:
-        f = open(file)
+        f = open(file + "_raw.txt")
         for i, line in enumerate(f):
             if i == 0:
                 data["#1"] += int(line)
