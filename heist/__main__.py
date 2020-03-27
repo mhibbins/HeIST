@@ -11,6 +11,7 @@ import time
 import sys
 import os
 import logging as log
+import subprocess
 from heist import hemiplasytool
 from heist import seqtools
 def newick2ms(*args):
@@ -78,14 +79,28 @@ def heistMerge(*args):
         description="Merge output files from multiple HeiST runs. \
             Useful for simulating large trees by running multiple batch jobs.")
 
-    parser.add_argument("inputs", nargs="*", help = "Prefixes of output files to merge.")
+    parser.add_argument(
+        "-d", help="Merge all files in a directory", action='store_true'
+    )
+    parser.add_argument("inputs", nargs="*", help = "Prefixes of output files to merge or a directory (supply -d flag as well)")
     args = parser.parse_args()
     files = args.inputs
     
+    if args.d == True:
+        direc = str(files[0])
+        result = subprocess.run('echo ' + str(direc) + '/*_raw.txt', stdout=subprocess.PIPE, shell=True)
+        
+        files2 = result.stdout.split()
+        files3 = []
+        for file in files2:
+            file = str(file.decode("utf-8"))
+            files3.append(file.replace('_raw.txt', ''))
+    else:
+        files3 = files
     #Get info that is same across all runs
 
     head = ""
-    file1 = open(files[0] + ".txt")
+    file1 = open(files3[0] + ".txt")
     for line in file1:
         if not line.startswith('### RESULTS ###'):
             head += line
@@ -101,7 +116,7 @@ def heistMerge(*args):
     taxaT_2 = {}
     taxaT_3 = {}
 
-    for file in files:
+    for file in files3:
         f = open(file + "_raw.txt")
         for i, line in enumerate(f):
             if i == 0:
@@ -186,7 +201,7 @@ def heistMerge(*args):
     for key, val in taxaT_1.items():
         print(key + "\t" + str(val) + "\t" + str(taxaT_2[key]) + "\t" + str(taxaT_3[key]))
 
-    tree_files = [x + ".trees" for x in files]
+    tree_files = [x + ".trees" for x in files3]
     catcall = "cat "
     for t in tree_files:
         catcall += t + " "
