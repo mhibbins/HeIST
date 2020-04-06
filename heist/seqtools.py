@@ -106,7 +106,7 @@ def readSeqs(seqs, ntaxa, speciesPattern, nodes, batch, prefix, breaks=[]):
                             b.append(pattern[str(taxa)])
                         if checkEqual(b):
                             if b[0] != pattern[str(ntaxa + 1)]:
-                                indices.append(index)
+                                indices.append(index+1)
                                 tmpFocal.write(' 10 1\n')
                                 for k, v in pattern.items():
                                     tmpFocal.write(k + "\t" + v + "\n")
@@ -128,6 +128,66 @@ def readSeqs(seqs, ntaxa, speciesPattern, nodes, batch, prefix, breaks=[]):
     tmpFocal.close()
     return (indices, counts)
 
+def readSeqs2(seqs, ntaxa, speciesPattern, nodes, batch, prefix, breaks=[]):
+    """
+    Reads in sequences, determines if gene tree site pattern matches species tree
+    site pattern. Returns indices of those which do.
+    """
+    indices = []
+    c = cluster(speciesPattern)
+    shouldMatch1 = c[0]
+    shouldMatch2 = c[1]
+    if len(breaks) != 0:
+        counts = [0] * len(breaks)
+    else:
+        counts = [0]
+    tmpFocal = open(prefix + ".focaltrees.tmp", "w")
+
+    index = 0
+    with open(seqs, "rU") as f:
+        for lines in grouper(f, ntaxa + nodes + 1, ""):
+            assert len(lines) == ntaxa + nodes + 1
+            pattern = {}
+            for x, line in enumerate(lines):
+                if x != 0:
+                    l = line.replace("\n", "").split()
+                    pattern[str(l[0])] = str(l[1])
+            levels = set()
+            for key, val in pattern.items():
+                if int(key) in range(1, ntaxa + 1):
+                    levels.add(val)
+            if len(levels) == 2:
+                a = []
+                for taxa in shouldMatch1:
+                    a.append(pattern[str(taxa)])
+                if checkEqual(a):
+                    b = []
+                    for taxa in shouldMatch2:
+                        b.append(pattern[str(taxa)])
+                    if checkEqual(b):
+                        if b[0] != pattern[str(ntaxa + 1)]:
+                            indices.append(index)
+                            for y in lines:
+                                tmpFocal.write(y)
+                            if len(breaks) != 0:
+                                tree_class = 0
+                                for i, breakpoint in enumerate(breaks):
+                                    if i != 0:
+                                        if (index <= breakpoint) and (
+                                            index > breaks[i - 1]
+                                        ):
+                                            tree_class = i
+                                    else:
+                                        if index <= breakpoint:
+                                            tree_class = i
+                                counts[tree_class] += 1
+                            else:
+                                counts[0] += 1
+            index += 1
+    tmpFocal.close()
+
+    return (indices, counts)
+
 
 def getTrees(treefile, matchlist):
     """
@@ -141,7 +201,7 @@ def getTrees(treefile, matchlist):
         if len(l) > 3:
             i += 1
             if i in matchlist:
-                focal_trees.append(line)
+                focal_trees.append(l)
     trees.close()
     #for i, tree in enumerate(all_trees):
     #    if i in matchlist:

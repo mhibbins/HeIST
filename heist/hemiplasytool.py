@@ -688,9 +688,6 @@ def readInput(file):
     return(tree, derived, admix, outgroup, treeType)
 
 
-
-
-
 def summarize_inherited(inherited):
     reduced = {}
     for event in inherited:

@@ -419,13 +419,13 @@ def main(*args):
     match_species_pattern, counts = seqtools.readSeqs(
         prefix + ".seqs.tmp", len(taxalist), traits, len(splits), i, prefix, breaks
     )
+
     counts_by_tree.append(counts)
     log.debug("Getting focal trees...")
     # Gets the trees at these indices 
     focal_trees, _ = seqtools.getTrees(prefix + ".trees.tmp", match_species_pattern)
-    all_focal_trees = all_focal_trees + focal_trees
+    all_focal_trees = focal_trees
     assert len(match_species_pattern) == len(focal_trees)
-
     log.debug("Calculating discordance...")
     results[i], disc, conc = seqtools.propDiscordant(focal_trees, treeSp)
 
@@ -492,7 +492,6 @@ def main(*args):
         coal_internals
     )
     hemiplasytool.write_unique_trees(all_focal_trees, args.outputdir, traits)
-    exit(0)
     end = time.time()
     print("\nTime elapsed: " + str(end - start) + " seconds")
     ################################################################
