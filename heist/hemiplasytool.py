@@ -465,6 +465,7 @@ def write_output(
                 out2.write("Taxa " + key + "," + ",".join(["0", val[1]]) + "," + val[0] + "\n")
 
     out1.close()
+    out2.close()
 
 
 def plot_mutations(mutation_counts_c, mutation_counts_d, filename):
