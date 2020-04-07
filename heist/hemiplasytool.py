@@ -740,10 +740,10 @@ def write_unique_trees(focal_trees, filename, traits):
                 counts[tree] = 1
     out1.write("\n### OBSERVED GENE TREES ###\n\n")
     for tree in unique:
-
         for key, val in traits.items():
             if val == 1:
-                t = re.sub(r"\b%s\b" % str(key)+":", str(key) + "*:", tree)
+                tree = re.sub(r"\b%s\b" % str(key)+":", str(key) + "*:", tree)
+        t = tree
         t = t.replace(";", "")
         t = Phylo.read(io.StringIO(t), "newick")
         Phylo.draw_ascii(t, out1, column_width=40)
