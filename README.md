@@ -19,12 +19,17 @@ Mark Hibbins (mhibbins@indiana.edu)
 
 ## Installation
 
+### From GitHub
 ```
 git clone https://github.com/mhibbins/heist
 cd heist
 python setup.py install
 ```
 
+### From PyPI
+```
+pip install heist-hemiplasy
+```
 
 ## Usage
 ```
