@@ -11,7 +11,7 @@ README = (HERE / "README.md").read_text()
 REQUIREMENTS = ['biopython', 'numpy', 'matplotlib', 'ete3']
 
 setup(name='heist',
-      version='0.3.0',
+      version='0.3.1',
       description='Hemiplasy Inference Simulation Tool. For characterising hemiplasy given traits mapped onto a species tree',
       long_description=README,
       long_description_content_type="text/markdown",
