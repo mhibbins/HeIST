@@ -53,7 +53,69 @@ def checkEqual(lst):
     return lst[1:] == lst[:-1]
 
 
-def readSeqs(seqs, ntaxa, speciesPattern, nodes, batch, breaks=[]):
+def readSeqs(seqs, ntaxa, speciesPattern, nodes, batch, prefix, breaks=0):
+    """
+    Reads in sequences, determines if gene tree site pattern matches species tree
+    site pattern. Returns indices of those which do.
+    """
+    indices = []
+    c = cluster(speciesPattern)
+    shouldMatch1 = c[0]
+    shouldMatch2 = c[1]
+    counts = [0,0]
+    tmpFocal = open(prefix + ".focaltrees.tmp", "w")
+
+    index = 0
+    iii = 0
+    p = ntaxa + nodes
+    #print(p)
+    with open(seqs, "rU") as f:
+        block = []
+        tax = []
+        for lines in f:
+            #print(block)
+            if iii < p:
+                l = lines.replace("\n", "").split()
+                if l[1] in ['A', 'T', 'C', 'G']:
+                    tax.append(l[0])
+                    block.append(l[1])
+                    iii += 1
+            elif iii == p:
+                iii = 0
+                assert len(block) == ntaxa + nodes
+                pattern = {}
+                for x, line in enumerate(block):
+                    pattern[str(tax[x])] = str(line)
+                block = []
+                tax = []
+                #print(pattern)
+                levels = set()
+                for key, val in pattern.items():
+                    if int(key) in range(1, ntaxa + 1):
+                        levels.add(val)
+                if len(levels) == 2:
+                    a = []
+                    for taxa in shouldMatch1:
+                        a.append(pattern[str(taxa)])
+                    if checkEqual(a):
+                        b = []
+                        for taxa in shouldMatch2:
+                            b.append(pattern[str(taxa)])
+                        if checkEqual(b):
+                            if b[0] != pattern[str(ntaxa + 1)]:
+                                indices.append(index+1)
+                                tmpFocal.write(' 10 1\n')
+                                for k, v in pattern.items():
+                                    tmpFocal.write(k + "\t" + v + "\n")
+                                if index < breaks:
+                                    counts[0] += 1
+                                else:
+                                    counts[1] += 1
+                index += 1
+    tmpFocal.close()
+    return (indices, counts)
+
+def readSeqs2(seqs, ntaxa, speciesPattern, nodes, batch, prefix, breaks=[]):
     """
     Reads in sequences, determines if gene tree site pattern matches species tree
     site pattern. Returns indices of those which do.
@@ -66,7 +128,7 @@ def readSeqs(seqs, ntaxa, speciesPattern, nodes, batch, breaks=[]):
         counts = [0] * len(breaks)
     else:
         counts = [0]
-    tmpFocal = open("focaltrees.tmp", "w")
+    tmpFocal = open(prefix + ".focaltrees.tmp", "w")
 
     index = 0
     with open(seqs, "rU") as f:
@@ -119,20 +181,22 @@ def getTrees(treefile, matchlist):
     Returns list of trees at indices obtained from readSeqs
     """
     focal_trees = []
-    all_trees = []
-    trees_dont_follow = []
     trees = open(treefile, "r")
-    for i, line in enumerate(trees):
+    i = 0
+    for line in trees:
         l = line.replace("\n", "")
         if len(l) > 3:
-            all_trees.append(l)
+            i += 1
+            if i in matchlist:
+                focal_trees.append(l)
     trees.close()
-    for i, tree in enumerate(all_trees):
-        if i in matchlist:
-            focal_trees.append(tree)
-        else:
-            trees_dont_follow.append(tree)
-    return (focal_trees, trees_dont_follow)
+    #for i, tree in enumerate(all_trees):
+    #    if i in matchlist:
+    #        focal_trees.append(tree)
+    #    else:
+    #        trees_dont_follow.append(tree)
+
+    return (focal_trees, 0)
 
 
 def _bitstrs(tree):
@@ -233,6 +297,7 @@ def parse_seqgen(seqfile, ntaxa, mask):
     trees = [
         lines[i : i + (ntaxa * 2) - 1] for i in range(0, len(lines), (ntaxa * 2) - 1)
     ]
+    #print(mask)
     return [trees[i] for i in mask]
 
 

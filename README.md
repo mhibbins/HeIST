@@ -20,15 +20,26 @@ Mark Hibbins (mhibbins@indiana.edu)
 ## Installation
 
 ```
-git clone https://github.com/mhibbins/hemiplasytool
-cd hemiplasytool
+git clone https://github.com/mhibbins/heist
+cd heist
 python setup.py install
 ```
 
 
 ## Usage
 ```
-usage: __main__.py [-h] [-v] [-n] [-x] [-p] [-g] [-s] [-o] input
+ _   _      ___ ____ _____
+| | | | ___|_ _/ ___|_   _|
+| |_| |/ _ \| |\___ \ | |
+|  _  |  __/| | ___) || |
+|_| |_|\___|___|____/ |_|
+Hemiplasy Inference Simulation Tool
+Version 0.3.0
+
+Written by Mark Hibbins & Matt Gibson
+Indiana University
+
+usage: heist [-h] [-v] [-n] [-t] [-p] [-g] [-s] [-o] input
 
 Tool for characterising hemiplasy given traits mapped onto a species tree
 
@@ -39,9 +50,9 @@ optional arguments:
   -h, --help            show this help message and exit
   -v, --verbose         Enable debugging messages to be displayed
   -n , --replicates     Number of replicates per batch
-  -x , --batches        Number of batches
-  -p , --mspath         Path to ms
-  -g , --seqgenpath     Path to seq-gen
+  -t , --threads        Number of threads for simulations
+  -p , --mspath         Path to ms (if not in user path)
+  -g , --seqgenpath     Path to seq-gen (if not in user path)
   -s , --mutationrate   Seq-gen mutation rate (default 0.05)
   -o , --outputdir      Output directory/prefix
 ```
@@ -66,6 +77,8 @@ end;
 ### Species tree
 
 Species tree in newick format. Branch lengths must be in average substitutions per site and **branches must be labeled with concordance factors**. [IQTree](www.iqtree.org/doc/Concordance-Factor) can be used to do this. 
+
+> If your tree is already ultrametric and in coalescent units, you can supply this directly if you add the flag `set type coal` to the input file.
 
 ### Traits
 
@@ -253,3 +266,22 @@ positional arguments:
 optional arguments:
   -h, --help  show this help message and exit
 ```
+
+### heistMerge
+
+```
+usage: heistmerge [-h] [-d] [inputs [inputs ...]]
+
+Merge output files from multiple HeiST runs. Useful for simulating large trees
+by running multiple batch jobs.
+
+positional arguments:
+  inputs      Prefixes of output files to merge or a directory (supply -d flag
+              as well)
+
+optional arguments:
+  -h, --help  show this help message and exit
+  -d          Merge all files in a directory
+```
+
+`heistMerge` will write the merged output summary to standard out and create a new files `merged_trees.trees` which contains all observed focal gene trees.

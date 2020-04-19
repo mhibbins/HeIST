@@ -6,15 +6,18 @@ import logging as log
 import os
 import io
 import re
+import math
+import shlex
 from Bio import Phylo
 from Bio.Alphabet import generic_dna
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 from Bio.Align import MultipleSeqAlignment
 from Bio.Phylo.TreeConstruction import ParsimonyScorer
-from hemiplasytool import seqtools
+from heist import seqtools
 from ete3 import Tree
 from collections import OrderedDict
+from subprocess import Popen, PIPE
 
 """
 Hemiplasy Tool
@@ -93,7 +96,7 @@ def newick2ms(newick):
     return(ms_splits, ms_taxa)
 
 
-def splits_to_ms(splitTimes, taxa, reps, path_to_ms, admix=None, r=None):
+def splits_to_ms(splitTimes, taxa, reps, path_to_ms, y, prefix, admix=None):
     """
     Converts inputs into a call to ms
     TODO: Add introgression
@@ -124,18 +127,30 @@ def splits_to_ms(splitTimes, taxa, reps, path_to_ms, admix=None, r=None):
         )
 
     if admix is not None:
-        call += " | tail -n +4 | grep -v // > trees" + str(r) + ".tmp"
+        call += " | tail -n +4 | grep -v // > " + prefix + ".trees" + str(y) + ".tmp"
     else:
-        call += " | tail -n +4 | grep -v // > trees.tmp"
+        call += " | tail -n +4 | grep -v // > " + prefix + ".trees" + str(y) + ".tmp"
     return call
 
 
-def seq_gen_call(treefile, path, s):
+def seq_gen_call(treefile, path, s, i, prefix):
     """
     Make seq-gen call.
     """
-    return path + " -m HKY -l 1 -s " + str(s) + ' -wa <"' + treefile + '" > seqs.tmp'
+    return path + " -m HKY -l 1 -s " + str(s) + ' -wa <"' + treefile + '" > ' + prefix + '.seqs' + str(i) + '.tmp'
 
+def print_banner():
+    print(" _   _      ___ ____ _____ ")
+    print("| | | | ___|_ _/ ___|_   _|")
+    print("| |_| |/ _ \| |\___ \ | |  ")
+    print("|  _  |  __/| | ___) || |  ")
+    print("|_| |_|\___|___|____/ |_|  ")
+    print("Hemiplasy Inference Simulation Tool")
+    print("Version 0.3.0")
+    print()
+    print("Written by Mark Hibbins & Matt Gibson")
+    print("Indiana University")
+    print()
 
 def call_programs(ms_call, seqgencall, treefile, ntaxa):
     """
@@ -150,13 +165,25 @@ def call_programs(ms_call, seqgencall, treefile, ntaxa):
         for i, call in enumerate(ms_call):
             concatCall += "trees" + str(i) + ".tmp "
         concatCall += "> trees.tmp"
-        os.system(concatCall)
+        process_ms = Popen(concatCall, stdout = PIPE, stderr=PIPE)
+        #os.system(concatCall)
     else:
         log.debug("Calling ms...")
-        os.system(ms_call)
+        #os.system(ms_call)
+        process_ms = Popen(ms_call, shell = True)
 
-    log.debug("Calling seq-gen...")
-    os.system(seqgencall)
+    return(process_ms)
+
+def call_programs_sg(ms_call, seqgencall, treefile, ntaxa):
+    
+        """
+        Calls ms and seq-gen
+        """
+        log.debug("Calling seq-gen...")
+        #seqgencall = shlex.split(seqgencall)
+        process = Popen(seqgencall, shell = True)
+        #os.system(seqgencall)
+        return(process)
 
 
 def cleanup():
@@ -224,8 +251,14 @@ def write_output(
     min_mutations_required,
     filename,
     reps,
-    conversions, oldTree):
+    conversions,
+    oldTree,
+    intercept,
+    coef,
+    newick_internals,
+    coal_internals):
     out1 = open(filename+'.txt', "w")
+    out2 = open(filename+'_raw.txt', "w")
 
     # CALCULATE SUMMARY STATS
     #print(conversions)
@@ -254,13 +287,9 @@ def write_output(
         if item[0] >= min_mutations_required:
             true_homo += item[1]
 
-    sum_from_introgression = 0
-    sum_from_species = 0
-    for i, topology_count in enumerate(counts):
-        if i != len(counts) - 1:
-            sum_from_introgression += topology_count
-        else:
-            sum_from_species = topology_count
+    sum_from_introgression = counts[1]
+    sum_from_species = counts[0]
+
 
     mutation_counts_comb = {}
     mutation_counts_keys = set()
@@ -287,6 +316,8 @@ def write_output(
             mutation_counts_comb[k] = mutation_counts_dd[k]
 
 
+    newick_internals = [str(x) for x in newick_internals]
+    coal_internals = [str(x) for x in coal_internals]
 
 
     # INPUT SUMMARY
@@ -302,6 +333,11 @@ def write_output(
     else:
         out1.write("The original species tree (smoothed, in coalescent units) is:\n " + oldTree + "\n\n")
         out1.write("The pruned species tree (smoothed, in coalescent units) is:\n " + speciesTree + "\n\n")
+
+    out1.write("Regression intercept: " + str(intercept) + '\n')
+    out1.write("Regression slope: " + str(coef) + '\n')
+    out1.write("X (newick internals): " + ",".join(newick_internals) + '\n')
+    out1.write("Y (coalescent internals): " + ",".join(coal_internals) + '\n')
 
     t = tree.replace(";", "")
     t = Phylo.read(io.StringIO(t), "newick")
@@ -341,10 +377,14 @@ def write_output(
     # OUTPUT SUMMARY
     out1.write("\n\n### RESULTS ###\n\n")
     out1.write(str(sum([true_hemi, mix, true_homo])) + ' loci matched the species character states\n\n')
+    out2.write(str(sum([true_hemi, mix, true_homo])) + '\n') #1#
+
     out1.write(
         '"True" hemiplasy (1 mutation) occurs ' + str(true_hemi) + " time(s)\n\n"
     )
-    if mix_range != [0]:
+    out2.write(str(true_hemi) + '\n') #2# 
+
+    try:
         out1.write(
             "Combinations of hemiplasy and homoplasy (1 < # mutations < "
             + str(min_mutations_required)
@@ -352,17 +392,39 @@ def write_output(
             + str(mix)
             + " time(s)\n\n"
         )
+        out2.write(str(mix) + '\n') #3#
+    except:
+        out1.write(
+            "Combinations of hemiplasy and homoplasy (1 < # mutations < "
+            + str(min_mutations_required)
+            + ") occur "
+            + str(0)
+            + " time(s)\n\n"
+        )
+        out2.write(str(0) + '\n') #3#
+
+
     out1.write(
         '"True" homoplasy (>= ' + str(min_mutations_required) + ' mutations) occurs ' + str(true_homo) + " time(s)\n\n"
     )
+    out2.write(str(true_homo) + '\n') #4#
+
     out1.write(str(summary[0]) + " loci have a discordant gene tree\n")
+    out2.write(str(summary[0]) + '\n') #5#
+
     out1.write(
         str(summary[1] - summary[0]) + " loci are concordant with the species tree\n\n"
     )
+    out2.write(str(summary[1] - summary[0]) + '\n') #6#
+
     out1.write(
         str(sum_from_introgression) + " loci originate from an introgressed history\n"
     )
+    out2.write(str(sum_from_introgression) + '\n') #7#
+
+
     out1.write(str(sum_from_species) + " loci originate from the species history\n\n")
+    out2.write(str(sum_from_species) + '\n') #8#
 
     # DETAILED OUTPUT
     out1.write('Distribution of mutation counts:\n\n')
@@ -371,15 +433,18 @@ def write_output(
     out1.write("On all trees:\n")
     for key, val in mutation_counts_comb.items():
         out1.write(str(key) + '\t\t' + str(val) + '\n')
-
+        out2.write('All' + "," + str(key) + "," + str(val) + '\n')
     out1.write("\nOn concordant trees:\n")
     out1.write("# Mutations\t# Trees\n")
     for item in mutation_counts_c:
         out1.write(str(item[0]) + "\t\t" + str(item[1]) + "\n")
+        out2.write('Conc' + "," + str(item[0]) + "," + str(item[1]) + '\n')
     out1.write("\nOn discordant trees:\n")
     out1.write("# Mutations\t# Trees\n")
     for item in mutation_counts_d:
         out1.write(str(item[0]) + "\t\t" + str(item[1]) + "\n")
+        out2.write('Disc' + "," + str(item[0]) + "," + str(item[1]) + '\n')
+
 
     if reduced is not None:
         out1.write(
@@ -390,9 +455,13 @@ def write_output(
             val = [str(v) for v in val]
             if key in derived:
                 out1.write("Taxa " + key + "\t" + "\t".join(val) + "\t" + "0" + "\n")
+                out2.write("Taxa " + key + "," + ",".join(val) + "," + "0" + "\n")
             else:
                 out1.write("Taxa " + key + "\t" + "\t".join(["0", val[1]]) + "\t" + val[0] + "\n")
+                out2.write("Taxa " + key + "," + ",".join(["0", val[1]]) + "," + val[0] + "\n")
+
     out1.close()
+    out2.close()
 
 
 def plot_mutations(mutation_counts_c, mutation_counts_d, filename):
@@ -451,7 +520,7 @@ def plot_mutations(mutation_counts_c, mutation_counts_d, filename):
     ax.set_xticklabels(labels)
     plt.ylabel("Count")
     plt.xlabel("# Mutations")
-    plt.savefig(filename + ".dist.png", dpi=250)
+    plt.savefig(filename + ".dist.png", dpi=50)
 
 
 def subs2coal(newick_string):
@@ -469,7 +538,11 @@ def subs2coal(newick_string):
         for i in range(len(scfs)):
 
                 if (float(scfs[i])/100) < 1 and float(scfs[i]) != 1: #catch for missing data / values of 1
-                        coal_internals.append(-1*(np.log(1-(float(scfs[i])/100))))
+                        coal_estimate = -1*(math.log(3/2) + math.log(1 - float(scfs[i])/100))
+                        if coal_estimate > 0:
+                                coal_internals.append(coal_estimate)
+                        else:
+                                coal_internals.append(0.01)
                 else:
                         coal_internals.append(np.NaN)
 
@@ -503,7 +576,8 @@ def subs2coal(newick_string):
                 return intercept, slope
 
         intercept, coef = branch_regression(newick_internals, coal_internals)
-        
+        n = newick_internals
+        c = coal_internals
         tip_sections = []
 
         for i in range(len(sections)): #gets the sections with tip lengths
@@ -522,7 +596,11 @@ def subs2coal(newick_string):
 
         coal_tips = [(newick_tips[i]*coef + intercept) for i in range(len(newick_tips))]
 
-      
+        for i in range(len(coal_tips)):
+                if coal_tips[i] <= 0:
+                        coal_tips[i] = 0.01
+                else:
+                        coal_tips[i] = coal_tips[i]
 
         coal_internals = [(newick_internals[i]*coef + intercept) if np.isnan(coal_internals[i]) else coal_internals[i] for i in range(len(newick_internals))]
 
@@ -549,9 +627,18 @@ def subs2coal(newick_string):
         for i in range(len(lengths)):
              coal_newick_string = coal_newick_string.replace(str(lengths[i]), str(coal_lengths[i]))
     
+        scfs = [float(x) for x in scfs]
+        scfs2 = []
+        for val in scfs:
+            if val.is_integer():
+                scfs2.append(str(val) + ".0")
+            else:
+                scfs2.append(str(val))
+
+
         for i in range(len(scfs)):
                 coal_newick_string = coal_newick_string.replace(str(scfs[i]), '')    
-        return(coal_newick_string, Tree(coal_newick_string, format=1))
+        return(coal_newick_string, Tree(coal_newick_string, format=1), intercept, coef, n, c)
 
 
 def readInput(file):
@@ -561,6 +648,7 @@ def readInput(file):
     admix = []
     outgroup=None
     cnt = 0
+    treeType = 'ml'
 
     for i, line in enumerate(f):
         if line.startswith("begin trees"):
@@ -590,11 +678,11 @@ def readInput(file):
                 strength = l[4].split('=')[1]
                 time = l[5].split('=')[1]
                 admix.append([time,sp1,sp2,strength])
+            elif l[0].startswith('set type coal'):
+                treeType = 'coal'
+    
             
-    return(tree, derived, admix, outgroup)
-
-
-
+    return(tree, derived, admix, outgroup, treeType)
 
 
 def summarize_inherited(inherited):
@@ -632,9 +720,6 @@ def write_unique_trees(focal_trees, filename, traits):
     counts = {}
     out1 = open(filename+'.txt', "a")
     outTrees = open(filename+'.trees', 'w')
-
-    outTrees.write("###All Observed gene trees###\n")
-
     for i, tree in enumerate(focal_trees):
         outTrees.write(tree + '\n')
         if i == 0:
@@ -651,10 +736,10 @@ def write_unique_trees(focal_trees, filename, traits):
                 counts[tree] = 1
     out1.write("\n### OBSERVED GENE TREES ###\n\n")
     for tree in unique:
-
         for key, val in traits.items():
             if val == 1:
-                t = re.sub(r"\b%s\b" % str(key)+":", str(key) + "*:", tree)
+                tree = re.sub(r"\b%s\b" % str(key)+":", str(key) + "*:", tree)
+        t = tree
         t = t.replace(";", "")
         t = Phylo.read(io.StringIO(t), "newick")
         Phylo.draw_ascii(t, out1, column_width=40)
@@ -677,7 +762,6 @@ def prune_tree(tree, derived, outgroup):
     ns = []
     for node in t.get_monophyletic(values=["1"], target_attr="derived"):
        ns.append(node)
-
     sub = t.get_common_ancestor(ns[0], ns[1], ns[2], ns[3])
     tokeep = list(sub.get_leaf_names())
     tokeep.append(outgroup)
