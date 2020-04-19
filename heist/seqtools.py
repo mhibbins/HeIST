@@ -53,7 +53,7 @@ def checkEqual(lst):
     return lst[1:] == lst[:-1]
 
 
-def readSeqs(seqs, ntaxa, speciesPattern, nodes, batch, prefix, breaks=[]):
+def readSeqs(seqs, ntaxa, speciesPattern, nodes, batch, prefix, breaks=0):
     """
     Reads in sequences, determines if gene tree site pattern matches species tree
     site pattern. Returns indices of those which do.
@@ -62,10 +62,7 @@ def readSeqs(seqs, ntaxa, speciesPattern, nodes, batch, prefix, breaks=[]):
     c = cluster(speciesPattern)
     shouldMatch1 = c[0]
     shouldMatch2 = c[1]
-    if len(breaks) != 0:
-        counts = [0] * len(breaks)
-    else:
-        counts = [0]
+    counts = [0,0]
     tmpFocal = open(prefix + ".focaltrees.tmp", "w")
 
     index = 0
@@ -110,20 +107,10 @@ def readSeqs(seqs, ntaxa, speciesPattern, nodes, batch, prefix, breaks=[]):
                                 tmpFocal.write(' 10 1\n')
                                 for k, v in pattern.items():
                                     tmpFocal.write(k + "\t" + v + "\n")
-                                if len(breaks) != 0:
-                                    tree_class = 0
-                                    for i, breakpoint in enumerate(breaks):
-                                        if i != 0:
-                                            if (index <= breakpoint) and (
-                                                index > breaks[i - 1]
-                                            ):
-                                                tree_class = i
-                                        else:
-                                            if index <= breakpoint:
-                                                tree_class = i
-                                    counts[tree_class] += 1
-                                else:
+                                if index < breaks:
                                     counts[0] += 1
+                                else:
+                                    counts[1] += 1
                 index += 1
     tmpFocal.close()
     return (indices, counts)

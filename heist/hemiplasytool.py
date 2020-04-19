@@ -96,7 +96,7 @@ def newick2ms(newick):
     return(ms_splits, ms_taxa)
 
 
-def splits_to_ms(splitTimes, taxa, reps, path_to_ms, y, prefix, admix=None, r=None):
+def splits_to_ms(splitTimes, taxa, reps, path_to_ms, y, prefix, admix=None):
     """
     Converts inputs into a call to ms
     TODO: Add introgression
@@ -127,7 +127,7 @@ def splits_to_ms(splitTimes, taxa, reps, path_to_ms, y, prefix, admix=None, r=No
         )
 
     if admix is not None:
-        call += " | tail -n +4 | grep -v // > " + prefix + ".trees" + str(r) + ".tmp"
+        call += " | tail -n +4 | grep -v // > " + prefix + ".trees" + str(y) + ".tmp"
     else:
         call += " | tail -n +4 | grep -v // > " + prefix + ".trees" + str(y) + ".tmp"
     return call
@@ -287,13 +287,9 @@ def write_output(
         if item[0] >= min_mutations_required:
             true_homo += item[1]
 
-    sum_from_introgression = 0
-    sum_from_species = 0
-    for i, topology_count in enumerate(counts):
-        if i != len(counts) - 1:
-            sum_from_introgression += topology_count
-        else:
-            sum_from_species = topology_count
+    sum_from_introgression = counts[1]
+    sum_from_species = counts[0]
+
 
     mutation_counts_comb = {}
     mutation_counts_keys = set()
