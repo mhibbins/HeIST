@@ -235,6 +235,10 @@ See `test_w_introgression.txt.txt` for full output.
 
 ![Mutation distribution](test_w_introgression.dist.png)
 
+## General guidelines for choose the number of replicates 
+
+Generally, the number of simulated loci with character states that match the observed distribution will be a small subset of the total number of loci. Therefore, it is typically necessary to simulate a large number of loci in order to observe a sufficient number of relevant cases. The precise number of loci to simulate will differ for each case, and will require some experimentation on the part of the user to come to an optimal value. We can provide some general guidelines to aid this exploration, however. Trees with fewer taxa and a higher specified mutation rate will require fewer simulations in order to observe relevant cases. The five-taxon test tree which uses a mutation rate value of 0.05, generates several hundred focal cases from 1x10^6 simulated loci. By contrast, the 15-taxon lizard phylogeny we analyze in our paper, which used a mutation rate of 0.001, required 1x10^10 simulations to observe a similar number of focal cases. Simulations of up to 1x10^7 loci are doable using the resources of a typical personal laptop, with memory use quickly becoming a limiting factor as the number of loci increases beyond this. We offer two approaches to aid with performance issues: 1) support for multiple processors, and 2) a module called “heistMerge” (see below) which combines the outputs from multiple independent runs. 
+
 
 ## Sub-modules
 
