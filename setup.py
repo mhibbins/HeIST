@@ -10,7 +10,7 @@ README = (HERE / "README.md").read_text()
 # specify requirements of your package here
 REQUIREMENTS = ['biopython', 'numpy', 'matplotlib', 'ete3']
 
-setup(name='heist',
+setup(name='heist-hemiplasy',
       version='0.3.1',
       description='Hemiplasy Inference Simulation Tool. For characterising hemiplasy given traits mapped onto a species tree',
       long_description=README,

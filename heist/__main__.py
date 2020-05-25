@@ -75,7 +75,9 @@ def subs2coal(*args):
 
     newick = open(args.input, 'r').read()
 
-    treeSp,t = hemiplasytool.subs2coal(newick)
+    treeSp,t,intercept,coef,n,c = hemiplasytool.subs2coal(newick)
+    print(treeSp)
+    print(t)
 
 def heistMerge(*args):
     parser = argparse.ArgumentParser(
