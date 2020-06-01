@@ -272,9 +272,11 @@ def main(*args):
 
     # Read input file
     log.debug("Reading input file...")
-    treeSp, derived, admix, outgroup, type = hemiplasytool.readInput(args.input)
+    treeSp, derived, admix, outgroup, type, tree2 = hemiplasytool.readInput(args.input)
     tmp1 = Tree(treeSp, format = 1)
     tmp1.convert_to_ultrametric()
+
+
 
     if type != 'coal':
         # Convert ML tree to a coalescent tree based on GCFs
@@ -293,7 +295,7 @@ def main(*args):
     # Convert coalescent tree to ms splits
     treeSp, conversions = hemiplasytool.names2ints(treeSp)
     original_tree[0], tmp = hemiplasytool.names2ints(original_tree[0])
-    
+
     # Convert newick tree to ms splits
     splits, taxa = hemiplasytool.newick2ms(treeSp)
     traits = {}
@@ -302,8 +304,36 @@ def main(*args):
             traits[conversions[i]] = 1
         else:
             traits[conversions[i]] = 0
+    #print(conversions)
+    #print(taxa)
+    #print(splits)
+
+    #Generate tree in ete3 with internal branches labeled based on user input
+    #plus how ms interprets them. e.g., I4(3). This way I can easily specify the
+    #events to ms.
+
+    if len(admix) != 0:
+        tree2_ete, tree2_newick, node_conversions = hemiplasytool.make_introgression_tree(tree2, conversions)
+    #print(tree2_newick)
+    #print(node_conversions)
+    #print(conversions)
     
-    
+    #Update conversion dictionary to contain node conversions (e.g. I4 -> 2)
+    conversions = {**conversions, **node_conversions}
+
+    #Perform conversions on admix list
+    events = []
+    for e in admix:
+        events.append([e[0], str(conversions[e[1]]), str(conversions[e[2]]), e[3]])
+    admix = events
+
+    #Sort admix list earliest to latest (not sure if ms requires this or not)
+
+    admix.sort(key = lambda x: float(x[0]), reverse=True)
+
+    #print(admix)
+    #exit(0)
+
     # Make program calls
     threads = int(args.threads)
     reps = int(args.replicates)
@@ -329,10 +359,7 @@ def main(*args):
     counts_by_tree = []
 
     
-    events = []
-    for e in admix:
-        events.append([e[0], str(conversions[e[1]]), str(conversions[e[2]]), e[3]])
-    admix = events
+
 
     if len(admix) != 0:
         total_reps_for_intro = 0
@@ -381,6 +408,7 @@ def main(*args):
                         int(reps * float(event[3])), args.mspath, o, prefix, event)
                     m = hemiplasytool.call_programs(ms_call, "", "trees.tmp", taxalist)
                     processes_ms.append(m)
+                    print(ms_call)
 
     done = False
     while done == False:

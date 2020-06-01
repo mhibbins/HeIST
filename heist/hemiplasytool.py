@@ -99,7 +99,7 @@ def newick2ms(newick):
 def splits_to_ms(splitTimes, taxa, reps, path_to_ms, y, prefix, admix=None):
     """
     Converts inputs into a call to ms
-    TODO: Add introgression
+
     """
     nsamples = len(splitTimes) + 1
     call = (
@@ -651,20 +651,25 @@ def readInput(file):
     treeType = 'ml'
 
     for i, line in enumerate(f):
-        if line.startswith("begin trees"):
+        #print(line.replace('\n',''))
+        if line.startswith('tree tree_1'):
             cnt = 1
-            continue
-        if line.startswith("begin hemiplasytool"):
+        if line.startswith('tree tree_2'):
             cnt = 2
-            continue
-        if (len(line) <= 1) or (line.startswith("end")) or (line.startswith("#")):
-            continue
+        if line.startswith("begin hemiplasytool"):
+            cnt = 3
+        #if (len(line) <= 1) or (line.startswith("end")) or (line.startswith("#")):
+        
 
-
-        elif cnt == 1:
+        if cnt == 1:
             tree = line.replace("\n", "").split('=')[1][1:]
-
+            cnt = 4
+     
         elif cnt == 2:
+            tree2 = line.replace("\n", "").split('=')[1][1:]
+            cnt = 4
+
+        elif cnt == 3:
             #simulation parameters
             l = line.replace("\n", "").split('=')
             if l[0] == "set derived taxon":
@@ -682,7 +687,7 @@ def readInput(file):
                 treeType = 'coal'
     
             
-    return(tree, derived, admix, outgroup, treeType)
+    return(tree, derived, admix, outgroup, treeType, tree2)
 
 
 def summarize_inherited(inherited):
@@ -768,3 +773,28 @@ def prune_tree(tree, derived, outgroup):
     t.prune(tokeep)
     return(t.write(), t)
     
+def make_introgression_tree(tree2, conversions):
+    #Used to create tree with internal nodes labled in ms style.
+    #Will allow us to easily specify introgression on internal nodes.
+    node_conversions = {}
+    #Change taxa names to ms ints
+    for key, val in conversions.items():
+        tree2 = re.sub(key, str(val), tree2)
+
+
+    #Convert to ete3 tree
+    tree2 = Tree(tree2, format = 1)
+
+    #Traverse tree
+    for node in tree2.traverse():
+        descendants = node.get_leaf_names()
+        #if not a leaf
+        if len(descendants) != 1:
+            ds = [int(x) for x in descendants]
+            node_conversions[node.name] = str(min(ds))
+            node.name = node.name + '/' + str(min(ds))
+
+    return(tree2, tree2.write(format = 1), node_conversions)
+
+        
+
