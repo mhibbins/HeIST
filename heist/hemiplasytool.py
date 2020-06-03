@@ -18,6 +18,7 @@ from heist import seqtools
 from ete3 import Tree
 from collections import OrderedDict
 from subprocess import Popen, PIPE
+import copy
 
 """
 Hemiplasy Tool
@@ -602,30 +603,48 @@ def subs2coal(newick_string):
                 else:
                         coal_tips[i] = coal_tips[i]
 
+        prediction_stdev = np.std(coal_tips) #standard deviation of tip predictions
+        coal_tips_lower_CI = [(tip - 1.96*prediction_stdev) for tip in coal_tips]
+        coal_tips_upper_CI = [(tip + 1.96*prediction_stdev) for tip in coal_tips]
+
         coal_internals = [(newick_internals[i]*coef + intercept) if np.isnan(coal_internals[i]) else coal_internals[i] for i in range(len(newick_internals))]
+        coal_internals_lower_CI = [((newick_internals[i]*coef + intercept) - 1.96*prediction_stdev) if np.isnan(coal_internals[i]) else coal_internals[i] for i in range(len(newick_internals))]
+        coal_internals_upper_CI = [((newick_internals[i]*coef + intercept) + 1.96*prediction_stdev) if np.isnan(coal_internals[i]) else coal_internals[i] for i in range(len(newick_internals))]
 
         lengths = re.findall("\d+\.\d+", newick_string)
 
         lengths = [lengths[i] for i in range(len(lengths)) if float(lengths[i]) < 1]
 
         coal_lengths = []
+        coal_lengths_lower_CI = []
+        coal_lengths_upper_CI = []
 
         for i in range(len(lengths)):
                 if newick_internals.count(lengths[i]) > 1 or newick_tips.count(lengths[i]) > 1:
                         sys.exit('Error: Duplicate branch lengths')
                 elif float(lengths[i]) in newick_internals:
                         coal_lengths.append(coal_internals[newick_internals.index(float(lengths[i]))])
+                        coal_lengths_lower_CI.append(coal_internals_lower_CI[newick_internals.index(float(lengths[i]))])
+                        coal_lengths_upper_CI.append(coal_internals_upper_CI[newick_internals.index(float(lengths[i]))])
                 elif float(lengths[i]) in newick_tips:
                         coal_lengths.append(coal_tips[newick_tips.index(float(lengths[i]))])
+                        coal_lengths_lower_CI.append(coal_tips_lower_CI[newick_tips.index(float(lengths[i]))])
+                        coal_lengths_upper_CI.append(coal_tips_upper_CI[newick_tips.index(float(lengths[i]))])
                 elif float(lengths[i]) == 0: #deals with roots of length 0 in smoothed trees
                         coal_lengths.append(float(0))
         
         coal_lengths = [str(coal_lengths[i]) for i in range(len(coal_lengths))]
+        coal_lengths_lower_CI = [str(coal_lengths_lower_CI[i]) for i in range(len(coal_lengths_lower_CI))]
+        coal_lengths_upper_CI = [str(coal_lengths_upper_CI[i]) for i in range(len(coal_lengths_upper_CI))]
        
-        coal_newick_string = newick_string
+        coal_newick_string = copy.deepcopy(newick_string)
+        coal_newick_string_lower_CI = copy.deepcopy(newick_string)
+        coal_newick_string_upper_CI = copy.deepcopy(newick_string)
 
         for i in range(len(lengths)):
              coal_newick_string = coal_newick_string.replace(str(lengths[i]), str(coal_lengths[i]))
+             coal_newick_string_lower_CI = coal_newick_string_lower_CI.replace(str(lengths[i]), str(coal_lengths_lower_CI[i]))
+             coal_newick_string_upper_CI = coal_newick_string_upper_CI.replace(str(lengths[i]), str(coal_lengths_upper_CI[i]))
     
         scfs = [float(x) for x in scfs]
         scfs2 = []
@@ -637,8 +656,12 @@ def subs2coal(newick_string):
 
 
         for i in range(len(scfs)):
-                coal_newick_string = coal_newick_string.replace(str(scfs[i]), '')    
-        return(coal_newick_string, Tree(coal_newick_string, format=1), intercept, coef, n, c)
+                coal_newick_string = coal_newick_string.replace(str(scfs[i]), '')
+                coal_newick_string_lower_CI = coal_newick_string_lower_CI.replace(str(scfs[i]), '')
+                coal_newick_string_upper_CI = coal_newick_string_upper_CI.replace(str(scfs[i]), '')
+
+        return(coal_newick_string, Tree(coal_newick_string, format=1), coal_newick_string_lower_CI, Tree(coal_newick_string_lower_CI, format=1),
+                coal_newick_string_upper_CI, Tree(coal_newick_string_upper_CI, format=1), intercept, coef, n, c)
 
 
 def readInput(file):
