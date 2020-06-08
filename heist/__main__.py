@@ -254,6 +254,10 @@ def main(*args):
         help="Seq-gen mutation rate (default 0.05)",
         default=0.05,
     )
+
+    parser.add_argument(
+        "-c", "--CI", metavar="", help="Optionally simulate at the upper ('upper') or lower ('lower') bounds of the 95 %% CI for the coalescent conversion regression.", default=None
+    )
     parser.add_argument("-o", "--outputdir", metavar="", help="Output directory/prefix")
 
     args = parser.parse_args()
@@ -280,8 +284,19 @@ def main(*args):
 
     if type != 'coal':
         # Convert ML tree to a coalescent tree based on GCFs
-        treeSp,t,intercept,coef,newick_internals,coal_internals = hemiplasytool.subs2coal(treeSp)
+        treeSp, t, treeSp_low, t_low, treeSp_up, t_up, intercept, coef, newick_internals, coal_internals = hemiplasytool.subs2coal(treeSp)
         original_tree = [treeSp, t]
+
+    sim_type = args.CI
+
+    if sim_type != None:
+        if sim_type == 'upper':
+            treeSp = treeSp_up
+            t = t_up
+        elif sim_type == 'lower':
+            treeSp = treeSp_low
+            t = t_low
+
     # Tree pruning
     if outgroup != None:
         log.debug("Pruning tree...")

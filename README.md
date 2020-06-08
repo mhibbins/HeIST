@@ -44,7 +44,7 @@ Version 0.3.0
 Written by Mark Hibbins & Matt Gibson
 Indiana University
 
-usage: heist [-h] [-v] [-n] [-t] [-p] [-g] [-s] [-o] input
+usage: heist [-h] [-v] [-n] [-t] [-p] [-g] [-s] [-c] [-o] input
 
 Tool for characterising hemiplasy given traits mapped onto a species tree
 
@@ -59,6 +59,9 @@ optional arguments:
   -p , --mspath         Path to ms (if not in user path)
   -g , --seqgenpath     Path to seq-gen (if not in user path)
   -s , --mutationrate   Seq-gen mutation rate (default 0.05)
+  -c , --CI             Optionally simulate at the upper ('upper') or lower
+                        ('lower') bounds of the 95 % CI for the coalescent
+                        conversion regression.
   -o , --outputdir      Output directory/prefix
 ```
 
