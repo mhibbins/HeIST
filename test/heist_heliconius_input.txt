@@ -1,0 +1,13 @@
+#NEXUS
+begin trees;
+tree tree_1 = (((((Hpar:0.011,Hnum:0.011)1:0.007,((Htim:0.003,Hcyd:0.003)45.0:0.003,HmelRef:0.006)87.0:0.013)1:0.003,Hbes:0.022)1:0.024,Ldor:0.046)98.0:0.038,Etal:0.084);
+tree tree_2 = (((((Hpar:0.011,Hnum:0.011)I1:0.007,((Htim:0.003,Hcyd:0.003)I2:0.003,HmelRef:0.006)I3:0.013)I4:0.003,Hbes:0.022)I5:0.024,Ldor:0.046)I6:0.038,Etal:0.084);
+end;
+
+begin hemiplasytool;
+set derived taxon=HmelRef
+set derived taxon=Hbes
+set introgression source=Hpar taxon2=I3 prob=0.099 timing=1.2
+set introgression source=Hnum taxon2=Hbes prob=0.423 timing=1.1
+set outgroup taxon=Etal
+end;
