@@ -583,8 +583,8 @@ def subs2coal(newick_string):
                 while "N/A" in coal_reg_internals:
                     coal_reg_internals.remove("N/A")
 
-                print(newick_reg_branches)
-                print(coal_reg_internals)
+                #print(newick_reg_branches)
+                #print(coal_reg_internals)
 
                 intercept, slope = poly.polyfit(newick_reg_branches, coal_reg_internals, 1)
 
@@ -804,11 +804,12 @@ def prune_tree(tree, derived, outgroup):
     ns = []
     for node in t.get_monophyletic(values=["1"], target_attr="derived"):
        ns.append(node)
-    sub = t.get_common_ancestor(ns[0], ns[1], ns[2], ns[3])
+    sub = t.get_common_ancestor(ns)
     tokeep = list(sub.get_leaf_names())
     tokeep.append(outgroup)
     t.prune(tokeep)
-    return(t.write(), t)
+
+    return(t.write(format = 1), t)
     
 def make_introgression_tree(tree2, conversions):
     #Used to create tree with internal nodes labled in ms style.
@@ -817,7 +818,6 @@ def make_introgression_tree(tree2, conversions):
     #Change taxa names to ms ints
     for key, val in conversions.items():
         tree2 = re.sub(key, str(val), tree2)
-
 
     #Convert to ete3 tree
     tree2 = Tree(tree2, format = 1)

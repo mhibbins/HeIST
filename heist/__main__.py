@@ -296,12 +296,12 @@ def main(*args):
         elif sim_type == 'lower':
             treeSp = treeSp_low
             t = t_low
-
     # Tree pruning
     if outgroup != None:
         log.debug("Pruning tree...")
         # Prune tree
         treeSp,t = hemiplasytool.prune_tree(treeSp, derived, outgroup)
+        tree2,t2 = hemiplasytool.prune_tree(tree2, derived, outgroup)
 
 
     taxalist = [i.name for i in t.iter_leaves()]
@@ -326,7 +326,6 @@ def main(*args):
     #Generate tree in ete3 with internal branches labeled based on user input
     #plus how ms interprets them. e.g., I4(3). This way I can easily specify the
     #events to ms.
-
     if len(admix) != 0:
         tree2_ete, tree2_newick, node_conversions = hemiplasytool.make_introgression_tree(tree2, conversions)
     #print(tree2_newick)
@@ -338,6 +337,7 @@ def main(*args):
 
     #Perform conversions on admix list
     events = []
+
     for e in admix:
         events.append([e[0], str(conversions[e[1]]), str(conversions[e[2]]), e[3]])
     admix = events

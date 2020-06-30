@@ -1,0 +1,1 @@
+heist -v -n 1000000 -t 16 -p ~/bin/ms -g ~/bin/seq-gen -o ./tmp1 ./test/heist_heliconius_input.txt
