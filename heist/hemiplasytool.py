@@ -569,8 +569,16 @@ def subs2coal(newick_string):
 
                 for i in range(len(newick_branches)): #drops missing data
                         if np.isnan(newick_branches[i]) or np.isnan(coal_internals[i]):
-                                del newick_branches[i]
-                                del coal_internals[i]
+                                newick_branches[i] = "N/A"
+                                coal_internals[i] = "N/A"
+                                #del newick_branches[i]
+                                #del coal_internals[i]
+                
+                while "N/A" in newick_branches:
+                    newick_branches.remove("N/A")
+
+                while "N/A" in coal_internals:
+                    coal_internals.remove("N/A") 
 
                 intercept, slope = poly.polyfit(newick_branches, coal_internals, 1)
 
