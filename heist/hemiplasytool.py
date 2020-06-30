@@ -567,20 +567,26 @@ def subs2coal(newick_string):
                 on the branch lengths in the newick string
                 '''
 
+                newick_reg_branches = copy.deepcopy(newick_branches)
+                coal_reg_internals = copy.deepcopy(coal_internals)
+
                 for i in range(len(newick_branches)): #drops missing data
                         if np.isnan(newick_branches[i]) or np.isnan(coal_internals[i]):
-                                newick_branches[i] = "N/A"
-                                coal_internals[i] = "N/A"
+                                newick_reg_branches[i] = "N/A"
+                                coal_reg_internals[i] = "N/A"
                                 #del newick_branches[i]
                                 #del coal_internals[i]
-                
-                while "N/A" in newick_branches:
-                    newick_branches.remove("N/A")
 
-                while "N/A" in coal_internals:
-                    coal_internals.remove("N/A") 
+                while "N/A" in newick_reg_branches:
+                    newick_reg_branches.remove("N/A")
 
-                intercept, slope = poly.polyfit(newick_branches, coal_internals, 1)
+                while "N/A" in coal_reg_internals:
+                    coal_reg_internals.remove("N/A")
+
+                print(newick_reg_branches)
+                print(coal_reg_internals)
+
+                intercept, slope = poly.polyfit(newick_reg_branches, coal_reg_internals, 1)
 
                 return intercept, slope
 
