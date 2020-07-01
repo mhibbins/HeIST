@@ -328,26 +328,23 @@ def main(*args):
     #events to ms.
     if len(admix) != 0:
         tree2_ete, tree2_newick, node_conversions = hemiplasytool.make_introgression_tree(tree2, conversions)
-    #print(tree2_newick)
-    #print(node_conversions)
-    #print(conversions)
+
     
-    #Update conversion dictionary to contain node conversions (e.g. I4 -> 2)
-    conversions = {**conversions, **node_conversions}
+        #Update conversion dictionary to contain node conversions (e.g. I4 -> 2)
+        conversions = {**conversions, **node_conversions}
 
-    #Perform conversions on admix list
-    events = []
+        #Perform conversions on admix list
+        events = []
 
-    for e in admix:
-        events.append([e[0], str(conversions[e[1]]), str(conversions[e[2]]), e[3]])
-    admix = events
+        for e in admix:
+            events.append([e[0], str(conversions[e[1]]), str(conversions[e[2]]), e[3]])
+        admix = events
 
-    #Sort admix list earliest to latest (not sure if ms requires this or not)
+        #Sort admix list earliest to latest (not sure if ms requires this or not)
 
-    admix.sort(key = lambda x: float(x[0]), reverse=True)
+        admix.sort(key = lambda x: float(x[0]), reverse=True)
 
-    #print(admix)
-    #exit(0)
+
 
     # Make program calls
     threads = int(args.threads)
@@ -375,9 +372,8 @@ def main(*args):
 
     
 
-
+    total_reps_for_intro = 0
     if len(admix) != 0:
-        total_reps_for_intro = 0
         for e in admix:
             total_reps_for_intro += int(reps * float(e[3]))
     remaining_reps = reps - total_reps_for_intro
@@ -395,7 +391,8 @@ def main(*args):
         #Extra thread for introgression
         threads += 1
 
-
+    print(per_thread)
+    print(len(per_thread))
 
 
     prefix = args.outputdir
@@ -415,15 +412,19 @@ def main(*args):
                 m = hemiplasytool.call_programs(ms_call, "", "trees.tmp", taxalist)
                 processes_ms.append(m)
             elif y == threads-1:
-                ms_calls = []
-                for m, event in enumerate(admix):
-                    o = str(y) + "_" + str(m)
-                    intro_indices.append(m)
-                    ms_call = hemiplasytool.splits_to_ms(splits, taxa, 
-                        int(reps * float(event[3])), args.mspath, o, prefix, event)
+                if (len(admix) != 0):
+                    ms_calls = []
+                    for m, event in enumerate(admix):
+                        o = str(y) + "_" + str(m)
+                        intro_indices.append(m)
+                        ms_call = hemiplasytool.splits_to_ms(splits, taxa, 
+                            int(reps * float(event[3])), args.mspath, o, prefix, event)
+                        m = hemiplasytool.call_programs(ms_call, "", "trees.tmp", taxalist)
+                        processes_ms.append(m)
+                else:
+                    ms_call = hemiplasytool.splits_to_ms(splits, taxa, per_thread[y], args.mspath, y, prefix)
                     m = hemiplasytool.call_programs(ms_call, "", "trees.tmp", taxalist)
                     processes_ms.append(m)
-                    print(ms_call)
 
     done = False
     while done == False:
@@ -445,8 +446,11 @@ def main(*args):
         if y != threads-1:
             string_cat_ms += prefix + ".trees" + str(y) + ".tmp "
         elif y == threads-1:
-            for intro in intro_indices:
-                string_cat_ms += prefix + ".trees" + str(y) + "_" + str(intro) + ".tmp "
+            if (len(admix) != 0):
+                for intro in intro_indices:
+                    string_cat_ms += prefix + ".trees" + str(y) + "_" + str(intro) + ".tmp "
+            else:
+                string_cat_ms += prefix + ".trees" + str(y) + ".tmp "
     string_cat_ms += "> " + prefix + ".trees.tmp"
     os.system(string_cat_ms)
 
@@ -456,8 +460,13 @@ def main(*args):
             s = hemiplasytool.call_programs_sg(ms_call, seqgencall, "trees.tmp", taxalist)
             processes_sq.append(s)
         else:
-            for intro in intro_indices:
-                seqgencall = hemiplasytool.seq_gen_call(prefix + ".trees" + str(y) + "_" + str(intro) + ".tmp", args.seqgenpath, args.mutationrate, str(y), prefix)
+            if (len(admix) != 0):
+                for z, intro in enumerate(intro_indices):
+                    seqgencall = hemiplasytool.seq_gen_call(prefix + ".trees" + str(y) + "_" + str(intro) + ".tmp", args.seqgenpath, args.mutationrate, str(y), prefix, z)
+                    s = hemiplasytool.call_programs_sg(ms_call, seqgencall, "trees.tmp", taxalist)
+                    processes_sq.append(s)
+            else:
+                seqgencall = hemiplasytool.seq_gen_call(prefix + ".trees" + str(y) + ".tmp", args.seqgenpath, args.mutationrate, str(y), prefix)
                 s = hemiplasytool.call_programs_sg(ms_call, seqgencall, "trees.tmp", taxalist)
                 processes_sq.append(s)
 
@@ -478,9 +487,18 @@ def main(*args):
 
     string_cat = "cat "
     for y in range(0, threads):
-        string_cat += prefix + ".seqs" + str(y) + ".tmp "
+        if y != threads-1:
+            string_cat += prefix + ".seqs" + str(y) + ".tmp "
+        elif y == threads-1:
+            if (len(admix) != 0):
+                for z, intro in enumerate(intro_indices):
+                    string_cat += prefix + ".seqs" + str(y) + "_" + str(z) + ".tmp "
+            else:
+                string_cat += prefix + ".seqs" + str(y) + ".tmp "
+
     string_cat += "> " + prefix + ".seqs.tmp"
     os.system(string_cat)
+
 
     # Gets indices of trees with site patterns that match speecies pattern
     log.debug("Finding trees that match species trait pattern...")
@@ -565,3 +583,4 @@ def main(*args):
 
 if __name__ == "__main__":
     main(*sys.argv)
+

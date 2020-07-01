@@ -8,6 +8,7 @@ import io
 import re
 import math
 import shlex
+import atexit
 from Bio import Phylo
 from Bio.Alphabet import generic_dna
 from Bio.Seq import Seq
@@ -134,11 +135,14 @@ def splits_to_ms(splitTimes, taxa, reps, path_to_ms, y, prefix, admix=None):
     return call
 
 
-def seq_gen_call(treefile, path, s, i, prefix):
+def seq_gen_call(treefile, path, s, i, prefix, z = None):
     """
     Make seq-gen call.
     """
-    return path + " -m HKY -l 1 -s " + str(s) + ' -wa <"' + treefile + '" > ' + prefix + '.seqs' + str(i) + '.tmp'
+    if z == None:
+        return path + " -m HKY -l 1 -s " + str(s) + ' -wa <"' + treefile + '" > ' + prefix + '.seqs' + str(i) + '.tmp'
+    else:
+        return path + " -m HKY -l 1 -s " + str(s) + ' -wa <"' + treefile + '" > ' + prefix + '.seqs' + str(i) + '_' + str(z) + '.tmp'
 
 def print_banner():
     print(" _   _      ___ ____ _____ ")
@@ -186,12 +190,17 @@ def call_programs_sg(ms_call, seqgencall, treefile, ntaxa):
         #os.system(seqgencall)
         return(process)
 
-
 def cleanup():
     """Remove gene trees and sequences files. For use between batches."""
     os.system("rm trees.tmp")
     os.system("rm seqs.tmp")
     os.system("rm focaltrees.tmp")
+
+@atexit.register
+def cleanup_earlyexit():
+    """Remove gene trees and sequences files. For use between batches."""
+    os.system("rm *.trees*.tmp")
+    os.system("rm *.seqs*.tmp")
 
 
 def summarize(results):
