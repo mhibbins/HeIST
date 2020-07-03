@@ -286,6 +286,8 @@ def main(*args):
         # Convert ML tree to a coalescent tree based on GCFs
         treeSp, t, treeSp_low, t_low, treeSp_up, t_up, intercept, coef, newick_internals, coal_internals = hemiplasytool.subs2coal(treeSp)
         original_tree = [treeSp, t]
+    else:
+        original_tree = [treeSp, Tree(treeSp, format=1)]
 
     sim_type = args.CI
 
@@ -319,9 +321,7 @@ def main(*args):
             traits[conversions[i]] = 1
         else:
             traits[conversions[i]] = 0
-    #print(conversions)
-    #print(taxa)
-    #print(splits)
+
 
     #Generate tree in ete3 with internal branches labeled based on user input
     #plus how ms interprets them. e.g., I4(3). This way I can easily specify the
@@ -532,7 +532,7 @@ def main(*args):
         inherited = inherited + test_summarize
 
     # Clean up temporary files
-    os.system("rm *.tmp")
+    #os.system("rm *.tmp")
     ###################################################################
 
     # Begin summary of all batches
@@ -549,11 +549,8 @@ def main(*args):
         )
     min_mutations_required = hemiplasytool.fitchs_alg(str(treeSp), traits)
 
-    #log.debug("Plotting...")
-    #try:
-    #    hemiplasytool.plot_mutations(mutation_counts_c, mutation_counts_d, args.outputdir)
-    #except:
-    #    log.debug("Can't plot!")
+    if type == "coal":
+        intercept, coef, newick_internals, coal_internals = [None]*4
 
 
     log.debug("Writing output file...")

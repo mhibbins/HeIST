@@ -325,9 +325,9 @@ def write_output(
         elif k not in mutation_counts_cc.keys() and k  in mutation_counts_dd.keys():
             mutation_counts_comb[k] = mutation_counts_dd[k]
 
-
-    newick_internals = [str(x) for x in newick_internals]
-    coal_internals = [str(x) for x in coal_internals]
+    if newick_internals != None:
+        newick_internals = [str(x) for x in newick_internals]
+        coal_internals = [str(x) for x in coal_internals]
 
 
     # INPUT SUMMARY
@@ -344,10 +344,11 @@ def write_output(
         out1.write("The original species tree (smoothed, in coalescent units) is:\n " + oldTree + "\n\n")
         out1.write("The pruned species tree (smoothed, in coalescent units) is:\n " + speciesTree + "\n\n")
 
-    out1.write("Regression intercept: " + str(intercept) + '\n')
-    out1.write("Regression slope: " + str(coef) + '\n')
-    out1.write("X (newick internals): " + ",".join(newick_internals) + '\n')
-    out1.write("Y (coalescent internals): " + ",".join(coal_internals) + '\n')
+    if intercept != None:
+        out1.write("Regression intercept: " + str(intercept) + '\n')
+        out1.write("Regression slope: " + str(coef) + '\n')
+        out1.write("X (newick internals): " + ",".join(newick_internals) + '\n')
+        out1.write("Y (coalescent internals): " + ",".join(coal_internals) + '\n')
 
     t = tree.replace(";", "")
     t = Phylo.read(io.StringIO(t), "newick")
