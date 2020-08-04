@@ -27,7 +27,7 @@ Authors: Matt Gibson, Mark Hibbins
 Indiana University
 """
 
-def names2ints(newick):
+def names2ints(newick, conversion_type, type):
     t = Tree(newick, format = 1)
     ntaxa = 0
     for n1 in t.iter_leaves():
@@ -52,10 +52,21 @@ def names2ints(newick):
         newick = newick.replace(name, str(new))
         rankings[name] = new
     newick = Tree(newick, format = 1)
-    newick.convert_to_ultrametric()
+    if type != 'coal':
+        if conversion_type == 'ete3':
+            newick.convert_to_ultrametric()
+        elif conversion_type == 'extend':
+            newick = convert_to_ultrametric_extend(newick)
     return(newick.write(), rankings)
 
+def convert_to_ultrametric_extend(tree):
 
+    most_dist, tree_length = tree.get_farthest_leaf()
+
+    for leaf in tree:
+        d = leaf.get_distance(tree)
+        leaf.dist += (tree_length-d)
+    return(tree)
 
 def newick2ms(newick):
     """
@@ -732,9 +743,11 @@ def readInput(file):
                 admix.append([time,sp1,sp2,strength])
             elif l[0].startswith('set type coal'):
                 treeType = 'coal'
+            elif l[0].startswith('set conversion type'):
+                conversionType = line.replace('\n','').split('=')[1]
     
             
-    return(tree, derived, admix, outgroup, treeType, tree2)
+    return(tree, derived, admix, outgroup, treeType, tree2, conversionType)
 
 
 def summarize_inherited(inherited):

@@ -276,7 +276,7 @@ def main(*args):
 
     # Read input file
     log.debug("Reading input file...")
-    treeSp, derived, admix, outgroup, type, tree2 = hemiplasytool.readInput(args.input)
+    treeSp, derived, admix, outgroup, type, tree2, conversion_type = hemiplasytool.readInput(args.input)
     tmp1 = Tree(treeSp, format = 1)
     tmp1.convert_to_ultrametric()
 
@@ -310,8 +310,11 @@ def main(*args):
     [i.name for i in t.iter_leaves()]
 
     # Convert coalescent tree to ms splits
-    treeSp, conversions = hemiplasytool.names2ints(treeSp)
-    original_tree[0], tmp = hemiplasytool.names2ints(original_tree[0])
+
+
+
+    treeSp, conversions = hemiplasytool.names2ints(treeSp, conversion_type, type)
+    original_tree[0], tmp = hemiplasytool.names2ints(original_tree[0], conversion_type, type)
 
     # Convert newick tree to ms splits
     splits, taxa = hemiplasytool.newick2ms(treeSp)
