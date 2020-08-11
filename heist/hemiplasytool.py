@@ -130,7 +130,7 @@ def splits_to_ms(splitTimes, taxa, reps, path_to_ms, y, prefix, admix=None):
             + " "
             + admix[1]
             + " "
-            + "1"
+            + "0"
             + " -ej "
             + admix[0]
             + " "

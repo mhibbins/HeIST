@@ -394,8 +394,7 @@ def main(*args):
         #Extra thread for introgression
         threads += 1
 
-    print(per_thread)
-    print(len(per_thread))
+
 
 
     prefix = args.outputdir
@@ -509,6 +508,7 @@ def main(*args):
         prefix + ".seqs.tmp", len(taxalist), traits, len(splits), i, prefix, intro_start
     )
 
+
     log.debug("Getting focal trees...")
     # Gets the trees at these indices 
     focal_trees, _ = seqtools.getTrees(prefix + ".trees.tmp", match_species_pattern)
@@ -517,8 +517,14 @@ def main(*args):
     log.debug("Calculating discordance...")
     results[i], disc, conc = seqtools.propDiscordant(focal_trees, treeSp)
 
+    ##The error we're getting wrt introgression not being accurately relfected in mutation counting happens around here \
+    ##Either count_mutations is not working on introgressed trees OR we are passing a list of trees that doesnt contain \
+    ##the introgreesion trees.
+
+
     focaltrees_d = seqtools.parse_seqgen(prefix + ".focaltrees.tmp", len(taxalist), disc)
     focaltrees_c = seqtools.parse_seqgen(prefix + ".focaltrees.tmp", len(taxalist), conc)
+    
     for index, tree in enumerate(focaltrees_d):
         n_mutations_d.append(seqtools.count_mutations(tree, len(taxalist)))
     for index, tree in enumerate(focaltrees_c):
