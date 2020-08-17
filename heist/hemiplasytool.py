@@ -128,7 +128,7 @@ def splits_to_ms(splitTimes, taxa, reps, path_to_ms, y, prefix, admix=None):
             " -es "
             + admix[0]
             + " "
-            + admix[1]
+            + admix[2]
             + " "
             + "0"
             + " -ej "
@@ -136,7 +136,7 @@ def splits_to_ms(splitTimes, taxa, reps, path_to_ms, y, prefix, admix=None):
             + " "
             + str(nsamples + 1)
             + " "
-            + admix[2]
+            + admix[1]
         )
 
     if admix is not None:
