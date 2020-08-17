@@ -341,7 +341,7 @@ def main(*args):
 
         #Parse admix list, divide times by 2
         for e in admix:
-            events.append([float(e[0])/2.0, str(conversions[e[1]]), str(conversions[e[2]]), e[3]])
+            events.append([str(float(e[0])/2.0), str(conversions[e[1]]), str(conversions[e[2]]), e[3]])
         admix = events
 
         #Sort admix list earliest to latest (not sure if ms requires this or not)
