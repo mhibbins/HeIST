@@ -4,3 +4,4 @@ erato_test.sh
 seedms
 heist_hemiplasy.egg-info/
 test/
+build/

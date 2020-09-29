@@ -92,7 +92,7 @@ To run HeIST, you must supply two trees in Newick format. The first tree (must b
 
 The second tree (named "tree_2") should have the same branch lengths as tree_1, but have internal branch labels rather than concordance factors. These will allow the user to specify introgression events on internal branches.
 
-> As of version 0.4.0, tree_2 must be supplied even if no introgression is being specified in the input.
+> As of version 0.3.2, tree_2 must be supplied even if no introgression is being specified in the input.
 
 > If your tree is already ultrametric and in coalescent units, you can supply this directly if you add the flag `set type coal` to the input file. In this case, tree_1 does not need to have concordance factors. 
 
