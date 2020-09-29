@@ -139,6 +139,8 @@ def heistMerge(*args):
                 data["#7"] += int(line)
             elif i == 7:
                 data["#8"] += int(line)
+            elif i == 8:
+                data["#9"] += float(line)
             else:
                 l = line.replace('\n', '').split(',')
                 if l[0] == 'All':
@@ -391,8 +393,6 @@ def main(*args):
         #Extra thread for introgression
         threads += 1
 
-    print(per_thread)
-    print(len(per_thread))
 
 
     prefix = args.outputdir
@@ -571,7 +571,8 @@ def main(*args):
         intercept,
         coef,
         newick_internals,
-        coal_internals
+        coal_internals,
+        args.mutationrate
     )
     hemiplasytool.write_unique_trees(all_focal_trees, args.outputdir, traits)
     end = time.time()

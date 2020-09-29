@@ -266,7 +266,8 @@ def write_output(
     intercept,
     coef,
     newick_internals,
-    coal_internals):
+    coal_internals,
+    mutationrate):
     out1 = open(filename+'.txt', "w")
     out2 = open(filename+'_raw.txt', "w")
 
@@ -376,14 +377,15 @@ def write_output(
             + " into taxon "
             + event[2]
             + " occurs at time "
-            + event[0]
+            + str(float(event[0])*2)
             + " with probability "
             + event[3]
             + "\n"
         )
     out1.write("\n")
 
-    out1.write(str("{:.2e}".format(reps)) + " simulations performed")
+    out1.write(str("{:.2e}".format(reps)) + " simulations performed, using a mutation rate of " + str(mutationrate))
+
 
     # OUTPUT SUMMARY
     out1.write("\n\n### RESULTS ###\n\n")
@@ -436,6 +438,8 @@ def write_output(
 
     out1.write(str(sum_from_species) + " loci originate from the species history\n\n")
     out2.write(str(sum_from_species) + '\n') #8#
+    
+    out2.write(str(mutationrate) + "\n") #9#
 
     # DETAILED OUTPUT
     out1.write('Distribution of mutation counts:\n\n')
@@ -470,6 +474,7 @@ def write_output(
             else:
                 out1.write("Taxa " + key + "\t" + "\t".join(["0", val[1]]) + "\t" + val[0] + "\n")
                 out2.write("Taxa " + key + "," + ",".join(["0", val[1]]) + "," + val[0] + "\n")
+
 
     out1.close()
     out2.close()
