@@ -1,0 +1,13 @@
+#NEXUS
+begin trees;
+tree tree_1 = (sp1:0.002,(sp2:0.001,((sp3:0.0004,sp4:0.0008)10.0:0.0005,(sp5:0.0006,sp6:0.0004)8.0:0.0004)15.0:0.0009)90.0:0.005);
+tree tree_2 = (sp1:0.002,(sp2:0.001,((sp3:0.0004,sp4:0.0008)I1:0.0005,(sp5:0.0006,sp6:0.0004)I2:0.0004)I3:0.0009)I4:0.005)I5;
+end;
+
+begin hemiplasytool;
+set derived taxon=sp2
+set derived taxon=sp4
+set derived taxon=sp6
+set introgression source=I1 taxon2=sp2 prob=0.05 timing=0.1
+set conversion type=extend
+end;

@@ -57,8 +57,6 @@ def names2ints(newick, conversion_type, type):
             newick.convert_to_ultrametric()
         elif conversion_type == 'extend':
             newick = convert_to_ultrametric_extend(newick)
-        else:
-            newick.convert_to_ultrametric() #else do ete3
     return(newick.write(), rankings)
 
 def convert_to_ultrametric_extend(tree):
@@ -714,7 +712,7 @@ def readInput(file):
     outgroup=None
     cnt = 0
     treeType = 'ml'
-    conversionType = None
+
     for i, line in enumerate(f):
         #print(line.replace('\n',''))
         if line.startswith('tree tree_1'):
