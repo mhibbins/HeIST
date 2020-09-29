@@ -89,7 +89,7 @@ end;
 ### Species trees
 To run HeIST, you must supply two trees in Newick format. The first tree (must be named "tree_1") should have branch lengths in average substitutions per site and **branches must be labeled with concordance factors**. [IQTree](www.iqtree.org/doc/Concordance-Factor) can be used to do this. HeIST will use the concordance factors to convert to a tree in coalescent units (required for simulation).
 
-The second tree (named "tree_2") should have the same branch lengths as tree_1, but have internal branch labels rather than concordance factors. These will allow the user to specify introgression events on internal branches.
+The second tree (named "tree_2") should have the same branch lengths as tree_1, but have internal branch labels rather than concordance factors. These labels can be arbitrary. These will allow the user to specify introgression events on internal branches.
 
 > As of version 0.3.2, tree_2 must be supplied even if no introgression is being specified in the input.
 
@@ -112,7 +112,7 @@ Introgression events can be defined by using
 ```
 set introgression source="species in tree" dest="species in tree" prob=[float_value] timing=[float_value]
 ```
-Note that timing must be specified in coalescent units. For this reason, we recommend first running your input tree through [`subs2coal`](#subs2coal)
+Note that timing must be specified in coalescent units. For this reason, we recommend first running your input tree through [`subs2coal`](#subs2coal) if it's in substitution units.
 
 
 ### Conversion type parameter
@@ -159,7 +159,7 @@ heist -v -n 100000 -t 16 -p ~/bin/ms -g ~/bin/seq-gen -o ./heist_example_output 
 The above call will result in three output files being written: 
 
 1. `heist_example_output.txt` contains the full summary
-2. `heist_example_output.trees` contains observed gene trees in newick format
+2. `heist_example_output.trees` contains observed gene trees from focal cases in newick format
 3. `heist_example_output_raw.txt` contains summary statistics in reduced format for merging multiple runs
 
 ```
@@ -326,7 +326,7 @@ From the above simulation, we can see that although the input species tree would
 
 ## General guidelines for choosing the number of replicates 
 
-Generally, the number of simulated loci with character states that match the observed distribution will be a small subset of the total number of loci. Therefore, it is typically necessary to simulate a large number of loci in order to observe a sufficient number of relevant cases. The precise number of loci to simulate will differ for each case, and will require some experimentation on the part of the user to come to an optimal value. We can provide some general guidelines to aid this exploration, however. Trees with fewer taxa and a higher specified mutation rate will require fewer simulations in order to observe relevant cases. The five-taxon test tree which uses a mutation rate value of 0.05, generates several hundred focal cases from 1x10^6 simulated loci. By contrast, the 15-taxon lizard phylogeny we analyze in our paper, which used a mutation rate of 0.001, required 1x10^10 simulations to observe a similar number of focal cases. Simulations of up to 1x10^7 loci are doable using the resources of a typical personal laptop, with memory use quickly becoming a limiting factor as the number of loci increases beyond this. We offer two approaches to aid with performance issues: 1) support for multiple processors, and 2) a module called “heistMerge” (see below) which combines the outputs from multiple independent runs. 
+Generally, the number of simulated loci with character states that match the observed distribution will be a small subset of the total number of loci. Therefore, it is typically necessary to simulate a large number of loci in order to observe a sufficient number of relevant cases. The precise number of loci to simulate will differ for each case, and will require some experimentation on the part of the user to come to an optimal value. We can provide some general guidelines to aid this exploration, however. Trees with fewer taxa and a higher specified mutation rate will require fewer simulations in order to observe relevant cases. The 15-taxon lizard phylogeny we analyze in our paper, which used a mutation rate of 0.001, required 1x10^10 simulations to observe 1000+ focal cases. This required several hundred hours of CPU time and a large amount of RAM (approx. 100 GB per parallel run) on Indiana University's Carbonate HPC cluster. Simulations of up to 1x10^7 loci are doable using the resources of a typical personal laptop, with memory use quickly becoming a limiting factor as the number of loci increases beyond this. We offer two approaches to aid with performance issues: 1) support for multiple processors, and 2) a module called “heistMerge” (see below) which combines the outputs from multiple independent runs. 
 
 
 ## Sub-modules
