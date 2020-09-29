@@ -83,7 +83,6 @@ begin hemiplasytool;
 set derived taxon=sp2
 set derived taxon=sp4
 set derived taxon=sp6
-set conversion type=extend
 end;
 ```
 
