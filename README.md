@@ -31,6 +31,9 @@ python setup.py install
 pip install heist-hemiplasy
 ```
 
+`heist` should be automatically added to your path.
+
+
 ## Usage
 ```
  _   _      ___ ____ _____
@@ -39,12 +42,12 @@ pip install heist-hemiplasy
 |  _  |  __/| | ___) || |
 |_| |_|\___|___|____/ |_|
 Hemiplasy Inference Simulation Tool
-Version 0.3.0
+Version 0.3.1
 
 Written by Mark Hibbins & Matt Gibson
 Indiana University
 
-usage: heist [-h] [-v] [-n] [-t] [-p] [-g] [-s] [-o] input
+usage: heist [-h] [-v] [-n] [-t] [-p] [-g] [-s] [-c] [-o] input
 
 Tool for characterising hemiplasy given traits mapped onto a species tree
 
@@ -59,31 +62,39 @@ optional arguments:
   -p , --mspath         Path to ms (if not in user path)
   -g , --seqgenpath     Path to seq-gen (if not in user path)
   -s , --mutationrate   Seq-gen mutation rate (default 0.05)
+  -c , --CI             Optionally simulate at the upper ('upper') or lower
+                        ('lower') bounds of the 95 % CI for the coalescent
+                        conversion regression.
   -o , --outputdir      Output directory/prefix
 ```
 
 ## Input file
 
-The input file is modified NEXUS format. A minimal example includes a tree (in newick format) and at least two dervived taxa set with the `set derived` command. If an outgroup is specified with `set outgroup`, the tree will be pruned to contain only taxa relevant to the simulation (i.e., the subclade containing derived taxa) + the outgroup. 
+The input file is modified NEXUS format. A minimal example includes two trees (in newick format) and at least two dervived taxa set with the `set derived` command. If an outgroup is specified with `set outgroup`, the tree will be pruned to contain only taxa relevant to the simulation (i.e., the subclade containing derived taxa) + the outgroup. 
 
 ```
 #NEXUS
 begin trees;
-	tree tree_1 = (spA:0.002,(spB:0.001,((spC:0.0004,spD:0.0008)10.0:0.0005,(spE:0.0006,spF:0.0004)8.0:0.0004)15:0.0009)90.0:0.005);
+tree tree_1 = (sp1:0.002,(sp2:0.001,((sp3:0.0004,sp4:0.0008)10.0:0.0005,(sp5:0.0006,sp6:0.0004)8.0:0.0004)15.0:0.0009)90.0:0.005);
+tree tree_2 = (sp1:0.002,(sp2:0.001,((sp3:0.0004,sp4:0.0008)I1:0.0005,(sp5:0.0006,sp6:0.0004)I2:0.0004)I3:0.0009)I4:0.005)I5;
 end;
 
 begin hemiplasytool;
-set derived taxon=spB
-set derived taxon=spD
-set derived taxon=spF
+set derived taxon=sp2
+set derived taxon=sp4
+set derived taxon=sp6
 end;
 ```
 
-### Species tree
+### Species trees
+To run HeIST, you must supply two trees in Newick format. The first tree (must be named "tree_1") should have branch lengths in average substitutions per site and **branches must be labeled with concordance factors**. [IQTree](www.iqtree.org/doc/Concordance-Factor) can be used to do this. HeIST will use the concordance factors to convert to a tree in coalescent units (required for simulation).
 
-Species tree in newick format. Branch lengths must be in average substitutions per site and **branches must be labeled with concordance factors**. [IQTree](www.iqtree.org/doc/Concordance-Factor) can be used to do this. 
+The second tree (named "tree_2") should have the same branch lengths as tree_1, but have internal branch labels rather than concordance factors. These labels can be arbitrary. These will allow the user to specify introgression events on internal branches.
 
-> If your tree is already ultrametric and in coalescent units, you can supply this directly if you add the flag `set type coal` to the input file.
+> As of version 0.3.2, tree_2 must be supplied even if no introgression is being specified in the input.
+
+> If your tree is already ultrametric and in coalescent units, you can supply this directly if you add the flag `set type coal` to the input file. In this case, tree_1 does not need to have concordance factors. 
+
 
 ### Traits
 
@@ -101,16 +112,55 @@ Introgression events can be defined by using
 ```
 set introgression source="species in tree" dest="species in tree" prob=[float_value] timing=[float_value]
 ```
-Note that timing must be specified in coalescent units. For this reason, we recommend first running your input tree through [`subs2coal`](#subs2coal)
+Note that timing must be specified in coalescent units. For this reason, we recommend first running your input tree through [`subs2coal`](#subs2coal) if it's in substitution units.
 
-## Example:
+
+### Conversion type parameter
+
+Since ms requires input trees to be ultrametric, HeIST implements a tree smoothing step with two algorithm options: 
+
+1. `ete3` -- redistributes branch lengths so that the distance from root to tip is the same, using the convert_to_ultrametric function in ete3 (default)
+2. `extend` -- extends tip branches while preserving internal branch lengths
+
+## Example
+
+### NEXUS example
+
+see `example/heist_example_input.txt`
+
 ```
-python -m hemiplasytool -n 100000 -x 5 -p ~/msdir/ms -g ~/Seq-Gen-1.3.4/seq-gen -o test_w_introgression -v test/input_test_small_intro_v2.txt
+#NEXUS
+begin trees;
+tree tree_1 = (sp1:0.002,(sp2:0.001,((sp3:0.0004,sp4:0.0008)10.0:0.0005,(sp5:0.0006,sp6:0.0004)8.0:0.0004)15.0:0.0009)90.0:0.005);
+tree tree_2 = (sp1:0.002,(sp2:0.001,((sp3:0.0004,sp4:0.0008)I1:0.0005,(sp5:0.0006,sp6:0.0004)I2:0.0004)I3:0.0009)I4:0.005)I5;
+end;
+
+begin hemiplasytool;
+set derived taxon=sp2
+set derived taxon=sp4
+set derived taxon=sp6
+set introgression source=I1 taxon2=sp2 prob=0.05 timing=0.1
+set conversion type=extend
+end;
 ```
 
-### Output:
-Three output files will be produced. The main output `test_w_introgression.txt`, a gene trees file `test_w_introgression.trees` which contains all observed topologies, and a mutation distribution plot `test_w_introgression.dist.png`.
+### HeIST call
 
+see `example/heist_example.sh`
+
+```
+heist -v -n 100000 -t 16 -p ~/bin/ms -g ~/bin/seq-gen -o ./heist_example_output ./heist_example_input.txt
+```
+
+
+
+### Output
+
+The above call will result in three output files being written: 
+
+1. `heist_example_output.txt` contains the full summary
+2. `heist_example_output.trees` contains observed gene trees from focal cases in newick format
+3. `heist_example_output_raw.txt` contains summary statistics in reduced format for merging multiple runs
 
 ```
 ### INPUT SUMMARY ###
@@ -122,122 +172,161 @@ Integer Code	Taxon Name
 4:	sp4
 5:	sp5
 6:	sp6
+1:	I5
+2:	I4
+3:	I3
+3:	I1
+5:	I2
 
 The species tree (smoothed, in coalescent units) is:
- (1:2.78984,(2:2.09238,((3:0.69746,4:0.69746)1:0.69746,(5:0.69746,6:0.69746)1:0.69746)1:0.69746)1:0.69746);
+ (1:2.08154,(2:0.184423,((3:0.164423,4:0.164423)1:0.01,(5:0.164423,6:0.164423)1:0.01)1:0.01)1:1.89712);
 
-  _________________________________ 1
+Regression intercept: -0.24037164874509137
+Regression slope: 424.7950852744482
+X (newick internals): 0.0005,0.0004,0.0009,0.005
+Y (coalescent internals): 0.01,0.01,0.01,1.8971199848858815
+  ________________________________ 1
  |
-_|        _________________________ 2*
- |       |
- |_______|                 ________ 3
-         |         _______|
-         |        |       |________ 4*
-         |________|
-                  |        ________ 5
-                  |_______|
-                          |________ 6*
+_|                              ___ 2*
+ |                             |
+ |_____________________________| __ 3
+                               ||
+                               ||__ 4*
+                               ||
+                                |__ 5
+                                |
+                                |__ 6*
 
 3 taxa have the derived state: 2, 4, 6
 
 With homoplasy only, 3 mutations are required to explain this trait pattern (Fitch parsimony)
 
-Introgression from taxon 4 into taxon 6 occurs at time 0.3 with probability 0.05
+Introgression from taxon 3 into taxon 2 occurs at time 0.1 with probability 0.05
 
-5.00e+05 simulations performed
+1.00e+05 simulations performed, using a mutation rate of 0.05
 
 ### RESULTS ###
 
-70 loci matched the species character states
+127 loci matched the species character states
 
-"True" hemiplasy (1 mutation) occurs 14 time(s)
+"True" hemiplasy (1 mutation) occurs 70 time(s)
 
-Combinations of hemiplasy and homoplasy (1 < # mutations < 3) occur 30 time(s)
+Combinations of hemiplasy and homoplasy (1 < # mutations < 3) occur 52 time(s)
 
-"True" homoplasy (>= 3 mutations) occurs 26 time(s)
+"True" homoplasy (>= 3 mutations) occurs 5 time(s)
 
-70 loci have a discordant gene tree
+127 loci have a discordant gene tree
 0 loci are concordant with the species tree
 
-4 loci originate from an introgressed history
-66 loci originate from the species history
+6 loci originate from an introgressed history
+121 loci originate from the species history
 
 Distribution of mutation counts:
 
 # Mutations	# Trees
 On all trees:
-1		14
-2		30
-3		25
-4		1
+1		70
+2		52
+3		5
 
 On concordant trees:
 # Mutations	# Trees
 
 On discordant trees:
 # Mutations	# Trees
-1		14
-2		30
-3		25
-4		1
+1		70
+2		52
+3		5
 
 Origins of mutations leading to observed character states for hemiplasy + homoplasy cases:
 
 	Tip mutation	Internal branch mutation	Tip reversal
-Taxa 2	3	27	0
-Taxa 4	3	27	0
-Taxa 6	0	30	0
+Taxa 2	0	52	0
+Taxa 4	0	52	0
+Taxa 6	0	52	0
 
 ### OBSERVED GENE TREES ###
 
-                 _________________ 4
-  ______________|
- |              | ________________ 3
- |              ||
- |               |         _______ 5
-_|               |________|
- |                        |_______ 6*
+                              _____ 4*
+  ___________________________|
+ |                           | ____ 2*
+ |                           ||
+_|                            |____ 6*
+ |
+ |          ______________________ 1
+ |_________|
+           |           ___________ 3
+           |__________|
+                      |___________ 5
+
+  _________________________________ 1
+ |
+_|                               __ 3
+ |                      ________|
+ |                     |        |__ 5
+ |_____________________|
+                       |   _______ 6*
+                       |__|
+                          |      _ 2*
+                          |_____|
+                                |_ 4*
+
+  ________________________________ 1
+_|
+ |   ______________________________ 3
+ |__|
+    |         _____________________ 5
+    |________|
+             |             ________ 6*
+             |____________|
+                          |      __ 2*
+                          |_____|
+                                |__ 4*
+
+  _________________________________ 1
+_|
+ |                           ______ 5
+ |__________________________|
+                            | _____ 3
+                            ||
+                             |   __ 2*
+                             |__|
+                                |__ 4*
+                                |
+                                |__ 6*
+
+                            _______ 6*
+  _________________________|
+ |                         | ______ 2*
+ |                         ||
+_|                          |______ 4*
  |
  |    _____________________________ 1
  |___|
-     |_____________________________ 2
+     |                        _____ 3
+     |_______________________|
+                             |_____ 5
 
-This topology occured 1 time(s)
-                       ____________ 3
-  ____________________|
- |                    |____________ 5
-_|
- |         ________________________ 1
- |________|
-          |     __________________ 2
-          |____|
-               |        __________ 4
-               |_______|
-                       |__________ 6*
-
-This topology occured 4 time(s)
-         _________________________ 2
-  ______|
- |      |       __________________ 5
- |      |______|
- |             |   _______________ 4
-_|             |__|
- |                |_______________ 6*
+  _________________________________ 1
  |
- |  _______________________________ 1
- |_|
-   |_______________________________ 3
-
-...
+_|                              ___ 3
+ |                       ______|
+ |                      |      |___ 5
+ |______________________|
+                        |     _____ 2*
+                        |____|
+                             | ___ 4*
+                             ||
+                              |___ 6*
+...continued
 ```
 
-See `test_w_introgression.txt.txt` for full output.
+From the above simulation, we can see that although the input species tree would have pointed to three independent origins of the arbitrary derived state (in taxa 2, 4, and 6), after we account for the possiblity of hemiplasy only 1 (or maybe 2) transitions are much more likely. 
 
-![Mutation distribution](test_w_introgression.dist.png)
 
 ## General guidelines for choosing the number of replicates 
 
-Generally, the number of simulated loci with character states that match the observed distribution will be a small subset of the total number of loci. Therefore, it is typically necessary to simulate a large number of loci in order to observe a sufficient number of relevant cases. The precise number of loci to simulate will differ for each case, and will require some experimentation on the part of the user to come to an optimal value. We can provide some general guidelines to aid this exploration, however. Trees with fewer taxa and a higher specified mutation rate will require fewer simulations in order to observe relevant cases. The five-taxon test tree which uses a mutation rate value of 0.05, generates several hundred focal cases from 1x10^6 simulated loci. By contrast, the 15-taxon lizard phylogeny we analyze in our paper, which used a mutation rate of 0.001, required 1x10^10 simulations to observe a similar number of focal cases. Simulations of up to 1x10^7 loci are doable using the resources of a typical personal laptop, with memory use quickly becoming a limiting factor as the number of loci increases beyond this. We offer two approaches to aid with performance issues: 1) support for multiple processors, and 2) a module called “heistMerge” (see below) which combines the outputs from multiple independent runs. 
+Generally, the number of simulated loci with character states that match the observed distribution will be a small subset of the total number of loci. Therefore, it is typically necessary to simulate a large number of loci in order to observe a sufficient number of relevant cases. The precise number of loci to simulate will differ for each case, and will require some experimentation on the part of the user to come to an optimal value. We can provide some general guidelines to aid this exploration, however. Trees with fewer taxa and a higher specified mutation rate will require fewer simulations in order to observe relevant cases. The 15-taxon lizard phylogeny we analyze in our paper, which used a mutation rate of 0.001, required 1x10^10 simulations to observe 1000+ focal cases. This required several hundred hours of CPU time and a large amount of RAM (approx. 100 GB per parallel run) on Indiana University's Carbonate HPC cluster. Simulations of up to 1x10^7 loci are doable using the resources of a typical personal laptop, with memory use quickly becoming a limiting factor as the number of loci increases beyond this. We offer two approaches to aid with performance issues: 1) support for multiple processors, and 2) a module called “heistMerge” (see below) which combines the outputs from multiple independent runs. 
 
 
 ## Sub-modules

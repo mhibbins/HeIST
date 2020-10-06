@@ -8,6 +8,7 @@ import io
 import re
 import math
 import shlex
+import atexit
 from Bio import Phylo
 from Bio.Alphabet import generic_dna
 from Bio.Seq import Seq
@@ -18,6 +19,7 @@ from heist import seqtools
 from ete3 import Tree
 from collections import OrderedDict
 from subprocess import Popen, PIPE
+import copy
 
 """
 Hemiplasy Tool
@@ -25,7 +27,7 @@ Authors: Matt Gibson, Mark Hibbins
 Indiana University
 """
 
-def names2ints(newick):
+def names2ints(newick, conversion_type, type):
     t = Tree(newick, format = 1)
     ntaxa = 0
     for n1 in t.iter_leaves():
@@ -50,10 +52,23 @@ def names2ints(newick):
         newick = newick.replace(name, str(new))
         rankings[name] = new
     newick = Tree(newick, format = 1)
-    newick.convert_to_ultrametric()
+    if type != 'coal':
+        if conversion_type == 'ete3':
+            newick.convert_to_ultrametric()
+        elif conversion_type == 'extend':
+            newick = convert_to_ultrametric_extend(newick)
+        else:
+            newick.convert_to_ultrametric() #else do ete3
     return(newick.write(), rankings)
 
+def convert_to_ultrametric_extend(tree):
 
+    most_dist, tree_length = tree.get_farthest_leaf()
+
+    for leaf in tree:
+        d = leaf.get_distance(tree)
+        leaf.dist += (tree_length-d)
+    return(tree)
 
 def newick2ms(newick):
     """
@@ -99,7 +114,7 @@ def newick2ms(newick):
 def splits_to_ms(splitTimes, taxa, reps, path_to_ms, y, prefix, admix=None):
     """
     Converts inputs into a call to ms
-    TODO: Add introgression
+
     """
     nsamples = len(splitTimes) + 1
     call = (
@@ -115,15 +130,15 @@ def splits_to_ms(splitTimes, taxa, reps, path_to_ms, y, prefix, admix=None):
             " -es "
             + admix[0]
             + " "
-            + admix[1]
+            + admix[2]
             + " "
-            + "1"
+            + "0"
             + " -ej "
             + admix[0]
             + " "
             + str(nsamples + 1)
             + " "
-            + admix[2]
+            + admix[1]
         )
 
     if admix is not None:
@@ -133,11 +148,14 @@ def splits_to_ms(splitTimes, taxa, reps, path_to_ms, y, prefix, admix=None):
     return call
 
 
-def seq_gen_call(treefile, path, s, i, prefix):
+def seq_gen_call(treefile, path, s, i, prefix, z = None):
     """
     Make seq-gen call.
     """
-    return path + " -m HKY -l 1 -s " + str(s) + ' -wa <"' + treefile + '" > ' + prefix + '.seqs' + str(i) + '.tmp'
+    if z == None:
+        return path + " -m HKY -l 1 -s " + str(s) + ' -wa <"' + treefile + '" > ' + prefix + '.seqs' + str(i) + '.tmp'
+    else:
+        return path + " -m HKY -l 1 -s " + str(s) + ' -wa <"' + treefile + '" > ' + prefix + '.seqs' + str(i) + '_' + str(z) + '.tmp'
 
 def print_banner():
     print(" _   _      ___ ____ _____ ")
@@ -146,7 +164,7 @@ def print_banner():
     print("|  _  |  __/| | ___) || |  ")
     print("|_| |_|\___|___|____/ |_|  ")
     print("Hemiplasy Inference Simulation Tool")
-    print("Version 0.3.0")
+    print("Version 0.3.1")
     print()
     print("Written by Mark Hibbins & Matt Gibson")
     print("Indiana University")
@@ -185,12 +203,17 @@ def call_programs_sg(ms_call, seqgencall, treefile, ntaxa):
         #os.system(seqgencall)
         return(process)
 
-
 def cleanup():
     """Remove gene trees and sequences files. For use between batches."""
     os.system("rm trees.tmp")
     os.system("rm seqs.tmp")
     os.system("rm focaltrees.tmp")
+
+@atexit.register
+def cleanup_earlyexit():
+    """Remove gene trees and sequences files. For use between batches."""
+    os.system("rm *.trees*.tmp")
+    os.system("rm *.seqs*.tmp")
 
 
 def summarize(results):
@@ -256,7 +279,8 @@ def write_output(
     intercept,
     coef,
     newick_internals,
-    coal_internals):
+    coal_internals,
+    mutationrate):
     out1 = open(filename+'.txt', "w")
     out2 = open(filename+'_raw.txt', "w")
 
@@ -315,9 +339,9 @@ def write_output(
         elif k not in mutation_counts_cc.keys() and k  in mutation_counts_dd.keys():
             mutation_counts_comb[k] = mutation_counts_dd[k]
 
-
-    newick_internals = [str(x) for x in newick_internals]
-    coal_internals = [str(x) for x in coal_internals]
+    if newick_internals != None:
+        newick_internals = [str(x) for x in newick_internals]
+        coal_internals = [str(x) for x in coal_internals]
 
 
     # INPUT SUMMARY
@@ -334,10 +358,11 @@ def write_output(
         out1.write("The original species tree (smoothed, in coalescent units) is:\n " + oldTree + "\n\n")
         out1.write("The pruned species tree (smoothed, in coalescent units) is:\n " + speciesTree + "\n\n")
 
-    out1.write("Regression intercept: " + str(intercept) + '\n')
-    out1.write("Regression slope: " + str(coef) + '\n')
-    out1.write("X (newick internals): " + ",".join(newick_internals) + '\n')
-    out1.write("Y (coalescent internals): " + ",".join(coal_internals) + '\n')
+    if intercept != None:
+        out1.write("Regression intercept: " + str(intercept) + '\n')
+        out1.write("Regression slope: " + str(coef) + '\n')
+        out1.write("X (newick internals): " + ",".join(newick_internals) + '\n')
+        out1.write("Y (coalescent internals): " + ",".join(coal_internals) + '\n')
 
     t = tree.replace(";", "")
     t = Phylo.read(io.StringIO(t), "newick")
@@ -365,14 +390,15 @@ def write_output(
             + " into taxon "
             + event[2]
             + " occurs at time "
-            + event[0]
+            + str(float(event[0])*2)
             + " with probability "
             + event[3]
             + "\n"
         )
     out1.write("\n")
 
-    out1.write(str("{:.2e}".format(reps)) + " simulations performed")
+    out1.write(str("{:.2e}".format(reps)) + " simulations performed, using a mutation rate of " + str(mutationrate))
+
 
     # OUTPUT SUMMARY
     out1.write("\n\n### RESULTS ###\n\n")
@@ -425,6 +451,8 @@ def write_output(
 
     out1.write(str(sum_from_species) + " loci originate from the species history\n\n")
     out2.write(str(sum_from_species) + '\n') #8#
+    
+    out2.write(str(mutationrate) + "\n") #9#
 
     # DETAILED OUTPUT
     out1.write('Distribution of mutation counts:\n\n')
@@ -459,6 +487,7 @@ def write_output(
             else:
                 out1.write("Taxa " + key + "\t" + "\t".join(["0", val[1]]) + "\t" + val[0] + "\n")
                 out2.write("Taxa " + key + "," + ",".join(["0", val[1]]) + "," + val[0] + "\n")
+
 
     out1.close()
     out2.close()
@@ -566,12 +595,26 @@ def subs2coal(newick_string):
                 on the branch lengths in the newick string
                 '''
 
+                newick_reg_branches = copy.deepcopy(newick_branches)
+                coal_reg_internals = copy.deepcopy(coal_internals)
+
                 for i in range(len(newick_branches)): #drops missing data
                         if np.isnan(newick_branches[i]) or np.isnan(coal_internals[i]):
-                                del newick_branches[i]
-                                del coal_internals[i]
+                                newick_reg_branches[i] = "N/A"
+                                coal_reg_internals[i] = "N/A"
+                                #del newick_branches[i]
+                                #del coal_internals[i]
 
-                intercept, slope = poly.polyfit(newick_branches, coal_internals, 1)
+                while "N/A" in newick_reg_branches:
+                    newick_reg_branches.remove("N/A")
+
+                while "N/A" in coal_reg_internals:
+                    coal_reg_internals.remove("N/A")
+
+                #print(newick_reg_branches)
+                #print(coal_reg_internals)
+
+                intercept, slope = poly.polyfit(newick_reg_branches, coal_reg_internals, 1)
 
                 return intercept, slope
 
@@ -602,30 +645,48 @@ def subs2coal(newick_string):
                 else:
                         coal_tips[i] = coal_tips[i]
 
+        prediction_stdev = np.std(coal_tips) #standard deviation of tip predictions
+        coal_tips_lower_CI = [(tip - 1.96*prediction_stdev) for tip in coal_tips]
+        coal_tips_upper_CI = [(tip + 1.96*prediction_stdev) for tip in coal_tips]
+
         coal_internals = [(newick_internals[i]*coef + intercept) if np.isnan(coal_internals[i]) else coal_internals[i] for i in range(len(newick_internals))]
+        coal_internals_lower_CI = [((newick_internals[i]*coef + intercept) - 1.96*prediction_stdev) if np.isnan(coal_internals[i]) else coal_internals[i] for i in range(len(newick_internals))]
+        coal_internals_upper_CI = [((newick_internals[i]*coef + intercept) + 1.96*prediction_stdev) if np.isnan(coal_internals[i]) else coal_internals[i] for i in range(len(newick_internals))]
 
         lengths = re.findall("\d+\.\d+", newick_string)
 
         lengths = [lengths[i] for i in range(len(lengths)) if float(lengths[i]) < 1]
 
         coal_lengths = []
+        coal_lengths_lower_CI = []
+        coal_lengths_upper_CI = []
 
         for i in range(len(lengths)):
                 if newick_internals.count(lengths[i]) > 1 or newick_tips.count(lengths[i]) > 1:
                         sys.exit('Error: Duplicate branch lengths')
                 elif float(lengths[i]) in newick_internals:
                         coal_lengths.append(coal_internals[newick_internals.index(float(lengths[i]))])
+                        coal_lengths_lower_CI.append(coal_internals_lower_CI[newick_internals.index(float(lengths[i]))])
+                        coal_lengths_upper_CI.append(coal_internals_upper_CI[newick_internals.index(float(lengths[i]))])
                 elif float(lengths[i]) in newick_tips:
                         coal_lengths.append(coal_tips[newick_tips.index(float(lengths[i]))])
+                        coal_lengths_lower_CI.append(coal_tips_lower_CI[newick_tips.index(float(lengths[i]))])
+                        coal_lengths_upper_CI.append(coal_tips_upper_CI[newick_tips.index(float(lengths[i]))])
                 elif float(lengths[i]) == 0: #deals with roots of length 0 in smoothed trees
                         coal_lengths.append(float(0))
         
         coal_lengths = [str(coal_lengths[i]) for i in range(len(coal_lengths))]
+        coal_lengths_lower_CI = [str(coal_lengths_lower_CI[i]) for i in range(len(coal_lengths_lower_CI))]
+        coal_lengths_upper_CI = [str(coal_lengths_upper_CI[i]) for i in range(len(coal_lengths_upper_CI))]
        
-        coal_newick_string = newick_string
+        coal_newick_string = copy.deepcopy(newick_string)
+        coal_newick_string_lower_CI = copy.deepcopy(newick_string)
+        coal_newick_string_upper_CI = copy.deepcopy(newick_string)
 
         for i in range(len(lengths)):
              coal_newick_string = coal_newick_string.replace(str(lengths[i]), str(coal_lengths[i]))
+             coal_newick_string_lower_CI = coal_newick_string_lower_CI.replace(str(lengths[i]), str(coal_lengths_lower_CI[i]))
+             coal_newick_string_upper_CI = coal_newick_string_upper_CI.replace(str(lengths[i]), str(coal_lengths_upper_CI[i]))
     
         scfs = [float(x) for x in scfs]
         scfs2 = []
@@ -637,8 +698,12 @@ def subs2coal(newick_string):
 
 
         for i in range(len(scfs)):
-                coal_newick_string = coal_newick_string.replace(str(scfs[i]), '')    
-        return(coal_newick_string, Tree(coal_newick_string, format=1), intercept, coef, n, c)
+                coal_newick_string = coal_newick_string.replace(str(scfs[i]), '')
+                coal_newick_string_lower_CI = coal_newick_string_lower_CI.replace(str(scfs[i]), '')
+                coal_newick_string_upper_CI = coal_newick_string_upper_CI.replace(str(scfs[i]), '')
+
+        return(coal_newick_string, Tree(coal_newick_string, format=1), coal_newick_string_lower_CI, Tree(coal_newick_string_lower_CI, format=1),
+                coal_newick_string_upper_CI, Tree(coal_newick_string_upper_CI, format=1), intercept, coef, n, c)
 
 
 def readInput(file):
@@ -649,22 +714,26 @@ def readInput(file):
     outgroup=None
     cnt = 0
     treeType = 'ml'
-
+    conversionType = None
     for i, line in enumerate(f):
-        if line.startswith("begin trees"):
+        #print(line.replace('\n',''))
+        if line.startswith('tree tree_1'):
             cnt = 1
-            continue
-        if line.startswith("begin hemiplasytool"):
+        if line.startswith('tree tree_2'):
             cnt = 2
-            continue
-        if (len(line) <= 1) or (line.startswith("end")) or (line.startswith("#")):
-            continue
+        if line.startswith("begin hemiplasytool"):
+            cnt = 3
+        
 
-
-        elif cnt == 1:
+        if cnt == 1:
             tree = line.replace("\n", "").split('=')[1][1:]
-
+            cnt = 4
+     
         elif cnt == 2:
+            tree2 = line.replace("\n", "").split('=')[1][1:]
+            cnt = 4
+
+        elif cnt == 3:
             #simulation parameters
             l = line.replace("\n", "").split('=')
             if l[0] == "set derived taxon":
@@ -680,9 +749,11 @@ def readInput(file):
                 admix.append([time,sp1,sp2,strength])
             elif l[0].startswith('set type coal'):
                 treeType = 'coal'
+            elif l[0].startswith('set conversion type'):
+                conversionType = line.replace('\n','').split('=')[1]
     
             
-    return(tree, derived, admix, outgroup, treeType)
+    return(tree, derived, admix, outgroup, treeType, tree2, conversionType)
 
 
 def summarize_inherited(inherited):
@@ -762,9 +833,34 @@ def prune_tree(tree, derived, outgroup):
     ns = []
     for node in t.get_monophyletic(values=["1"], target_attr="derived"):
        ns.append(node)
-    sub = t.get_common_ancestor(ns[0], ns[1], ns[2], ns[3])
+    sub = t.get_common_ancestor(ns)
     tokeep = list(sub.get_leaf_names())
     tokeep.append(outgroup)
     t.prune(tokeep)
-    return(t.write(), t)
+
+    return(t.write(format = 1), t)
     
+def make_introgression_tree(tree2, conversions):
+    #Used to create tree with internal nodes labled in ms style.
+    #Will allow us to easily specify introgression on internal nodes.
+    node_conversions = {}
+    #Change taxa names to ms ints
+    for key, val in conversions.items():
+        tree2 = re.sub(key, str(val), tree2)
+
+    #Convert to ete3 tree
+    tree2 = Tree(tree2, format = 1)
+
+    #Traverse tree
+    for node in tree2.traverse():
+        descendants = node.get_leaf_names()
+        #if not a leaf
+        if len(descendants) != 1:
+            ds = [int(x) for x in descendants]
+            node_conversions[node.name] = str(min(ds))
+            node.name = node.name + '/' + str(min(ds))
+
+    return(tree2, tree2.write(format = 1), node_conversions)
+
+        
+
