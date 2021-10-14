@@ -290,9 +290,6 @@ def main(*args):
         treeSp, t, treeSp_low, t_low, treeSp_up, t_up, intercept, coef, newick_internals, coal_internals = hemiplasytool.subs2coal(treeSp)
         original_tree = [treeSp, t]
     else:
-<<<<<<< HEAD
-        original_tree = [treeSp, t]
-=======
         original_tree = [treeSp, Tree(treeSp, format=1)]
 
     sim_type = args.CI
@@ -304,7 +301,7 @@ def main(*args):
         elif sim_type == 'lower':
             treeSp = treeSp_low
             t = t_low
->>>>>>> 16f9f6452c4f6792a0b8fa078ce28f443bf09b58
+
     # Tree pruning
     if outgroup != None:
         log.debug("Pruning tree...")
