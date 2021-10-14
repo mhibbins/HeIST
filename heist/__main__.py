@@ -274,11 +274,14 @@ def main(*args):
     log.debug("Reading input file...")
     treeSp, derived, admix, outgroup, type = hemiplasytool.readInput(args.input)
     tmp1 = Tree(treeSp, format = 1)
+    t = tmp1
     tmp1.convert_to_ultrametric()
 
     if type != 'coal':
         # Convert ML tree to a coalescent tree based on GCFs
         treeSp,t,intercept,coef,newick_internals,coal_internals = hemiplasytool.subs2coal(treeSp)
+        original_tree = [treeSp, t]
+    else:
         original_tree = [treeSp, t]
     # Tree pruning
     if outgroup != None:
@@ -333,9 +336,9 @@ def main(*args):
     for e in admix:
         events.append([e[0], str(conversions[e[1]]), str(conversions[e[2]]), e[3]])
     admix = events
-
+    total_reps_for_intro = 0
     if len(admix) != 0:
-        total_reps_for_intro = 0
+        
         for e in admix:
             total_reps_for_intro += int(reps * float(e[3]))
     remaining_reps = reps - total_reps_for_intro
