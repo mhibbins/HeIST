@@ -104,7 +104,7 @@ def readSeqs(seqs, ntaxa, speciesPattern, nodes, batch, prefix, breaks=0):
                         if checkEqual(b):
                             if b[0] != pattern[str(ntaxa + 1)]:
                                 indices.append(index+1)
-                                tmpFocal.write(' 10 1\n')
+                                tmpFocal.write(' ' + str(ntaxa) + ' 1\n')
                                 for k, v in pattern.items():
                                     tmpFocal.write(k + "\t" + v + "\n")
                                 if index < breaks:

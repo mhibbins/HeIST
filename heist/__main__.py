@@ -75,7 +75,7 @@ def subs2coal(*args):
 
     newick = open(args.input, 'r').read()
 
-    treeSp,t,intercept,coef,n,c = hemiplasytool.subs2coal(newick)
+    treeSp,t,treeSp_lower_CI,t_lower_CI,treeSp_upper_CI,t_upper_CI,intercept,coef,n,c = hemiplasytool.subs2coal(newick)
     print(treeSp)
 
 def heistMerge(*args):
@@ -139,6 +139,8 @@ def heistMerge(*args):
                 data["#7"] += int(line)
             elif i == 7:
                 data["#8"] += int(line)
+            elif i == 8:
+                data["#9"] += float(line)
             else:
                 l = line.replace('\n', '').split(',')
                 if l[0] == 'All':
@@ -254,6 +256,10 @@ def main(*args):
         help="Seq-gen mutation rate (default 0.05)",
         default=0.05,
     )
+
+    parser.add_argument(
+        "-c", "--CI", metavar="", help="Optionally simulate at the upper ('upper') or lower ('lower') bounds of the 95 %% CI for the coalescent conversion regression.", default=None
+    )
     parser.add_argument("-o", "--outputdir", metavar="", help="Output directory/prefix")
 
     args = parser.parse_args()
@@ -272,31 +278,51 @@ def main(*args):
 
     # Read input file
     log.debug("Reading input file...")
-    treeSp, derived, admix, outgroup, type = hemiplasytool.readInput(args.input)
+    treeSp, derived, admix, outgroup, type, tree2, conversion_type = hemiplasytool.readInput(args.input)
     tmp1 = Tree(treeSp, format = 1)
     t = tmp1
     tmp1.convert_to_ultrametric()
 
+
+
     if type != 'coal':
         # Convert ML tree to a coalescent tree based on GCFs
-        treeSp,t,intercept,coef,newick_internals,coal_internals = hemiplasytool.subs2coal(treeSp)
+        treeSp, t, treeSp_low, t_low, treeSp_up, t_up, intercept, coef, newick_internals, coal_internals = hemiplasytool.subs2coal(treeSp)
         original_tree = [treeSp, t]
     else:
+<<<<<<< HEAD
         original_tree = [treeSp, t]
+=======
+        original_tree = [treeSp, Tree(treeSp, format=1)]
+
+    sim_type = args.CI
+
+    if sim_type != None:
+        if sim_type == 'upper':
+            treeSp = treeSp_up
+            t = t_up
+        elif sim_type == 'lower':
+            treeSp = treeSp_low
+            t = t_low
+>>>>>>> 16f9f6452c4f6792a0b8fa078ce28f443bf09b58
     # Tree pruning
     if outgroup != None:
         log.debug("Pruning tree...")
         # Prune tree
         treeSp,t = hemiplasytool.prune_tree(treeSp, derived, outgroup)
+        tree2,t2 = hemiplasytool.prune_tree(tree2, derived, outgroup)
 
 
     taxalist = [i.name for i in t.iter_leaves()]
     [i.name for i in t.iter_leaves()]
 
     # Convert coalescent tree to ms splits
-    treeSp, conversions = hemiplasytool.names2ints(treeSp)
-    original_tree[0], tmp = hemiplasytool.names2ints(original_tree[0])
-    
+
+
+
+    treeSp, conversions = hemiplasytool.names2ints(treeSp, conversion_type, type)
+    original_tree[0], tmp = hemiplasytool.names2ints(original_tree[0], conversion_type, type)
+
     # Convert newick tree to ms splits
     splits, taxa = hemiplasytool.newick2ms(treeSp)
     traits = {}
@@ -305,8 +331,32 @@ def main(*args):
             traits[conversions[i]] = 1
         else:
             traits[conversions[i]] = 0
+
+
+    #Generate tree in ete3 with internal branches labeled based on user input
+    #plus how ms interprets them. e.g., I4(3). This way I can easily specify the
+    #events to ms.
+    if len(admix) != 0:
+        tree2_ete, tree2_newick, node_conversions = hemiplasytool.make_introgression_tree(tree2, conversions)
+
     
-    
+        #Update conversion dictionary to contain node conversions (e.g. I4 -> 2)
+        conversions = {**conversions, **node_conversions}
+
+        #Perform conversions on admix list
+        events = []
+
+        #Parse admix list, divide times by 2
+        for e in admix:
+            events.append([str(float(e[0])/2.0), str(conversions[e[1]]), str(conversions[e[2]]), e[3]])
+        admix = events
+
+        #Sort admix list earliest to latest (not sure if ms requires this or not)
+
+        admix.sort(key = lambda x: float(x[0]), reverse=True)
+
+
+
     # Make program calls
     threads = int(args.threads)
     reps = int(args.replicates)
@@ -338,7 +388,6 @@ def main(*args):
     admix = events
     total_reps_for_intro = 0
     if len(admix) != 0:
-        
         for e in admix:
             total_reps_for_intro += int(reps * float(e[3]))
     remaining_reps = reps - total_reps_for_intro
@@ -355,9 +404,6 @@ def main(*args):
     if len(admix) != 0:
         #Extra thread for introgression
         threads += 1
-
-
-
 
     prefix = args.outputdir
 
@@ -376,12 +422,17 @@ def main(*args):
                 m = hemiplasytool.call_programs(ms_call, "", "trees.tmp", taxalist)
                 processes_ms.append(m)
             elif y == threads-1:
-                ms_calls = []
-                for m, event in enumerate(admix):
-                    o = str(y) + "_" + str(m)
-                    intro_indices.append(m)
-                    ms_call = hemiplasytool.splits_to_ms(splits, taxa, 
-                        int(reps * float(event[3])), args.mspath, o, prefix, event)
+                if (len(admix) != 0):
+                    ms_calls = []
+                    for m, event in enumerate(admix):
+                        o = str(y) + "_" + str(m)
+                        intro_indices.append(m)
+                        ms_call = hemiplasytool.splits_to_ms(splits, taxa, 
+                            int(reps * float(event[3])), args.mspath, o, prefix, event)
+                        m = hemiplasytool.call_programs(ms_call, "", "trees.tmp", taxalist)
+                        processes_ms.append(m)
+                else:
+                    ms_call = hemiplasytool.splits_to_ms(splits, taxa, per_thread[y], args.mspath, y, prefix)
                     m = hemiplasytool.call_programs(ms_call, "", "trees.tmp", taxalist)
                     processes_ms.append(m)
 
@@ -405,8 +456,11 @@ def main(*args):
         if y != threads-1:
             string_cat_ms += prefix + ".trees" + str(y) + ".tmp "
         elif y == threads-1:
-            for intro in intro_indices:
-                string_cat_ms += prefix + ".trees" + str(y) + "_" + str(intro) + ".tmp "
+            if (len(admix) != 0):
+                for intro in intro_indices:
+                    string_cat_ms += prefix + ".trees" + str(y) + "_" + str(intro) + ".tmp "
+            else:
+                string_cat_ms += prefix + ".trees" + str(y) + ".tmp "
     string_cat_ms += "> " + prefix + ".trees.tmp"
     os.system(string_cat_ms)
 
@@ -416,8 +470,13 @@ def main(*args):
             s = hemiplasytool.call_programs_sg(ms_call, seqgencall, "trees.tmp", taxalist)
             processes_sq.append(s)
         else:
-            for intro in intro_indices:
-                seqgencall = hemiplasytool.seq_gen_call(prefix + ".trees" + str(y) + "_" + str(intro) + ".tmp", args.seqgenpath, args.mutationrate, str(y), prefix)
+            if (len(admix) != 0):
+                for z, intro in enumerate(intro_indices):
+                    seqgencall = hemiplasytool.seq_gen_call(prefix + ".trees" + str(y) + "_" + str(intro) + ".tmp", args.seqgenpath, args.mutationrate, str(y), prefix, z)
+                    s = hemiplasytool.call_programs_sg(ms_call, seqgencall, "trees.tmp", taxalist)
+                    processes_sq.append(s)
+            else:
+                seqgencall = hemiplasytool.seq_gen_call(prefix + ".trees" + str(y) + ".tmp", args.seqgenpath, args.mutationrate, str(y), prefix)
                 s = hemiplasytool.call_programs_sg(ms_call, seqgencall, "trees.tmp", taxalist)
                 processes_sq.append(s)
 
@@ -438,15 +497,25 @@ def main(*args):
 
     string_cat = "cat "
     for y in range(0, threads):
-        string_cat += prefix + ".seqs" + str(y) + ".tmp "
+        if y != threads-1:
+            string_cat += prefix + ".seqs" + str(y) + ".tmp "
+        elif y == threads-1:
+            if (len(admix) != 0):
+                for z, intro in enumerate(intro_indices):
+                    string_cat += prefix + ".seqs" + str(y) + "_" + str(z) + ".tmp "
+            else:
+                string_cat += prefix + ".seqs" + str(y) + ".tmp "
+
     string_cat += "> " + prefix + ".seqs.tmp"
     os.system(string_cat)
+
 
     # Gets indices of trees with site patterns that match speecies pattern
     log.debug("Finding trees that match species trait pattern...")
     match_species_pattern, counts_by_tree = seqtools.readSeqs(
         prefix + ".seqs.tmp", len(taxalist), traits, len(splits), i, prefix, intro_start
     )
+
 
     log.debug("Getting focal trees...")
     # Gets the trees at these indices 
@@ -456,8 +525,14 @@ def main(*args):
     log.debug("Calculating discordance...")
     results[i], disc, conc = seqtools.propDiscordant(focal_trees, treeSp)
 
+    ##The error we're getting wrt introgression not being accurately relfected in mutation counting happens around here \
+    ##Either count_mutations is not working on introgressed trees OR we are passing a list of trees that doesnt contain \
+    ##the introgreesion trees.
+
+
     focaltrees_d = seqtools.parse_seqgen(prefix + ".focaltrees.tmp", len(taxalist), disc)
     focaltrees_c = seqtools.parse_seqgen(prefix + ".focaltrees.tmp", len(taxalist), conc)
+    
     for index, tree in enumerate(focaltrees_d):
         n_mutations_d.append(seqtools.count_mutations(tree, len(taxalist)))
     for index, tree in enumerate(focaltrees_c):
@@ -474,7 +549,7 @@ def main(*args):
         inherited = inherited + test_summarize
 
     # Clean up temporary files
-    os.system("rm *.tmp")
+    #os.system("rm *.tmp")
     ###################################################################
 
     # Begin summary of all batches
@@ -491,11 +566,8 @@ def main(*args):
         )
     min_mutations_required = hemiplasytool.fitchs_alg(str(treeSp), traits)
 
-    #log.debug("Plotting...")
-    #try:
-    #    hemiplasytool.plot_mutations(mutation_counts_c, mutation_counts_d, args.outputdir)
-    #except:
-    #    log.debug("Can't plot!")
+    if type == "coal":
+        intercept, coef, newick_internals, coal_internals = [None]*4
 
 
     log.debug("Writing output file...")
@@ -516,7 +588,8 @@ def main(*args):
         intercept,
         coef,
         newick_internals,
-        coal_internals
+        coal_internals,
+        args.mutationrate
     )
     hemiplasytool.write_unique_trees(all_focal_trees, args.outputdir, traits)
     end = time.time()
@@ -525,3 +598,4 @@ def main(*args):
 
 if __name__ == "__main__":
     main(*sys.argv)
+
