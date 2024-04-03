@@ -10,7 +10,6 @@ import math
 import shlex
 import atexit
 from Bio import Phylo
-from Bio.Alphabet import generic_dna
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 from Bio.Align import MultipleSeqAlignment
@@ -253,9 +252,9 @@ def fitchs_alg(tree, traits):
     records = []
     for key, val in traits.items():
         if val == 0:
-            records.append(SeqRecord(Seq("A", generic_dna), id=str(key)))
+            records.append(SeqRecord(Seq("A"), id=str(key)))
         elif val == 1:
-            records.append(SeqRecord(Seq("T", generic_dna), id=str(key)))
+            records.append(SeqRecord(Seq("T"), id=str(key)))
 
     test_pattern = MultipleSeqAlignment(records)
 

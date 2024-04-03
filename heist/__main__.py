@@ -381,7 +381,7 @@ def main(*args):
     
     events = []
     for e in admix:
-        events.append([e[0], str(conversions[e[1]]), str(conversions[e[2]]), e[3]])
+        events.append([e[0], e[1], e[2], e[3]])
     admix = events
     total_reps_for_intro = 0
     if len(admix) != 0:

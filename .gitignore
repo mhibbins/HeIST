@@ -1,7 +1,12 @@
-cleanup.sh
+# Folders
+__pycache__/
 dist/
-erato_test.sh
-seedms
 heist_hemiplasy.egg-info/
 test/
 build/
+
+# Files
+cleanup.sh
+erato_test.sh
+seedms
+.DS_Store
