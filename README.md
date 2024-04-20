@@ -42,7 +42,7 @@ pip install heist-hemiplasy
 |  _  |  __/| | ___) || |
 |_| |_|\___|___|____/ |_|
 Hemiplasy Inference Simulation Tool
-Version 0.3.1
+Version 0.4.1
 
 Written by Mark Hibbins & Matt Gibson
 Indiana University

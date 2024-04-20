@@ -163,7 +163,7 @@ def print_banner():
     print("|  _  |  __/| | ___) || |  ")
     print("|_| |_|\___|___|____/ |_|  ")
     print("Hemiplasy Inference Simulation Tool")
-    print("Version 0.3.1")
+    print("Version 0.4.1")
     print()
     print("Written by Mark Hibbins & Matt Gibson")
     print("Indiana University")
