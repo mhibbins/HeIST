@@ -20,14 +20,16 @@ Mark Hibbins (mhibbins@indiana.edu)
 ## Installation
 
 ### From GitHub
-```
+```bash
 git clone https://github.com/mhibbins/heist
 cd heist
 python setup.py install
+# Or
+pip install .
 ```
 
 ### From PyPI
-```
+```bash
 pip install heist-hemiplasy
 ```
 
