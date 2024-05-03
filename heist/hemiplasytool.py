@@ -8,7 +8,8 @@ import io
 import re
 import math
 import shlex
-import atexit
+import glob
+import sys
 from Bio import Phylo
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
@@ -163,7 +164,7 @@ def print_banner():
     print("|  _  |  __/| | ___) || |  ")
     print("|_| |_|\___|___|____/ |_|  ")
     print("Hemiplasy Inference Simulation Tool")
-    print("Version 0.3.1")
+    print("Version 0.4.1")
     print()
     print("Written by Mark Hibbins & Matt Gibson")
     print("Indiana University")
@@ -208,12 +209,42 @@ def cleanup():
     os.system("rm seqs.tmp")
     os.system("rm focaltrees.tmp")
 
-@atexit.register
-def cleanup_earlyexit():
+def cleanup_earlyexit(filename):
     """Remove gene trees and sequences files. For use between batches."""
-    os.system("rm *.trees*.tmp")
-    os.system("rm *.seqs*.tmp")
+    trees_pattern = filename + "*.trees*.tmp"
+    seqs_pattern = filename + "*.seqs*.tmp"
 
+    # Collect all matching files
+    trees_files = glob.glob(trees_pattern)
+    seqs_files = glob.glob(seqs_pattern)
+
+    delete_files(trees_files)
+    delete_files(seqs_files)
+
+def delete_files(files):
+    for file in files:
+        try:
+            os.remove(file)
+            print(f"Deleted successfully: {file}")
+        except OSError as e:
+            print(f"Error deleting {file}:", e)
+
+def check_if_output_folder_exists(output_path):
+    print("Check if output folder exists...")
+
+    if output_path:
+        # Cleaning file name from output path param
+        splitted_path = output_path.split("/")
+        if splitted_path:
+            splitted_path.pop()
+        folder_path = "/".join(splitted_path)
+
+        # Check if folder path exist
+        if not os.path.exists(folder_path):
+            os.makedirs(folder_path)
+            print(f"Output folder created: {folder_path}")
+        else:
+            print(f"Output folder already exist: {folder_path}")
 
 def summarize(results):
     """Summarizes simulations from multiple batches"""

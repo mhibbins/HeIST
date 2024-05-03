@@ -69,7 +69,7 @@ def readSeqs(seqs, ntaxa, speciesPattern, nodes, batch, prefix, breaks=0):
     iii = 0
     p = ntaxa + nodes
     #print(p)
-    with open(seqs, "rU") as f:
+    with open(seqs, "r") as f:
         block = []
         tax = []
         for lines in f:
@@ -131,7 +131,7 @@ def readSeqs2(seqs, ntaxa, speciesPattern, nodes, batch, prefix, breaks=[]):
     tmpFocal = open(prefix + ".focaltrees.tmp", "w")
 
     index = 0
-    with open(seqs, "rU") as f:
+    with open(seqs, "r") as f:
         for lines in grouper(f, ntaxa + nodes + 1, ""):
             assert len(lines) == ntaxa + nodes + 1
             pattern = {}
