@@ -405,6 +405,7 @@ def main(*args):
 
     prefix = args.outputdir
     atexit.register(hemiplasytool.cleanup_earlyexit, prefix)
+    hemiplasytool.check_if_output_folder_exists(prefix)
 
     processes_ms = []
     processes_sq = []

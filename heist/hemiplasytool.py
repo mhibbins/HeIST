@@ -229,6 +229,23 @@ def delete_files(files):
         except OSError as e:
             print(f"Error deleting {file}:", e)
 
+def check_if_output_folder_exists(output_path):
+    print("Check if output folder exists...")
+
+    if output_path:
+        # Cleaning file name from output path param
+        splitted_path = output_path.split("/")
+        if splitted_path:
+            splitted_path.pop()
+        folder_path = "/".join(splitted_path)
+
+        # Check if folder path exist
+        if not os.path.exists(folder_path):
+            os.makedirs(folder_path)
+            print(f"Output folder created: {folder_path}")
+        else:
+            print(f"Output folder already exist: {folder_path}")
+
 def summarize(results):
     """Summarizes simulations from multiple batches"""
     c_disc_follow = 0
