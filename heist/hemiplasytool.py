@@ -8,7 +8,8 @@ import io
 import re
 import math
 import shlex
-import atexit
+import glob
+import sys
 from Bio import Phylo
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
@@ -208,12 +209,25 @@ def cleanup():
     os.system("rm seqs.tmp")
     os.system("rm focaltrees.tmp")
 
-@atexit.register
-def cleanup_earlyexit():
+def cleanup_earlyexit(filename):
     """Remove gene trees and sequences files. For use between batches."""
-    os.system("rm *.trees*.tmp")
-    os.system("rm *.seqs*.tmp")
+    trees_pattern = filename + "*.trees*.tmp"
+    seqs_pattern = filename + "*.seqs*.tmp"
 
+    # Collect all matching files
+    trees_files = glob.glob(trees_pattern)
+    seqs_files = glob.glob(seqs_pattern)
+
+    delete_files(trees_files)
+    delete_files(seqs_files)
+
+def delete_files(files):
+    for file in files:
+        try:
+            os.remove(file)
+            print(f"Deleted successfully: {file}")
+        except OSError as e:
+            print(f"Error deleting {file}:", e)
 
 def summarize(results):
     """Summarizes simulations from multiple batches"""

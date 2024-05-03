@@ -7,6 +7,7 @@ Indiana University
 """
 
 import argparse
+import atexit
 import time
 import sys
 import os
@@ -403,6 +404,7 @@ def main(*args):
         threads += 1
 
     prefix = args.outputdir
+    atexit.register(hemiplasytool.cleanup_earlyexit, prefix)
 
     processes_ms = []
     processes_sq = []
