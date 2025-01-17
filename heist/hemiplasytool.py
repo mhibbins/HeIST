@@ -653,9 +653,13 @@ def subs2coal(newick_string):
         coal_internals_lower_CI = [((newick_internals[i]*coef + intercept) - 1.96*prediction_stdev) if np.isnan(coal_internals[i]) else coal_internals[i] for i in range(len(newick_internals))]
         coal_internals_upper_CI = [((newick_internals[i]*coef + intercept) + 1.96*prediction_stdev) if np.isnan(coal_internals[i]) else coal_internals[i] for i in range(len(newick_internals))]
 
-        lengths = re.findall("\d+\.\d+", newick_string)
+    #the original code find all numbers with decimal and then filter out those greater than 1
+    #under the assumption that branch lengths are all less than 1, and concordance factor all greater
+    #this can lead to issue when there are long branches or short branches on the tree
+    #and lead to problems down the line
+        lengths = re.findall("\:\d+\.\d+", newick_string)
 
-        lengths = [lengths[i] for i in range(len(lengths)) if float(lengths[i]) < 1]
+        lengths = [length.replace(":","") for length in lengths]
 
         coal_lengths = []
         coal_lengths_lower_CI = []
@@ -674,6 +678,7 @@ def subs2coal(newick_string):
                         coal_lengths_upper_CI.append(coal_tips_upper_CI[newick_tips.index(float(lengths[i]))])
                 elif float(lengths[i]) == 0: #deals with roots of length 0 in smoothed trees
                         coal_lengths.append(float(0))
+                #here there needs to be an else statement to catch the problem and provide more informative error message
         
         coal_lengths = [str(coal_lengths[i]) for i in range(len(coal_lengths))]
         coal_lengths_lower_CI = [str(coal_lengths_lower_CI[i]) for i in range(len(coal_lengths_lower_CI))]
