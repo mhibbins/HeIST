@@ -20,14 +20,16 @@ Mark Hibbins (mhibbins@indiana.edu)
 ## Installation
 
 ### From GitHub
-```
+```bash
 git clone https://github.com/mhibbins/heist
 cd heist
 python setup.py install
+# Or
+pip install .
 ```
 
 ### From PyPI
-```
+```bash
 pip install heist-hemiplasy
 ```
 
@@ -42,7 +44,7 @@ pip install heist-hemiplasy
 |  _  |  __/| | ___) || |
 |_| |_|\___|___|____/ |_|
 Hemiplasy Inference Simulation Tool
-Version 0.3.1
+Version 0.4.1
 
 Written by Mark Hibbins & Matt Gibson
 Indiana University

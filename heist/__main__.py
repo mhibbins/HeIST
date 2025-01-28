@@ -7,6 +7,7 @@ Indiana University
 """
 
 import argparse
+import atexit
 import time
 import sys
 import os
@@ -112,7 +113,7 @@ def heistMerge(*args):
             break
     
     data = {"#1": 0, "#2": 0, "#3": 0, "#4": 0, "#5": 0,
-            "#6": 0, "#7": 0, "#8": 0}
+            "#6": 0, "#7": 0, "#8": 0, "#9": 0.0}
     allT = {}
     discT = {}
     concT = {}
@@ -403,6 +404,8 @@ def main(*args):
         threads += 1
 
     prefix = args.outputdir
+    atexit.register(hemiplasytool.cleanup_earlyexit, prefix)
+    hemiplasytool.check_if_output_folder_exists(prefix)
 
     processes_ms = []
     processes_sq = []
